@@ -93,7 +93,10 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
             </div>
             <div className="coin-title-copy">
               <div className="coin-name-line">
-                <h1 className={coin.boost === 500 ? 'gold-name gold-name-animated' : ''}>
+                <h1
+                  className={coin.boost === 500 ? 'gold-name gold-name-animated' : ''}
+                  title={coin.name}
+                >
                   {coin.name}
                 </h1>
                 {coin.boost && (

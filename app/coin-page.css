@@ -81,6 +81,10 @@
 }
 .coin-name-line h1 {
   margin: 0;
+  max-width: min(680px, calc(100vw - 190px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: clamp(25px, 3vw, 38px);
   letter-spacing: -0.045em;
   font-family: var(--font-space-grotesk), sans-serif;

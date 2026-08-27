@@ -127,6 +127,8 @@ export function CoinCells({ coin }: { coin: Coin }) {
             <Link
               href={`/coin/${coin.projectId}`}
               className={coin.boost === 500 ? 'gold-name gold-name-animated' : ''}
+              title={coin.name}
+              aria-label={coin.name}
             >
               <b>{coin.name}</b>
             </Link>
