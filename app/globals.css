@@ -290,6 +290,13 @@ nav a.active {
   background: #20272b;
   color: #fff;
 }
+.user-dropdown .logout-action {
+  color: #ff8f8f;
+}
+.user-dropdown .logout-action:hover {
+  background: rgba(244, 97, 97, 0.11);
+  color: #ffc2c2;
+}
 .status-dot {
   display: inline-block;
   width: 6px;
@@ -1481,6 +1488,7 @@ body.modal-open {
 .auth-form label {
   display: grid;
   gap: 6px;
+  width: 100%;
   color: #b7bec2;
   font-size: 9px;
   font-weight: 700;
@@ -1507,6 +1515,7 @@ body.modal-open {
   gap: 8px;
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
 }
 .auth-form .auth-code-grid input {
   width: 44px;

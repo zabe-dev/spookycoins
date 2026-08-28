@@ -53,15 +53,6 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             <Link href="/#footer" onClick={closeMenu}>
               Advertise
             </Link>
-            {isSignedIn ? (
-              <button className="mobile-nav-auth" onClick={() => void logout()}>
-                Sign out
-              </button>
-            ) : (
-              <button className="mobile-nav-auth" onClick={openAuth}>
-                Sign in
-              </button>
-            )}
           </nav>
           <div className="nav-actions">
             <button className="submit-coin-btn">＋ Submit coin</button>
@@ -81,7 +72,9 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     <Link href="/account" onClick={() => setUserMenuOpen(false)}>
                       Watchlists
                     </Link>
-                    <button onClick={() => void logout()}>Logout</button>
+                    <button className="logout-action" onClick={() => void logout()}>
+                      Logout
+                    </button>
                   </div>
                 )}
               </div>

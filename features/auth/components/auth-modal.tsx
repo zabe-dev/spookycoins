@@ -24,9 +24,15 @@ const emailSchema = z.object({
   email: z.string().trim().email('Use a real email address so we can send the reset code.'),
 });
 
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, 'New password needs at least 8 characters.'),
-});
+const resetPasswordSchema = z
+  .object({
+    password: z.string().min(8, 'New password needs at least 8 characters.'),
+    confirmPassword: z.string().min(8, 'Confirm the new password.'),
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    message: 'Both password fields must match.',
+    path: ['confirmPassword'],
+  });
 
 type AuthMode = 'login' | 'signup' | 'reset';
 type AuthStep = 'credentials' | 'verify-signup' | 'reset-code' | 'new-password';
@@ -136,7 +142,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     const form = new FormData(event.currentTarget);
 
     if (step === 'new-password') {
-      await finishPasswordReset(String(form.get('password') || ''));
+      await finishPasswordReset({
+        password: String(form.get('password') || ''),
+        confirmPassword: String(form.get('confirmPassword') || ''),
+      });
       return;
     }
 
@@ -317,8 +326,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     }
   }
 
-  async function finishPasswordReset(password: string) {
-    const parsedPassword = resetPasswordSchema.safeParse({ password });
+  async function finishPasswordReset(passwords: { password: string; confirmPassword: string }) {
+    const parsedPassword = resetPasswordSchema.safeParse(passwords);
     if (!parsedPassword.success) {
       showValidationError(parsedPassword.error.issues[0]?.message);
       return;
@@ -448,7 +457,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           </p>
         </div>
 
-        {!isCodeStep && step !== 'new-password' && (
+        {!isCodeStep && step !== 'new-password' && mode !== 'reset' && (
           <>
             <div className="auth-tabs" role="tablist" aria-label="Authentication mode">
               <button
@@ -469,14 +478,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               </button>
             </div>
 
-            {mode !== 'reset' && (
-              <>
-                <AuthProviderButtons disabled={loading} onGoogle={continueWithGoogle} />
-                <div className="auth-divider">
-                  <span>or continue with email</span>
-                </div>
-              </>
-            )}
+            <AuthProviderButtons disabled={loading} onGoogle={continueWithGoogle} />
+            <div className="auth-divider">
+              <span>or continue with email</span>
+            </div>
           </>
         )}
 
@@ -518,17 +523,30 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               )}
             </>
           ) : step === 'new-password' ? (
-            <label>
-              New password
-              <input
-                type="password"
-                name="password"
-                placeholder="At least 8 characters"
-                autoComplete="new-password"
-                minLength={8}
-                required
-              />
-            </label>
+            <>
+              <label>
+                New password
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </label>
+              <label>
+                Confirm new password
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Type it again"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </label>
+            </>
           ) : mode === 'reset' ? (
             <label>
               Email address

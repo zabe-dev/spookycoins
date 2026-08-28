@@ -606,16 +606,17 @@
   .navbar nav {
     position: absolute;
     top: calc(100% + 1px);
-    right: 0;
-    left: 0;
+    right: 12px;
+    left: auto;
     display: grid;
     gap: 3px;
+    width: min(230px, calc(100vw - 24px));
     max-height: 0;
     margin-left: 0;
     padding: 0;
     overflow: hidden;
     border: 0 solid var(--border);
-    border-radius: 0 0 8px 8px;
+    border-radius: 12px;
     background: rgba(13, 16, 19, 0.98);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
     transition:
@@ -625,15 +626,16 @@
   }
   .navbar nav.open {
     max-height: 220px;
-    padding: 8px;
+    padding: 9px;
     border-width: 1px;
   }
   .navbar nav a {
     display: flex;
     align-items: center;
-    min-height: 38px;
+    min-height: 40px;
     padding: 0 12px;
-    border-radius: 7px;
+    border-radius: 9px;
+    font-weight: 750;
   }
   .mobile-nav-auth {
     display: flex;
@@ -650,6 +652,9 @@
   }
   .navbar nav a.active {
     background: var(--surface2);
+  }
+  .navbar nav a:hover {
+    background: rgba(255, 255, 255, 0.04);
   }
   .mobile-menu-btn {
     display: block;
