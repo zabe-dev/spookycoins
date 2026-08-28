@@ -1,6 +1,8 @@
 import { NETWORKS } from './networks';
 import type { Coin, CoinCategory } from './types';
 
+const logoColors = ['cyan', 'orange', 'pink', 'blue', 'green', 'yellow', 'red', 'violet'] as const;
+
 export type CoinListItem = {
   coinId: number;
   externalId: string;
@@ -10,6 +12,7 @@ export type CoinListItem = {
   lifecycle: 'launched' | 'presale';
   chain: string;
   networkName: string;
+  chainIcon: string | null;
   logo: string;
   image?: string;
   description: string | null;
@@ -69,10 +72,11 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     lifecycle: coin.lifecycle,
     chain: NETWORKS[coin.network].shortName,
     networkName: NETWORKS[coin.network].name,
+    chainIcon: NETWORKS[coin.network].iconUrl,
     logo: coin.symbol.slice(0, 1),
     ...(coin.logoUrl ? { image: coin.logoUrl } : {}),
     description: coin.description,
-    color: coin.promoted.active ? 'violet' : 'market-logo',
+    color: coin.promoted.active ? 'yellow' : logoColors[coin.id % logoColors.length],
     cap: formatMoney(coin.market.marketCapUsd),
     capN: marketCap,
     volume24h: formatMoney(coin.market.volume24hUsd),

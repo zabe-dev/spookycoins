@@ -66,6 +66,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Mobile navbar includes a compact menu button with Discover, Promoted, Partners, Advertise, and Sign In.
 - [x] Shared brand, topbar, navbar, site-header, table, action-button, placeholder-surface, and modal components exist.
 - [x] Desktop and mobile layouts are responsive.
+- [x] Supported chain icons are stored locally and used for table chain badges.
 
 ### Topbar
 

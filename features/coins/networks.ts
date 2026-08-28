@@ -7,6 +7,7 @@ export type NetworkConfig = {
   providerPlatformIds: readonly string[];
   explorerAddressUrl: ((address: string) => string) | null;
   dexScreenerSlug: string | null;
+  iconUrl: string | null;
   enabled: boolean;
 };
 
@@ -18,6 +19,7 @@ export const NETWORKS = {
     ['ethereum'],
     'https://etherscan.io/address/',
     'ethereum',
+    '/chain-icons/eth.svg',
   ),
   bsc: network(
     'bsc',
@@ -26,8 +28,17 @@ export const NETWORKS = {
     ['binance-smart-chain'],
     'https://bscscan.com/address/',
     'bsc',
+    '/chain-icons/bsc.svg',
   ),
-  solana: network('solana', 'Solana', 'SOL', ['solana'], 'https://solscan.io/account/', 'solana'),
+  solana: network(
+    'solana',
+    'Solana',
+    'SOL',
+    ['solana'],
+    'https://solscan.io/account/',
+    'solana',
+    '/chain-icons/sol.svg',
+  ),
   polygon: network(
     'polygon',
     'Polygon',
@@ -35,6 +46,7 @@ export const NETWORKS = {
     ['polygon-pos'],
     'https://polygonscan.com/address/',
     'polygon',
+    '/chain-icons/matic.svg',
   ),
   avalanche: network(
     'avalanche',
@@ -43,6 +55,7 @@ export const NETWORKS = {
     ['avalanche'],
     'https://snowtrace.io/address/',
     'avalanche',
+    '/chain-icons/avax.svg',
   ),
   arbitrum: network(
     'arbitrum',
@@ -51,8 +64,17 @@ export const NETWORKS = {
     ['arbitrum-one'],
     'https://arbiscan.io/address/',
     'arbitrum',
+    '/chain-icons/arb.svg',
   ),
-  base: network('base', 'Base', 'BASE', ['base'], 'https://basescan.org/address/', 'base'),
+  base: network(
+    'base',
+    'Base',
+    'BASE',
+    ['base'],
+    'https://basescan.org/address/',
+    'base',
+    '/chain-icons/base.svg',
+  ),
   optimism: network(
     'optimism',
     'Optimism',
@@ -60,6 +82,7 @@ export const NETWORKS = {
     ['optimistic-ethereum'],
     'https://optimistic.etherscan.io/address/',
     'optimism',
+    '/chain-icons/op.svg',
   ),
   dogecoin: network(
     'dogecoin',
@@ -68,9 +91,26 @@ export const NETWORKS = {
     ['dogechain'],
     'https://dogechain.info/address/',
     'dogechain',
+    '/chain-icons/doge.svg',
   ),
-  tron: network('tron', 'Tron', 'TRX', ['tron'], 'https://tronscan.org/#/address/', 'tron'),
-  fantom: network('fantom', 'Fantom', 'FTM', ['fantom'], 'https://ftmscan.com/address/', 'fantom'),
+  tron: network(
+    'tron',
+    'Tron',
+    'TRX',
+    ['tron'],
+    'https://tronscan.org/#/address/',
+    'tron',
+    '/chain-icons/trx.svg',
+  ),
+  fantom: network(
+    'fantom',
+    'Fantom',
+    'FTM',
+    ['fantom'],
+    'https://ftmscan.com/address/',
+    'fantom',
+    '/chain-icons/ftm.svg',
+  ),
   kcc: network(
     'kcc',
     'KuCoin Community Chain',
@@ -78,11 +118,28 @@ export const NETWORKS = {
     ['kucoin-community-chain'],
     'https://explorer.kcc.io/en/address/',
     'kcc',
+    '/chain-icons/kcc.svg',
   ),
-  sui: network('sui', 'Sui', 'SUI', ['sui'], 'https://suiscan.xyz/mainnet/object/', 'sui'),
-  hood: network('hood', 'Hood', 'HOOD', ['hood'], null, null),
-  xrpl: network('xrpl', 'XRP Ledger', 'XRPL', ['xrp'], 'https://xrpscan.com/account/', 'xrpl'),
-  other: network('other', 'Other', 'OTHER', [], null, null),
+  sui: network(
+    'sui',
+    'Sui',
+    'SUI',
+    ['sui'],
+    'https://suiscan.xyz/mainnet/object/',
+    'sui',
+    '/chain-icons/sui.svg',
+  ),
+  hood: network('hood', 'Hood', 'HOOD', ['hood'], null, null, '/chain-icons/hood.png'),
+  xrpl: network(
+    'xrpl',
+    'XRP Ledger',
+    'XRPL',
+    ['xrp'],
+    'https://xrpscan.com/account/',
+    'xrpl',
+    '/chain-icons/xrpl.png',
+  ),
+  other: network('other', 'Other', 'OTHER', [], null, null, null),
 } satisfies Record<NetworkId, NetworkConfig>;
 
 function network(
@@ -92,6 +149,7 @@ function network(
   providerPlatformIds: readonly string[],
   explorerBaseUrl: string | null,
   dexScreenerSlug: string | null,
+  iconUrl: string | null,
 ): NetworkConfig {
   return {
     id,
@@ -100,6 +158,7 @@ function network(
     providerPlatformIds,
     explorerAddressUrl: explorerBaseUrl ? (address) => `${explorerBaseUrl}${address}` : null,
     dexScreenerSlug,
+    iconUrl,
     enabled: true,
   };
 }

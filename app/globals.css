@@ -401,6 +401,12 @@ nav a.active {
   color: #d6dce0 !important;
   font-size: 7px !important;
   font-weight: 800;
+  overflow: hidden;
+}
+.chain-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .violet {
   background: linear-gradient(135deg, #8468ff, #4a2cbd);
