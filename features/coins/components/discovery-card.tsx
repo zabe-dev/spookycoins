@@ -1,6 +1,7 @@
 'use client';
-/* eslint-disable @next/next/no-img-element -- URLs come from replaceable market-data providers. */
+/* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
+import Link from 'next/link';
 import type { CoinListItem as Coin } from '@/features/coins/view';
 import { DiscoveryIcon } from './icons';
 
@@ -30,7 +31,7 @@ export function DiscoveryCard({
         </a>
       </div>
       {coins.map((coin, index) => (
-        <div className="mini-coin" key={coin.symbol}>
+        <Link className="mini-coin" href={`/coin/${coin.coinId}`} key={coin.symbol}>
           <b>{index + 1}</b>
           <div className={`coin-logo ${coin.color}`}>
             {coin.image ? <img src={coin.image} alt="" /> : coin.logo}
@@ -45,7 +46,7 @@ export function DiscoveryCard({
             {coin.change >= 0 ? '+' : ''}
             {coin.change}%
           </em>
-        </div>
+        </Link>
       ))}
     </article>
   );

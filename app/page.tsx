@@ -15,7 +15,7 @@ import {
 import { Brand } from '@/components/ui/brand';
 import { SiteHeader } from '@/components/layout/site-header';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
-import { initialCoinListItems } from '@/features/coins/data/initial-dataset';
+import { mockCoinListItems } from '@/features/coins/data/mock-coins';
 import {
   coinCategories,
   coinChainOptions,
@@ -52,7 +52,7 @@ const sortKeys: CoinSortKey[] = [
 ];
 
 export default function Home() {
-  const [marketCoins, setMarketCoins] = useState<CoinListItem[]>(initialCoinListItems);
+  const [marketCoins] = useState<CoinListItem[]>(mockCoinListItems);
   const [view, setView] = useState<LeaderboardView>('Launched coins'),
     [category, setCategory] = useState('All'),
     [chain, setChain] = useState('All chains'),
@@ -102,7 +102,7 @@ export default function Home() {
   useEffect(() => {
     if (!urlReady) return;
     const params = new URLSearchParams();
-    if (view !== 'Launched coins') params.set('coins', viewParams[view]);
+    params.set('coins', viewParams[view]);
     if (sort.key !== 'rank' || sort.dir !== 1) {
       params.set('sort', sort.key);
       params.set('dir', sort.dir === -1 ? 'desc' : 'asc');
@@ -118,23 +118,6 @@ export default function Home() {
       `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
     );
   }, [category, chain, page, search, sort, urlReady, view]);
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch('/api/market/coins?limit=100', { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error('Market data unavailable');
-        return response.json() as Promise<{ data: CoinListItem[] }>;
-      })
-      .then(({ data }) => {
-        if (data.length) setMarketCoins(data);
-      })
-      .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          console.warn(error);
-        }
-      });
-    return () => controller.abort();
-  }, []);
   useEffect(() => {
     const el = categoryRef.current;
     if (!el) return;
@@ -309,7 +292,6 @@ export default function Home() {
           kicker="SPONSORED PLACEMENTS"
           title="Promoted coins"
           subtitle="Sponsored coins with active visibility packages. Promotion does not guarantee rank or endorsement."
-          action="View ad packages ↗"
         />
         <SimpleTable
           className="promoted-table"

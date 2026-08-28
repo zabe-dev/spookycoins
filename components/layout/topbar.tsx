@@ -1,35 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type MarketTicker = { symbol: string; price: number | null; change: number | null };
 
+const mockTickers: MarketTicker[] = [
+  { symbol: 'BTC', price: 113240.18, change: 1.42 },
+  { symbol: 'ETH', price: 4385.72, change: 2.08 },
+  { symbol: 'BNB', price: 862.34, change: -0.36 },
+];
+
 export function Topbar() {
-  const [tickers, setTickers] = useState<MarketTicker[]>([]);
   const [paused, setPaused] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch('/api/market/tickers', { signal: controller.signal })
-      .then((response) => response.json() as Promise<{ data: MarketTicker[] }>)
-      .then(({ data }) => setTickers(data))
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, []);
-
-  const visibleTickers = tickers.length
-    ? tickers
-    : [
-        { symbol: 'BTC', price: null, change: null },
-        { symbol: 'ETH', price: null, change: null },
-        { symbol: 'BNB', price: null, change: null },
-      ];
 
   return (
     <div className="topbar-band">
       <div className="container topbar">
         <div className="ticker">
-          <TickerItems tickers={visibleTickers} />
+          <TickerItems tickers={mockTickers} />
         </div>
         <div className="platform-stats">
           <span>
@@ -52,11 +40,11 @@ export function Topbar() {
         >
           <div className="topbar-marquee-track">
             <div className="topbar-marquee-group">
-              <TickerItems tickers={visibleTickers} />
+              <TickerItems tickers={mockTickers} />
               <PlatformItems />
             </div>
             <div className="topbar-marquee-group" aria-hidden="true">
-              <TickerItems tickers={visibleTickers} />
+              <TickerItems tickers={mockTickers} />
               <PlatformItems />
             </div>
           </div>

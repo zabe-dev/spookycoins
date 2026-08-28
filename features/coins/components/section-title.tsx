@@ -9,7 +9,7 @@ export function SectionTitle({
   kicker: string;
   title: string;
   subtitle?: string;
-  action: string;
+  action?: string;
 }) {
   return (
     <div className="section-title">
@@ -18,7 +18,7 @@ export function SectionTitle({
         <h1>{title}</h1>
         {subtitle && <p className="section-subtitle">{subtitle}</p>}
       </div>
-      <span>{action}</span>
+      {action && <span>{action}</span>}
     </div>
   );
 }

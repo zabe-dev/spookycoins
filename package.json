@@ -14,8 +14,7 @@
     "format:check": "prettier --check .",
     "db:generate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
-    "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
-    "data:generate": "node --env-file=.env.local scripts/generate-initial-dataset.mjs"
+    "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio"
   },
   "dependencies": {
     "@emnapi/core": "1.11.3",

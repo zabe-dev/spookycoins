@@ -14,23 +14,23 @@ Working positioning:
 
 ## Agreed technology stack
 
-| Area | Technology |
-| --- | --- |
-| Framework | Next.js + TypeScript |
-| Authentication | Clerk — email, Google, MetaMask, and Coinbase Wallet |
-| Database | Neon (Postgres) + Drizzle ORM |
-| Validation | Zod |
-| File storage | Cloudflare R2 |
-| Payments | Coinbase Commerce or NOWPayments; final provider is not yet selected |
+| Area           | Technology                                                           |
+| -------------- | -------------------------------------------------------------------- |
+| Framework      | Next.js + TypeScript                                                 |
+| Authentication | Clerk — email, Google, MetaMask, and Coinbase Wallet                 |
+| Database       | Neon (Postgres) + Drizzle ORM                                        |
+| Validation     | Zod                                                                  |
+| File storage   | Cloudflare R2                                                        |
+| Payments       | Coinbase Commerce or NOWPayments; final provider is not yet selected |
 
-Clerk is responsible for identity and sessions. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, advertising campaigns, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs.
+Clerk is responsible for identity and sessions. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, promoted placements, boosts, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs.
 
 ## Product principles
 
 - Keep discovery and voting fast and simple.
 - Separate organic community signals, paid promotion, and trending signals.
 - Never add purchased boosts to the displayed raw-vote total.
-- Clearly label promoted projects and advertisements.
+- Clearly label promoted projects and paid boost/placement surfaces.
 - Promotion is not an endorsement or a claim that a project is safe.
 - Treat chain plus contract address as token identity; ticker symbols are display data only.
 - Show factual KYC, audit, and risk information without using generic “Safe” claims.
@@ -42,15 +42,14 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Node.js pinned to the Vercel-supported 22.x line and deployment lockfile repaired.
 - [x] Server-only environment variables with a safe `.env.example`; local secrets are ignored.
 - [x] Formatting, linting, TypeScript, production-build, and production-dependency checks pass.
-- [x] Provider-neutral market-data architecture with server endpoints, caching, and bounded concurrent requests.
+- [x] Previous live market-data endpoints, provider adapter, generated dataset, and client fetches were removed from the prototype.
 - [x] Public project records use numeric IDs starting at 1000.
 - [x] Existing sensitive/internal tables—market-source records, project links, payments, submissions, and change requests—use UUIDs.
-- [ ] Planned advertisement, report, campaign, creative, and other private records must also use UUIDs when added.
+- [ ] Planned report, order, payment, boost, promoted-placement, and other private records must also use UUIDs when added.
 - [x] Canonical network, chart, DEX, boost, promoted-state, market, and community configuration exists.
-- [x] Initial dataset contains exactly 100 token projects with IDs 1000–1099.
-- [x] Dataset contains projects deployed on supported networks, not the networks’ native/base coins.
-- [x] Obsolete fallback/dummy-data paths were removed; the canonical dataset is the local fallback source.
-- [x] Exactly one promoted advertising placeholder exists: **Spooky · $SPOOKY · Solana**.
+- [x] Mock data is now the prototype source of truth and later submissions will sit on top of the mock data.
+- [x] Mock data contains token projects deployed on supported networks, not the networks’ native/base coins.
+- [x] Exactly one promoted placement placeholder exists: **Spooky · $SPKY · Solana** with a 500× boost.
 
 ## Homepage — implemented
 
@@ -60,16 +59,16 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 
 - [x] Brand is **spookycoins**, lowercase, with a ghost logo and favicon.
 - [x] Homepage content uses a 1320px maximum-width container.
-- [x] Topbar, navbar, section backgrounds, borders, and fixed advertising can span the viewport.
+- [x] Topbar, navbar, section backgrounds, borders, and fixed placeholder surfaces can span the viewport.
 - [x] Navbar order is Discover, Promoted, Partners, Advertise.
 - [x] Navbar actions are Submit Coin and Sign In; light/dark mode was removed.
 - [x] Mobile navbar includes a compact menu button with Discover, Promoted, Partners, Advertise, and Sign In.
-- [x] Shared brand, topbar, navbar, site-header, table, action-button, advertising, and modal components exist.
+- [x] Shared brand, topbar, navbar, site-header, table, action-button, placeholder-surface, and modal components exist.
 - [x] Desktop and mobile layouts are responsive.
 
 ### Topbar
 
-- [x] BTC, ETH, and BNB prices are loaded from a server endpoint.
+- [x] BTC, ETH, and BNB prices use plain mock values in the current prototype.
 - [x] Project, user, and total-vote figures are displayed as presentation values.
 - [x] On mobile, topbar items run as a continuous marquee.
 - [x] Users can hold to pause the mobile marquee or swipe it horizontally.
@@ -87,7 +86,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 
 - [x] Promoted Coins uses the same table structure and row controls as the community leaderboard.
 - [x] Promoted Coins intentionally has no search, filters, or sortable headings.
-- [x] The Spooky/Solana row is an advertising-layout example, not a real paid campaign.
+- [x] The Spooky/Solana row is a promoted-placement layout example, not a real paid order.
 - [x] The Spooky placeholder is not clickable and has no project-page destination.
 
 ### Community leaderboard
@@ -130,15 +129,15 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Reduced-motion preferences are respected.
 - [ ] Boost purchasing, payments, activation, expiration, and ranking effects are not connected.
 
-### Advertising UI
+### Placeholder surfaces
 
 - [x] Two 90px header placements appear on desktop; one appears on mobile.
 - [x] A full-width in-page banner is present.
 - [x] A fixed full-width bottom overlay includes a close control.
 - [x] Mobile bottom-ad copy and controls are compact and do not create horizontal overflow.
 - [x] Current placeholder copy: “Reach crypto’s earliest project hunters. Premium inventory · Measured impressions and clicks.”
-- [x] Current CTA: “View ad packages.”
-- [ ] Campaign rotation, scheduling, creative delivery, dismissal persistence, impression tracking, and click tracking are not connected.
+- [x] Current CTA text exists in placeholder UI, but should be reconsidered because banner ad spaces are no longer a sellable MVP product.
+- [ ] These placeholder surfaces are not sellable MVP inventory and should be removed or repurposed before production unless the business decision changes.
 
 ### Authentication UI
 
@@ -152,10 +151,10 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 
 - [x] Routes and lookups use `/coin/[numeric-project-id]`; symbols never identify routes.
 - [x] Canonical project data, logo, name, `$SYMBOL`, chain, category, and copyable contract address are displayed.
-- [x] Price, change, market information, and historical chart data are loaded through server endpoints when available.
+- [x] Price, change, market information, and chart visuals use local mock project data for the current prototype.
 - [x] Chart and DEX actions use canonical configuration; TradingView is not used.
 - [x] Vote and watchlist controls reuse homepage interaction components.
-- [x] Share, Report, Buy/DEX, social links, advertising, and Request Change interfaces exist.
+- [x] Share, Report, Buy/DEX, social links, paid-placement surfaces, and Request Change interfaces exist.
 - [x] Request Change replaces the discarded public verified/claim badge.
 - [ ] Project actions, reports, changes, ownership, and authentication are not persisted.
 - [ ] Project-page refinement is paused while homepage work is the priority.
@@ -194,38 +193,51 @@ Trending is separate from official weekly rank.
 - Store score components for moderation and debugging.
 - Current prototype trend values are simplified presentation data, not this production algorithm.
 
-## Weekly boost packages — current commercial working decision
+## Promoted Coins pricing — current commercial decision
 
-The old user-owned consumable booster concept is discarded. Boosts belong to a project and expire at the next weekly reset. Prices decrease as less time remains in the week.
+For now, SpookyCoins only sells Promoted Coin placements and Boosts. No banner ad spaces are sold in the MVP.
 
-Monday base prices:
+Promoted Coins base price is **$30/day**.
 
-| Tier | Base price |
-| ---: | ---------: |
-|  10× |        $39 |
-|  30× |        $89 |
-|  50× |       $149 |
-| 100× |       $299 |
-| 500× |       $799 |
+| Duration  | Discount    | Effective price |
+| --------- | ----------- | --------------: |
+| 1–2 days  | No discount |         $30/day |
+| 3–6 days  | 20% off     |         $24/day |
+| 7–13 days | 30% off     |         $21/day |
+| 14+ days  | 40% off     |         $18/day |
 
-Time-remaining schedule:
+Example: 7 days = $210 before discount, 30% off, **$147 total**.
 
-| Purchase day | Price percentage |
-| ------------ | ---------------: |
-| Monday       |             100% |
-| Tuesday      |              85% |
-| Wednesday    |              70% |
-| Thursday     |              55% |
-| Friday       |              40% |
-| Saturday     |              30% |
-| Sunday       |              22% |
+Promoted Coin placements are still subject to manual approval. Purchasing a placement guarantees the approved promoted surface and dates, not safety endorsement.
 
-Approximate Sunday minimums: 10× $9, 30× $19, 50× $35, 100× $69, 500× $179.
+## Boost packages — current commercial decision
 
-- Disclose that every package expires at the next reset regardless of purchase time.
+The old user-owned consumable booster concept is discarded. Boosts belong to a project and always run for a full seven days from activation.
+
+Boost pricing:
+
+| Package | Price | Vote multiplier | Duration |
+| ------: | ----: | --------------: | -------: |
+|     10× |   $39 |              ×2 |   7 days |
+|     30× |   $89 |              ×3 |   7 days |
+|     50× |  $149 |              ×4 |   7 days |
+|    100× |  $299 |              ×5 |   7 days |
+|    500× |  $799 |             ×10 |   7 days |
+
+- The multiplier stays the same for the entire seven-day boost period.
+- Price does not decay based on purchase day; a boost always costs the package price and runs for seven days regardless of the day it starts.
+- Example: 1,000 raw votes with a ×5 multiplier displays as 5,000 boosted/displayed votes.
 - Treat pricing as introductory and revisit after real traffic, conversion, and advertiser-demand data exists.
-- Boosts never increase the displayed raw-vote count.
+- Boosts never change stored raw-vote counts.
 - Only one active boost may apply to a project at a time.
+- Boosts do not stack; if a project already has an active boost, additional boosts for that project are disabled until the current boost expires.
+
+## Review and activation — current commercial decision
+
+- Daily review cutoff is **6:00 PM**.
+- Requests submitted before 6:00 PM are reviewed for possible activation at **12:00 AM**, giving up to a six-hour review window.
+- Requests submitted after 6:00 PM are not guaranteed to be reviewed or activated by 12:00 AM and may move to the next activation cycle.
+- All Promoted Coin placements and Boosts are subject to manual approval.
 
 ### Unresolved boost-ranking rule
 
@@ -236,49 +248,13 @@ The brainstorm contains two incompatible proposals:
 
 The homepage currently displays boost status but does not implement either ranking effect. Resolve this trust/product decision before implementing boost checkout or server-side ranking.
 
-## Advertising and promoted inventory — planned business rules
+## Commercial policy — planned
 
-### Placement decisions
-
-- Header: two desktop slots, one mobile slot.
-- Full-width in-page placement.
-- Fixed bottom overlay.
-- Project page: top, desktop sidebar, and inline placements; mobile replaces sidebar with inline.
-- Support run-of-site, chain/category targeting, and specific-project targeting.
-- Clearly label every placement as Advertisement or Sponsored.
-- Rotate eligible creatives on page load; one eligible campaign displays continuously.
-- Count an impression only after at least 50% visibility for one continuous second.
-- Track impressions, unique reach, clicks, unique clicks, CTR, placement, device, creative version, and campaign dates.
-- Treat the placement dimensions already rendered by the codebase as canonical creative sizes; add new dimensions only when a genuinely new placement is introduced.
-
-### Introductory day rates
-
-| Placement                                                       |            Rate |
-| --------------------------------------------------------------- | --------------: |
-| Header banner                                                   |         $25/day |
-| Full-width in-page                                              |         $35/day |
-| Bottom overlay                                                  |         $50/day |
-| Project-page top: run-of-site / targeted / specific project     | $15 / $25 / $40 |
-| Project-page sidebar: run-of-site / targeted / specific project | $10 / $15 / $25 |
-| Project-page inline: run-of-site / targeted / specific project  | $10 / $15 / $20 |
-| Promoted Coins table slot                                       |         $35/day |
-
-Multi-day discounts: 1–2 days 0%, 3–6 days 10%, 7–13 days 20%, 14–29 days 30%, 30+ days 40%. Round effective day rates to the nearest dollar.
-
-- Suggested Promoted Coins capacity is 5–10 slots.
-- Purchasing a slot guarantees placement, not a specific position.
-- Earliest selectable campaign start is tomorrow, never the current day.
-- Human approval of creative and destination is mandatory before launch.
-- Exact daily review cutoff time remains undecided.
-- Advertiser self-service dashboard is deferred; initial campaign operations belong in the admin dashboard.
-
-### Advertising policy
-
-- Every creative and destination page requires human review before activation.
+- Every paid Promoted Coin placement, Boost, creative, and destination page requires human review before activation.
 - Reject pornography/sexual content, illegal goods or services, phishing, malware, deceptive downloads, impersonation, fake giveaways, guaranteed-return claims, hate or harassment, and ads disguised as organic rankings or security badges.
 - Reject undisclosed redirect chains or destination URLs that differ from the approved submission.
-- Store a clear rejection reason and track repeated violations for possible advertiser-account blocking.
-- If review misses a selected start date, handle the SLA failure manually through extension, rescheduling, or refund; never silently run an ad on dates the advertiser did not select.
+- Store a clear rejection reason and track repeated violations for possible buyer/account blocking.
+- If review misses a selected start date, handle the SLA failure manually through extension, rescheduling, or refund; never silently run a paid placement on dates the buyer did not select.
 
 ## Project submission — planned
 
@@ -332,12 +308,12 @@ Report moderation states are New, Under Review, Action Taken, Rejected, and Reso
 - Market API keys stay server-side and are never exposed to browsers.
 - Batch leaderboard requests and use bounded concurrency.
 - Cache active market data and refresh it approximately every 5–15 minutes; refresh inactive metadata less frequently.
-- Serve visitors from cached/server data rather than calling an upstream API per page view.
+- If live enrichment returns later, serve visitors from cached/server data rather than calling an upstream API per page view.
 - Current market coverage may be supplemented later for newly launched tokens without primary-provider coverage.
 - Public project URLs use short numeric IDs; canonical token identity remains network plus contract address.
 - Never use ticker symbols as route identifiers.
 
-## Admin and advertiser tools
+## Admin tools
 
 ### Admin dashboard — required MVP infrastructure, not implemented
 
@@ -345,26 +321,29 @@ Report moderation states are New, Under Review, Action Taken, Rejected, and Reso
 - Audit log for every administrative action.
 - User management, suspension, abuse investigation, and support-only cooldown reset.
 - Project CRUD/delisting without deleting historical records.
-- Submission, KYC/audit, report, advertisement, and campaign approval queues.
-- Campaign management, analytics, Promoted Coins capacity, and fraud detail.
+- Simple workflow: Requests → Review → Approve/Reject → Scheduled → Live → Expired.
+- Submission, KYC/audit, report, Promoted Coin placement, and Boost approval queues.
+- Live clock and daily cutoff indicator.
+- Promoted Coin pricing calculator with automatic duration discounts.
+- Boost management, including one-active-boost enforcement and expiry.
+- Payment/order details, placement dates, rejection reasons, status tracking, and fraud detail.
+- PDF receipt generation.
 - Ability to grant logged promotional comps without mixing them into paid revenue.
-- Dashboard summary for pending work, campaigns, boosts, projects, users, votes, and recent actions.
+- Dashboard summary for pending work, promoted placements, boosts, projects, users, votes, and recent actions.
 
-### Advertiser dashboard — deliberately deferred
+### Buyer dashboard — deliberately deferred
 
-- Eventually expose only each advertiser’s own aggregate campaign analytics.
-- Reuse the impression/click/creative data model built for the admin dashboard.
-- Historical analytics are view-only; creative changes create auditable revisions.
-- Until real volume exists, campaigns are managed manually through admin tools.
+- Eventually expose each buyer’s own orders, statuses, receipts, active placements, and boost history.
+- Until real volume exists, paid placement and boost operations are managed manually through admin tools.
 
 ## Current prototype boundaries
 
-- Votes, watchlists, authentication, reports, project changes, campaign actions, and payments are not persistent.
+- Votes, watchlists, authentication, reports, project changes, paid placement actions, boost actions, and payments are not persistent.
 - Initial watchlist counts are placeholder values, so Most Watched uses trend as a tie fallback.
 - Topbar project/user/total-vote totals are presentation values.
-- The Spooky promoted row is placeholder inventory, not a paid campaign.
-- Market prices, images, and available historical data are fetched and cached through server endpoints.
-- Current upstream market integration is replaceable and must remain generically named inside product-facing code and copy.
+- The Spooky promoted row is placeholder inventory, not a paid order.
+- Market prices, images, and available historical data currently use local mock data.
+- There is no live upstream market integration in the current prototype.
 - Commercial licensing must be confirmed before meaningful monetized production use.
 
 ## Next implementation work
@@ -388,8 +367,8 @@ Platform implementation:
 - [ ] Build project submission, ownership/claim, and request-change workflows.
 - [ ] Build the separate presale dataset and leaderboard.
 - [ ] Implement reports, moderation, anti-bot controls, and the admin dashboard.
-- [ ] Implement boost checkout, payments, activation, expiration, and analytics.
-- [ ] Implement advertising campaigns, approval, rotation, scheduling, impressions, clicks, and CTR.
+- [ ] Implement Promoted Coin checkout, payments, approval, scheduling, activation, expiration, and PDF receipts.
+- [ ] Implement boost checkout, payments, approval, activation, expiration, one-active-boost enforcement, and PDF receipts.
 
 ## Superseded decisions
 
@@ -398,21 +377,22 @@ Platform implementation:
 - Light/dark mode was removed.
 - Most Voted homepage view was replaced by Most Watched.
 - User-owned consumable boosters and booster-count ranking were discarded.
-- The older 12/24-hour five-pack boost pricing proposal is superseded by week-until-reset packages and time-remaining pricing.
+- The older 12/24-hour five-pack boost pricing proposal and the week-until-reset/time-decay pricing proposal are superseded by fixed seven-day boost packages.
+- Banner ad spaces are no longer part of the MVP commercial plan; the MVP sells only Promoted Coins and Boosts.
 - The old electric-surge 500× badge is replaced by the slower animated gold-gradient badge with black content.
 - The proposed `/coin/[chain]/[contract]` and symbol routes are replaced by `/coin/[numeric-project-id]`.
 - Public verified/claimed badges were discarded; Request Change remains. Ownership claims may return later as an authenticated workflow.
-- TradingView chart integration was discarded in favor of provider-neutral native historical charts and canonical DEX links.
-- The original hard-coded CoinGecko product terminology was replaced by provider-neutral naming. The current adapter can be replaced without changing the product model or UI copy.
+- TradingView chart integration was discarded for now; project pages currently use mock native chart visuals and canonical DEX links.
+- The original hard-coded CoinGecko product terminology was replaced by provider-neutral naming, and the current prototype has no live market-data adapter.
 - A modal/sidebar is not the primary project detail experience; the dedicated project page remains primary.
 
 ## Open decisions
 
 - Final resolution of boost effects on main ranking versus organic-only ranking.
-- Exact production market-data licensing/provider plan.
+- Exact production market-data licensing/provider plan and whether/when to reintroduce live enrichment.
 - Authentication implementation and account-verification requirements.
 - Payment provider and accepted fiat/crypto methods.
-- Exact advertising review cutoff time and initial Promoted Coins slot cap.
+- Initial Promoted Coins slot cap.
 - Project-verification requirements and public warning presentation.
 - Supported-network subset for the first public launch.
 - How much of the existing project-page prototype to keep when that phase resumes.

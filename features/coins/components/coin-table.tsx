@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable @next/next/no-img-element -- URLs come from replaceable market-data providers. */
+/* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';

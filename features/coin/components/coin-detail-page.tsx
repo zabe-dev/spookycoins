@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Brand } from '@/components/ui/brand';
 import { SiteHeader } from '@/components/layout/site-header';
@@ -15,8 +15,8 @@ import { CoinHero } from './coin-hero';
 import { CoinInfoSections } from './coin-info-sections';
 import { CoinSidebar } from './coin-sidebar';
 
-export function CoinDetailPage({ initialCoin }: { initialCoin: Coin }) {
-  const [canonicalCoin, setCanonicalCoin] = useState(initialCoin);
+export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
+  const canonicalCoin = coinRecord;
   const coin = toCoinListItem(canonicalCoin, 0);
   const contractAddress = coin.contractAddress || 'Contract address unavailable';
   const [voted, setVoted] = useState(false);
@@ -26,32 +26,10 @@ export function CoinDetailPage({ initialCoin }: { initialCoin: Coin }) {
   const [voteAnimating, setVoteAnimating] = useState(false);
   const [watchAnimating, setWatchAnimating] = useState(false);
   const [range, setRange] = useState<ChartRange>('24H');
-  const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`/api/coins/${initialCoin.id}`, { signal: controller.signal })
-      .then((response) => response.json() as Promise<{ data: Coin }>)
-      .then(({ data }) => setCanonicalCoin(data))
-      .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) console.warn(error);
-      });
-    return () => controller.abort();
-  }, [initialCoin.id]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`/api/coins/${initialCoin.id}/chart?range=${range}`, {
-      signal: controller.signal,
-    })
-      .then((response) => response.json() as Promise<{ data: ChartPoint[] }>)
-      .then(({ data }) => setChartPoints(data))
-      .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) console.warn(error);
-      });
-    return () => controller.abort();
-  }, [initialCoin.id, range]);
-
+  const chartPoints = useMemo(
+    () => makeMockChartPoints(canonicalCoin.id, range),
+    [canonicalCoin.id, range],
+  );
   const chartPath = useMemo(() => makeChartPath(chartPoints), [chartPoints]);
 
   function vote() {
@@ -137,4 +115,25 @@ export function CoinDetailPage({ initialCoin }: { initialCoin: Coin }) {
       </footer>
     </main>
   );
+}
+
+function makeMockChartPoints(coinId: number, range: ChartRange): ChartPoint[] {
+  const countByRange: Record<ChartRange, number> = {
+    '1H': 24,
+    '4H': 48,
+    '24H': 72,
+    '7D': 96,
+    '30D': 120,
+  };
+  const count = countByRange[range];
+  const seed = coinId % 37;
+  return Array.from({ length: count }, (_, index) => {
+    const wave = Math.sin((index + seed) / 5) * 0.09;
+    const drift = index / count / 3;
+    const jitter = Math.cos((index + seed) / 3) * 0.035;
+    return {
+      timestamp: Date.now() - (count - index) * 3_600_000,
+      price: 1 + wave + drift + jitter,
+    };
+  });
 }
