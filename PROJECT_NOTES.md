@@ -12,6 +12,19 @@ Working positioning:
 
 > Discover crypto projects before everyone else.
 
+## Agreed technology stack
+
+| Area | Technology |
+| --- | --- |
+| Framework | Next.js + TypeScript |
+| Authentication | Clerk — email, Google, MetaMask, and Coinbase Wallet |
+| Database | Neon (Postgres) + Drizzle ORM |
+| Validation | Zod |
+| File storage | Cloudflare R2 |
+| Payments | Coinbase Commerce or NOWPayments; final provider is not yet selected |
+
+Clerk is responsible for identity and sessions. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, advertising campaigns, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs.
+
 ## Product principles
 
 - Keep discovery and voting fast and simple.
