@@ -17,12 +17,12 @@ function Icon({ kind }: { kind: SocialKind }) {
 export function CoinSocialActions({ buyUrl }: { buyUrl?: string }) {
   return (
     <div className="coin-social-actions">
-      <div className="project-utilities">
-        <button className="share-action" aria-label="Share project">
+      <div className="coin-utilities">
+        <button className="share-action" aria-label="Share coin">
           <Icon kind="share" />
           <span>Share</span>
         </button>
-        <button className="report-action" aria-label="Report project">
+        <button className="report-action" aria-label="Report coin">
           <Icon kind="report" />
           <span>Report</span>
         </button>

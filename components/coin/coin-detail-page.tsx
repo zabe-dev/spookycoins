@@ -8,16 +8,16 @@ import { VoteButton, WatchlistButton } from '@/components/actions/action-buttons
 import { CoinSocialActions } from '@/components/coin/coin-social-actions';
 import { ChangeRequestModal } from '@/components/coin/change-request-modal';
 import { SiteHeader } from '@/components/layout/site-header';
-import { BoltIcon } from '@/components/market-ui';
-import type { Project } from '@/lib/projects/types';
-import { toProjectListItem } from '@/lib/projects/view';
+import { BoltIcon } from '@/features/coins/components';
+import type { Coin } from '@/features/coins/types';
+import { toCoinListItem } from '@/features/coins/view';
 
 type ChartRange = '1H' | '4H' | '24H' | '7D' | '30D';
 type ChartPoint = { timestamp: number; price: number };
 
-export function CoinDetailPage({ initialProject }: { initialProject: Project }) {
-  const [project, setProject] = useState(initialProject);
-  const coin = toProjectListItem(project, 0);
+export function CoinDetailPage({ initialCoin }: { initialCoin: Coin }) {
+  const [canonicalCoin, setCanonicalCoin] = useState(initialCoin);
+  const coin = toCoinListItem(canonicalCoin, 0);
   const contractAddress = coin.contractAddress || 'Contract address unavailable';
   const [voted, setVoted] = useState(false);
   const [watched, setWatched] = useState(false);
@@ -30,18 +30,18 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/projects/${initialProject.id}`, { signal: controller.signal })
-      .then((response) => response.json() as Promise<{ data: Project }>)
-      .then(({ data }) => setProject(data))
+    fetch(`/api/coins/${initialCoin.id}`, { signal: controller.signal })
+      .then((response) => response.json() as Promise<{ data: Coin }>)
+      .then(({ data }) => setCanonicalCoin(data))
       .catch((error: unknown) => {
         if (!(error instanceof DOMException && error.name === 'AbortError')) console.warn(error);
       });
     return () => controller.abort();
-  }, [initialProject.id]);
+  }, [initialCoin.id]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/projects/${initialProject.id}/chart?range=${range}`, {
+    fetch(`/api/coins/${initialCoin.id}/chart?range=${range}`, {
       signal: controller.signal,
     })
       .then((response) => response.json() as Promise<{ data: ChartPoint[] }>)
@@ -50,7 +50,7 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
         if (!(error instanceof DOMException && error.name === 'AbortError')) console.warn(error);
       });
     return () => controller.abort();
-  }, [initialProject.id, range]);
+  }, [initialCoin.id, range]);
 
   const chartPath = useMemo(() => makeChartPath(chartPoints), [chartPoints]);
 
@@ -154,8 +154,8 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
       <div className="container coin-ad">
         <small>ADVERTISEMENT</small>
         <span>
-          <b>Reach crypto&apos;s earliest project hunters.</b> Premium inventory · Measured
-          impressions and clicks
+          <b>Reach crypto&apos;s earliest coin hunters.</b> Premium inventory · Measured impressions
+          and clicks
         </span>
         <button>View ad packages ↗</button>
       </div>
@@ -204,8 +204,8 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
             </div>
             <div className="chart-foot">
               <span>Historical market chart · {range}</span>
-              {project.dex.available && (
-                <a href={project.dex.url} target="_blank" rel="noreferrer">
+              {canonicalCoin.dex.available && (
+                <a href={canonicalCoin.dex.url} target="_blank" rel="noreferrer">
                   Open DEX ↗
                 </a>
               )}
@@ -225,8 +225,8 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
           </section>
 
           <section className="detail-card about-card">
-            <Heading kicker="PROJECT" title={`About ${coin.name}`} />
-            <p>{coin.description || 'A project description has not been provided yet.'}</p>
+            <Heading kicker="COIN" title={`About ${coin.name}`} />
+            <p>{coin.description || 'A coin description has not been provided yet.'}</p>
             <div className="tag-row">
               <span>{coin.category}</span>
               <span>{coin.chain} ecosystem</span>
@@ -258,7 +258,7 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
               appearance="sidebar"
               coinName={coin.name}
             />
-            <small className="vote-rule">Vote for each project once every 12 hours.</small>
+            <small className="vote-rule">Vote for each coin once every 12 hours.</small>
           </section>
           {coin.boost && (
             <section className="detail-card boost-card-detail">
@@ -267,11 +267,11 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
                 <small>ACTIVE PROMOTION</small>
                 <h3>{coin.boost}× boost</h3>
               </div>
-              <button>Boost project ↗</button>
+              <button>Boost coin ↗</button>
             </section>
           )}
           <section className="detail-card quick-info">
-            <h3>Project information</h3>
+            <h3>Coin information</h3>
             <Info label="Network" value={coin.chain} />
             <Info label="Category" value={coin.category} />
             <Info label="Submitted" value={coin.age} />
@@ -285,20 +285,20 @@ export function CoinDetailPage({ initialProject }: { initialProject: Project }) 
             </div>
             <div>
               <h3>Something incorrect?</h3>
-              <p>Request an update to this project&apos;s information, links, or listing.</p>
+              <p>Request an update to this coin&apos;s information, links, or listing.</p>
             </div>
             <button onClick={() => setChangeRequestOpen(true)}>Request a change</button>
           </section>
           <div className="sidebar-ad">
             <small>AD SPACE</small>
-            <b>Your project here</b>
+            <b>Your coin here</b>
             <span>Measured impressions and clicks</span>
             <button>View packages ↗</button>
           </div>
         </aside>
       </div>
       <ChangeRequestModal
-        projectName={coin.name}
+        coinName={coin.name}
         open={changeRequestOpen}
         onClose={() => setChangeRequestOpen(false)}
       />

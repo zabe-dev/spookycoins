@@ -3,25 +3,25 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   BannerAd as Ad,
   CoinCells as Cells,
+  CoinTable as SimpleTable,
   DiscoveryCard as Discovery,
   InfoRow as Info,
   LineBurst,
-  MarketTable as SimpleTable,
   SectionTitle as Title,
   SortHeader as SH,
   TableScroller,
   WatchButton as Watch,
-} from '@/components/market-ui';
+} from '@/features/coins/components';
 import { Brand } from '@/components/brand';
 import { SiteHeader } from '@/components/layout/site-header';
 import { WeeklyResetChip } from '@/components/leaderboard/weekly-reset-chip';
-import { initialProjectListItems } from '@/lib/projects/initial-dataset';
+import { initialCoinListItems } from '@/features/coins/data/initial-dataset';
 import {
-  projectCategories,
-  projectChainOptions,
-  type ProjectListItem,
-  type ProjectSortKey,
-} from '@/lib/projects/view';
+  coinCategories,
+  coinChainOptions,
+  type CoinListItem,
+  type CoinSortKey,
+} from '@/features/coins/view';
 import './market.css';
 import './scroll-fix.css';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
@@ -39,7 +39,7 @@ const viewParams: Record<LeaderboardView, string> = {
 const paramsToView = Object.fromEntries(
   Object.entries(viewParams).map(([label, value]) => [value, label]),
 ) as Record<string, LeaderboardView>;
-const sortKeys: ProjectSortKey[] = [
+const sortKeys: CoinSortKey[] = [
   'rank',
   'name',
   'capN',
@@ -52,12 +52,12 @@ const sortKeys: ProjectSortKey[] = [
 ];
 
 export default function Home() {
-  const [marketCoins, setMarketCoins] = useState<ProjectListItem[]>(initialProjectListItems);
+  const [marketCoins, setMarketCoins] = useState<CoinListItem[]>(initialCoinListItems);
   const [view, setView] = useState<LeaderboardView>('Launched coins'),
     [category, setCategory] = useState('All'),
     [chain, setChain] = useState('All chains'),
     [search, setSearch] = useState('');
-  const [sort, setSort] = useState<{ key: ProjectSortKey; dir: 1 | -1 }>({
+  const [sort, setSort] = useState<{ key: CoinSortKey; dir: 1 | -1 }>({
       key: 'rank',
       dir: 1,
     }),
@@ -77,7 +77,7 @@ export default function Home() {
     const applyUrlState = () => {
       const params = new URLSearchParams(window.location.search);
       const nextView = paramsToView[params.get('coins') || params.get('view') || ''];
-      const nextSort = params.get('sort') as ProjectSortKey | null;
+      const nextSort = params.get('sort') as CoinSortKey | null;
       const nextCategory = params.get('category');
       const nextChain = params.get('chain');
       if (nextView) setView(nextView);
@@ -86,11 +86,11 @@ export default function Home() {
       }
       if (
         nextCategory &&
-        projectCategories.includes(nextCategory as (typeof projectCategories)[number])
+        coinCategories.includes(nextCategory as (typeof coinCategories)[number])
       ) {
         setCategory(nextCategory);
       }
-      if (nextChain && projectChainOptions.includes(nextChain)) setChain(nextChain);
+      if (nextChain && coinChainOptions.includes(nextChain)) setChain(nextChain);
       setSearch(params.get('q') || '');
       setPage(Math.max(1, Number(params.get('page')) || 1));
       setUrlReady(true);
@@ -123,7 +123,7 @@ export default function Home() {
     fetch('/api/market/coins?limit=100', { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('Market data unavailable');
-        return response.json() as Promise<{ data: ProjectListItem[] }>;
+        return response.json() as Promise<{ data: CoinListItem[] }>;
       })
       .then(({ data }) => {
         if (data.length) setMarketCoins(data);
@@ -187,7 +187,7 @@ export default function Home() {
   }, [category, chain, marketCoins, search, sort, view, watchlist]);
   const rows = filtered.slice((page - 1) * 25, page * 25),
     pages = Math.max(1, Math.ceil(filtered.length / 25));
-  const sortBy = (key: ProjectSortKey) => {
+  const sortBy = (key: CoinSortKey) => {
     setSort((s) => ({
       key,
       dir: s.key === key ? (s.dir === 1 ? -1 : 1) : key === 'rank' ? 1 : -1,
@@ -308,7 +308,7 @@ export default function Home() {
         <Title
           kicker="SPONSORED PLACEMENTS"
           title="Promoted coins"
-          subtitle="Sponsored projects with active visibility packages. Promotion does not guarantee rank or endorsement."
+          subtitle="Sponsored coins with active visibility packages. Promotion does not guarantee rank or endorsement."
           action="View ad packages ↗"
         />
         <SimpleTable
@@ -320,13 +320,13 @@ export default function Home() {
           animating={animating}
           watch={watch}
           vote={vote}
-          projectLinks={false}
+          coinLinks={false}
         />
       </section>
       <div className="container wide-banner">
         <small>FULL-WIDTH ADVERTISEMENT</small>
         <div>
-          <b>Reach crypto&apos;s earliest project hunters.</b>
+          <b>Reach crypto&apos;s earliest coin hunters.</b>
           <span>Premium inventory · Measured impressions and clicks</span>
         </div>
         <button>View ad packages ↗</button>
@@ -386,14 +386,14 @@ export default function Home() {
                 setPage(1);
               }}
             >
-              {projectChainOptions.map((x) => (
+              {coinChainOptions.map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </select>
           </label>
           <div className="category-strip">
             <div className="category-scroll" ref={categoryRef}>
-              {projectCategories.map((x) => (
+              {coinCategories.map((x) => (
                 <button
                   key={x}
                   className={category === x ? 'selected' : ''}
@@ -436,7 +436,7 @@ export default function Home() {
           <div className="presale-placeholder">
             <b>Presale leaderboard</b>
             <span>
-              Live and upcoming projects use status, countdown, caps and verification columns.
+              Live and upcoming coins use status, countdown, caps and verification columns.
             </span>
           </div>
         ) : (
@@ -445,7 +445,7 @@ export default function Home() {
               <thead>
                 <tr>
                   <SH l="#" k="rank" s={sort} go={sortBy} />
-                  <SH l="Project" k="name" s={sort} go={sortBy} />
+                  <SH l="Coin" k="name" s={sort} go={sortBy} />
                   <SH l="Market cap" k="capN" s={sort} go={sortBy} />
                   <SH l="Price" k="price" s={sort} go={sortBy} />
                   <SH l="24h" k="change" s={sort} go={sortBy} />
@@ -520,7 +520,7 @@ export default function Home() {
           />
           <Info
             title="Built for discovery"
-            text="Market data, community signals and project information in one focused interface."
+            text="Market data, community signals and coin information in one focused interface."
           />
         </div>
       </section>
@@ -540,7 +540,7 @@ export default function Home() {
             <b>YOURCOIN</b>
             <div className="bottom-ad-copy">
               <strong className="bottom-ad-copy-desktop">
-                Reach crypto&apos;s earliest project hunters.
+                Reach crypto&apos;s earliest coin hunters.
               </strong>
               <strong className="bottom-ad-copy-mobile">Reach early crypto hunters.</strong>
               <span>Premium inventory · Measured impressions and clicks</span>

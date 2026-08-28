@@ -1,5 +1,5 @@
-import { initialProjects } from '@/lib/projects/initial-dataset';
-import type { Project } from '@/lib/projects/types';
+import { initialCoins } from '@/features/coins/data/initial-dataset';
+import type { Coin } from '@/features/coins/types';
 import { cached } from './cache';
 import { mapConcurrent } from './concurrency';
 import { publicMarketProvider } from './providers/public-provider';
@@ -10,14 +10,14 @@ const MARKET_TTL = 5 * 60_000;
 const STALE_WINDOW = 60 * 60_000;
 const PAGE_SIZE = 250;
 
-export async function getMarketProjects(limit = 100): Promise<Project[]> {
-  const safeLimit = Math.min(Math.max(limit, 1), initialProjects.length);
-  const canonical = initialProjects.slice(0, safeLimit);
+export async function getMarketCoins(limit = 100): Promise<Coin[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), initialCoins.length);
+  const canonical = initialCoins.slice(0, safeLimit);
 
   try {
     const liveRows = await getLiveMarketRows(2);
     const liveById = new Map(liveRows.map((row) => [row.id, row]));
-    return canonical.map((project) => enrichProject(project, liveById.get(project.externalId)));
+    return canonical.map((coin) => enrichCoin(coin, liveById.get(coin.externalId)));
   } catch (error) {
     console.error('Live market refresh unavailable; serving the canonical snapshot.', error);
     return canonical;
@@ -30,29 +30,29 @@ export async function getMarketTickers(symbols: string[]): Promise<ProviderMarke
   return rows.filter((row) => wanted.has(row.symbol.toLowerCase()));
 }
 
-export async function getMarketProject(projectId: number): Promise<Project | null> {
-  const project = initialProjects.find((item) => item.id === projectId);
-  if (!project) return null;
+export async function getMarketCoin(coinId: number): Promise<Coin | null> {
+  const coin = initialCoins.find((item) => item.id === coinId);
+  if (!coin) return null;
   try {
     const liveRows = await getLiveMarketRows(2);
-    return enrichProject(
-      project,
-      liveRows.find((row) => row.id === project.externalId),
+    return enrichCoin(
+      coin,
+      liveRows.find((row) => row.id === coin.externalId),
     );
   } catch {
-    return project;
+    return coin;
   }
 }
 
-export async function getProjectChart(
-  projectId: number,
+export async function getCoinChart(
+  coinId: number,
   range: '1H' | '4H' | '24H' | '7D' | '30D',
 ): Promise<ProviderChartPoint[]> {
-  const project = initialProjects.find((item) => item.id === projectId);
-  if (!project || project.chart.source !== 'market') return [];
-  const chartExternalId = project.chart.externalId;
+  const coin = initialCoins.find((item) => item.id === coinId);
+  if (!coin || coin.chart.source !== 'market') return [];
+  const chartExternalId = coin.chart.externalId;
   const days = range === '7D' ? 7 : range === '30D' ? 30 : 1;
-  const points = await cached(`chart:${project.id}:${range}`, MARKET_TTL, STALE_WINDOW, () =>
+  const points = await cached(`chart:${coin.id}:${range}`, MARKET_TTL, STALE_WINDOW, () =>
     publicMarketProvider.getChart(chartExternalId, days),
   );
   if (range === '7D' || range === '30D' || range === '24H') return points;
@@ -71,13 +71,13 @@ async function getLiveMarketRows(pageCount: number) {
   return results.flat();
 }
 
-function enrichProject(project: Project, market?: ProviderMarket): Project {
-  if (!market) return project;
+function enrichCoin(coin: Coin, market?: ProviderMarket): Coin {
+  if (!market) return coin;
   return {
-    ...project,
-    logoUrl: market.image || project.logoUrl,
+    ...coin,
+    logoUrl: market.image || coin.logoUrl,
     market: {
-      ...project.market,
+      ...coin.market,
       priceUsd: market.currentPrice,
       marketCapUsd: market.marketCap,
       volume24hUsd: market.volume24h,

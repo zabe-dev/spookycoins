@@ -1,4 +1,4 @@
-export type ProjectId = number;
+export type CoinId = number;
 
 /** UUID string used for private or sensitive records; never expose sequential IDs for these. */
 export type PrivateRecordId = string;
@@ -21,7 +21,7 @@ export type NetworkId =
   | 'xrpl'
   | 'other';
 
-export type ProjectCategory =
+export type CoinCategory =
   | 'AI'
   | 'DeFi'
   | 'Fan Token'
@@ -70,7 +70,7 @@ export type PromotedState =
       priority: number;
     };
 
-export type ProjectMarketData = {
+export type CoinMarketData = {
   priceUsd: number | null;
   marketCapUsd: number | null;
   volume24hUsd: number | null;
@@ -79,14 +79,14 @@ export type ProjectMarketData = {
   lastUpdatedAt: string | null;
 };
 
-export type ProjectCommunityData = {
+export type CoinCommunityData = {
   weeklyVotes: number;
   totalVotes: number;
   watchlistCount: number;
 };
 
-export type Project = {
-  id: ProjectId;
+export type Coin = {
+  id: CoinId;
   externalId: string;
   name: string;
   symbol: string;
@@ -96,7 +96,7 @@ export type Project = {
   contractAddress: string;
   logoUrl: string | null;
   description: string | null;
-  category: ProjectCategory;
+  category: CoinCategory;
   launchDate: string | null;
   submittedAt: string;
   populatedAt: string;
@@ -104,10 +104,10 @@ export type Project = {
   dex: DexConfig;
   boost: BoostState;
   promoted: PromotedState;
-  market: ProjectMarketData;
-  community: ProjectCommunityData;
+  market: CoinMarketData;
+  community: CoinCommunityData;
 };
 
-export function isProjectId(value: unknown): value is ProjectId {
+export function isCoinId(value: unknown): value is CoinId {
   return Number.isSafeInteger(value) && Number(value) >= 1000;
 }

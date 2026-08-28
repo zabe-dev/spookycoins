@@ -44,7 +44,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         <Brand />
         <div className="auth-heading">
           <h2 id="auth-title">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
-          <p>Vote, build your watchlist, and follow projects you care about.</p>
+          <p>Vote, build your watchlist, and follow coins you care about.</p>
         </div>
 
         <div className="auth-tabs" role="tablist" aria-label="Authentication mode">

@@ -68,7 +68,7 @@ export function VoteButton({
     appearance === 'sidebar'
       ? active
         ? 'Vote recorded ✓'
-        : `Vote for ${coinName ?? 'project'}`
+        : `Vote for ${coinName ?? 'coin'}`
       : active
         ? 'Voted ✓'
         : 'Vote +1';

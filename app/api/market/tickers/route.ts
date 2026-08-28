@@ -1,4 +1,4 @@
-import { getMarketTickers } from '@/lib/market/service';
+import { getMarketTickers } from '@/features/market/service';
 
 export async function GET() {
   try {

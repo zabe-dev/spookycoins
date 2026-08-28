@@ -23,7 +23,7 @@ const firaMono = Fira_Mono({
 export const metadata: Metadata = {
   title: 'SpookyCoins — Community Crypto Discovery',
   description:
-    'Discover early crypto projects, vote every 12 hours, and follow the signals communities create.',
+    'Discover early crypto coins, vote every 12 hours, and follow the signals communities create.',
   openGraph: {
     title: 'SpookyCoins — Find what’s moving next.',
     description: 'Community-powered crypto discovery.',

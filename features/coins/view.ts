@@ -1,8 +1,8 @@
 import { NETWORKS } from './networks';
-import type { Project, ProjectCategory } from './types';
+import type { Coin, CoinCategory } from './types';
 
-export type ProjectListItem = {
-  projectId: number;
+export type CoinListItem = {
+  coinId: number;
   externalId: string;
   rank: number;
   name: string;
@@ -24,16 +24,16 @@ export type ProjectListItem = {
   votes: number;
   watchCount: number;
   age: string;
-  category: ProjectCategory;
+  category: CoinCategory;
   trend: number;
   contractAddress: string;
   buyUrl?: string;
 };
 
-export type ProjectSortKey =
+export type CoinSortKey =
   'rank' | 'name' | 'capN' | 'price' | 'change' | 'launch' | 'boost' | 'votes' | 'age';
 
-export const projectCategories: Array<'All' | ProjectCategory> = [
+export const coinCategories: Array<'All' | CoinCategory> = [
   'All',
   'AI',
   'DeFi',
@@ -48,49 +48,47 @@ export const projectCategories: Array<'All' | ProjectCategory> = [
   'Utility Token',
 ];
 
-export const projectChainOptions = [
+export const coinChainOptions = [
   'All chains',
   ...Object.values(NETWORKS)
     .filter((network) => network.enabled && network.id !== 'other')
     .map((network) => network.shortName),
 ];
 
-export function toProjectListItem(project: Project, index: number): ProjectListItem {
-  const marketCap = project.market.marketCapUsd ?? 0;
-  const priceUsd = project.market.priceUsd;
-  const change = Number((project.market.change24h ?? 0).toFixed(2));
+export function toCoinListItem(coin: Coin, index: number): CoinListItem {
+  const marketCap = coin.market.marketCapUsd ?? 0;
+  const priceUsd = coin.market.priceUsd;
+  const change = Number((coin.market.change24h ?? 0).toFixed(2));
   return {
-    projectId: project.id,
-    externalId: project.externalId,
-    rank: project.promoted.active
-      ? project.promoted.priority
-      : (project.market.marketRank ?? index + 1),
-    name: project.name,
-    symbol: project.symbol,
-    chain: NETWORKS[project.network].shortName,
-    networkName: NETWORKS[project.network].name,
-    logo: project.symbol.slice(0, 1),
-    ...(project.logoUrl ? { image: project.logoUrl } : {}),
-    description: project.description,
-    color: project.promoted.active ? 'violet' : 'market-logo',
-    cap: formatMoney(project.market.marketCapUsd),
+    coinId: coin.id,
+    externalId: coin.externalId,
+    rank: coin.promoted.active ? coin.promoted.priority : (coin.market.marketRank ?? index + 1),
+    name: coin.name,
+    symbol: coin.symbol,
+    chain: NETWORKS[coin.network].shortName,
+    networkName: NETWORKS[coin.network].name,
+    logo: coin.symbol.slice(0, 1),
+    ...(coin.logoUrl ? { image: coin.logoUrl } : {}),
+    description: coin.description,
+    color: coin.promoted.active ? 'violet' : 'market-logo',
+    cap: formatMoney(coin.market.marketCapUsd),
     capN: marketCap,
-    volume24h: formatMoney(project.market.volume24hUsd),
+    volume24h: formatMoney(coin.market.volume24hUsd),
     price: formatPrice(priceUsd),
     change,
-    launch: project.launchDate ? formatDate(project.launchDate) : '—',
-    ...(project.boost.active ? { boost: project.boost.multiplier } : {}),
-    promoted: project.promoted.active,
-    votes: project.community.weeklyVotes,
-    watchCount: project.community.watchlistCount,
-    age: formatAge(project.submittedAt),
-    category: project.category,
+    launch: coin.launchDate ? formatDate(coin.launchDate) : '—',
+    ...(coin.boost.active ? { boost: coin.boost.multiplier } : {}),
+    promoted: coin.promoted.active,
+    votes: coin.community.weeklyVotes,
+    watchCount: coin.community.watchlistCount,
+    age: formatAge(coin.submittedAt),
+    category: coin.category,
     trend:
       Math.abs(change) +
-      Math.log10(Math.max(project.market.volume24hUsd ?? 1, 1)) +
-      project.community.weeklyVotes,
-    contractAddress: project.contractAddress,
-    ...(project.dex.available ? { buyUrl: project.dex.url } : {}),
+      Math.log10(Math.max(coin.market.volume24hUsd ?? 1, 1)) +
+      coin.community.weeklyVotes,
+    contractAddress: coin.contractAddress,
+    ...(coin.dex.available ? { buyUrl: coin.dex.url } : {}),
   };
 }
 

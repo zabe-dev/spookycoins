@@ -33,7 +33,7 @@ export function Topbar() {
         </div>
         <div className="platform-stats">
           <span>
-            Projects <b>14,892</b>
+            Coins <b>14,892</b>
           </span>
           <span>
             Users <b>84.2K</b>
@@ -82,7 +82,7 @@ function PlatformItems() {
   return (
     <>
       <span>
-        Projects <b>14,892</b>
+        Coins <b>14,892</b>
       </span>
       <span>
         Users <b>84.2K</b>

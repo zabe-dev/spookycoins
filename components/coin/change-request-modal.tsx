@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 export function ChangeRequestModal({
-  projectName,
+  coinName,
   open,
   onClose,
 }: {
-  projectName: string;
+  coinName: string;
   open: boolean;
   onClose: () => void;
 }) {
@@ -55,7 +55,7 @@ export function ChangeRequestModal({
             <span>✓</span>
             <small>REQUEST RECEIVED</small>
             <h2>Thanks for helping us improve the listing.</h2>
-            <p>We&apos;ll review the requested changes before updating {projectName}.</p>
+            <p>We&apos;ll review the requested changes before updating {coinName}.</p>
             <button onClick={close}>Done</button>
           </div>
         ) : (
@@ -64,8 +64,8 @@ export function ChangeRequestModal({
               <small>LISTING CORRECTION</small>
               <h2 id="change-modal-title">Request a change</h2>
               <p>
-                Tell us what should be updated on <b>{projectName}</b>. All changes are reviewed
-                before publishing.
+                Tell us what should be updated on <b>{coinName}</b>. All changes are reviewed before
+                publishing.
               </p>
             </div>
             <form className="change-request-form" onSubmit={submit}>
@@ -75,7 +75,7 @@ export function ChangeRequestModal({
                   <option value="" disabled>
                     Select a change type
                   </option>
-                  <option>Project information</option>
+                  <option>Coin information</option>
                   <option>Website or social link</option>
                   <option>Logo or branding</option>
                   <option>Chain or contract address</option>

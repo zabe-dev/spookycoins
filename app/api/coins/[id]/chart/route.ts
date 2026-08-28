@@ -1,4 +1,4 @@
-import { getProjectChart } from '@/lib/market/service';
+import { getCoinChart } from '@/features/market/service';
 
 const ranges = new Set(['1H', '4H', '24H', '7D', '30D']);
 type ChartRange = '1H' | '4H' | '24H' | '7D' | '30D';
@@ -10,7 +10,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return Response.json({ error: 'Invalid chart request' }, { status: 400 });
   }
   try {
-    const points = await getProjectChart(Number(id), range as ChartRange);
+    const points = await getCoinChart(Number(id), range as ChartRange);
     return Response.json(
       { data: points },
       { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } },
