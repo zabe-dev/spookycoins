@@ -2,13 +2,30 @@
 
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
+import { z } from 'zod';
 import { Brand } from '@/components/ui/brand';
 import { AuthProviderButtons } from './auth-provider-buttons';
 
+const emailPasswordSchema = z.object({
+  email: z.string().trim().email('Enter a valid email address.'),
+  password: z.string().min(8, 'Password must be at least 8 characters.'),
+});
+
+const verificationSchema = z.object({
+  code: z.string().trim().min(6, 'Enter the verification code from your email.'),
+});
+
+type AuthFeedback = {
+  tone: 'info' | 'success' | 'error';
+  title: string;
+  message: string;
+} | null;
+
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [status, setStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<AuthFeedback>(null);
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn();
   const { isLoaded: signUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
@@ -32,16 +49,74 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     event.stopPropagation();
   }
 
+  function updateMode(nextMode: 'login' | 'signup') {
+    setMode(nextMode);
+    setFeedback(null);
+    setPendingVerification(false);
+    setVerificationEmail('');
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setStatus(null);
+    setFeedback(null);
 
     const form = new FormData(event.currentTarget);
-    const email = String(form.get('email') || '');
-    const password = String(form.get('password') || '');
 
-    if (!email || !password) return;
+    if (pendingVerification) {
+      const parsedCode = verificationSchema.safeParse({
+        code: String(form.get('code') || ''),
+      });
+
+      if (!parsedCode.success) {
+        setFeedback({
+          tone: 'error',
+          title: 'Code needed',
+          message: parsedCode.error.issues[0]?.message || 'Enter the verification code.',
+        });
+        return;
+      }
+
+      setLoading(true);
+      try {
+        if (!signUpLoaded || !signUp) throw new Error('Authentication is still loading.');
+        const result = await signUp.attemptEmailAddressVerification({
+          code: parsedCode.data.code,
+        });
+
+        if (result.status === 'complete' && result.createdSessionId) {
+          await setSignUpActive({ session: result.createdSessionId });
+          onClose();
+          return;
+        }
+
+        setFeedback({
+          tone: 'info',
+          title: 'Almost there',
+          message: 'Clerk needs one more step before this account can be activated.',
+        });
+      } catch (caught) {
+        setFeedback({ tone: 'error', title: 'Verification failed', message: getAuthError(caught) });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const parsedCredentials = emailPasswordSchema.safeParse({
+      email: String(form.get('email') || ''),
+      password: String(form.get('password') || ''),
+    });
+
+    if (!parsedCredentials.success) {
+      setFeedback({
+        tone: 'error',
+        title: 'Check your details',
+        message: parsedCredentials.error.issues[0]?.message || 'Enter a valid email and password.',
+      });
+      return;
+    }
+
+    const { email, password } = parsedCredentials.data;
 
     setLoading(true);
     try {
@@ -53,7 +128,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           onClose();
           return;
         }
-        setStatus('Extra verification is required to finish logging in.');
+        setFeedback({
+          tone: 'info',
+          title: 'Extra verification needed',
+          message: 'Complete the extra security step to finish logging in.',
+        });
         return;
       }
 
@@ -67,13 +146,23 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
       if (result.unverifiedFields.includes('email_address')) {
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-        setStatus('Check your email for the verification code. Code entry UI is coming next.');
+        setVerificationEmail(email);
+        setPendingVerification(true);
+        setFeedback({
+          tone: 'success',
+          title: 'Check your email',
+          message: `We sent a verification code to ${email}. Enter it below to finish signing up.`,
+        });
         return;
       }
 
-      setStatus('Your account needs one more verification step before it can finish.');
+      setFeedback({
+        tone: 'info',
+        title: 'Almost there',
+        message: 'Your account needs one more verification step before it can finish.',
+      });
     } catch (caught) {
-      setError(getAuthError(caught));
+      setFeedback({ tone: 'error', title: 'Authentication failed', message: getAuthError(caught) });
     } finally {
       setLoading(false);
     }
@@ -86,7 +175,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   async function continueWithRedirect(strategy: 'oauth_google') {
     const loaded = mode === 'login' ? signInLoaded : signUpLoaded;
     if (!loaded) return;
-    setError(null);
+    setFeedback(null);
     setLoading(true);
     try {
       if (mode === 'login') {
@@ -105,14 +194,13 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         });
       }
     } catch (caught) {
-      setError(getAuthError(caught));
+      setFeedback({ tone: 'error', title: 'Google login failed', message: getAuthError(caught) });
       setLoading(false);
     }
   }
 
   async function continueWithWallet(provider: 'metamask' | 'coinbase') {
-    setError(null);
-    setStatus(null);
+    setFeedback(null);
     setLoading(true);
     try {
       const result = mode === 'login' ? await signInWallet(provider) : await signUpWallet(provider);
@@ -125,9 +213,17 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         return;
       }
 
-      setStatus('Wallet verification started. Follow the wallet prompt to finish.');
+      setFeedback({
+        tone: 'info',
+        title: 'Wallet verification started',
+        message: 'Follow the wallet prompt to finish connecting.',
+      });
     } catch (caught) {
-      setError(getAuthError(caught));
+      setFeedback({
+        tone: 'error',
+        title: 'Wallet connection failed',
+        message: getAuthError(caught),
+      });
     } finally {
       setLoading(false);
     }
@@ -168,7 +264,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="auth-tabs" role="tablist" aria-label="Authentication mode">
           <button
             className={mode === 'login' ? 'active' : ''}
-            onClick={() => setMode('login')}
+            onClick={() => updateMode('login')}
             role="tab"
             aria-selected={mode === 'login'}
           >
@@ -176,7 +272,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
           <button
             className={mode === 'signup' ? 'active' : ''}
-            onClick={() => setMode('signup')}
+            onClick={() => updateMode('signup')}
             role="tab"
             aria-selected={mode === 'signup'}
           >
@@ -184,49 +280,107 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           </button>
         </div>
 
-        <AuthProviderButtons
-          disabled={loading}
-          onGoogle={continueWithGoogle}
-          onMetaMask={() => continueWithWallet('metamask')}
-          onCoinbase={() => continueWithWallet('coinbase')}
-        />
+        {!pendingVerification && (
+          <>
+            <AuthProviderButtons
+              disabled={loading}
+              onGoogle={continueWithGoogle}
+              onMetaMask={() => continueWithWallet('metamask')}
+              onCoinbase={() => continueWithWallet('coinbase')}
+            />
 
-        <div className="auth-divider">
-          <span>or continue with email</span>
-        </div>
+            <div className="auth-divider">
+              <span>or continue with email</span>
+            </div>
+          </>
+        )}
+
+        {feedback && <AuthFeedbackMessage feedback={feedback} />}
 
         <form className="auth-form" onSubmit={submit}>
-          <label>
-            Email address
-            <input
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              name="password"
-              placeholder="At least 8 characters"
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength={8}
-              required
-            />
-          </label>
-          {error && <p className="auth-message error">{error}</p>}
-          {status && <p className="auth-message">{status}</p>}
+          {pendingVerification ? (
+            <>
+              <label>
+                Verification code
+                <input
+                  type="text"
+                  name="code"
+                  placeholder="Enter email code"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  required
+                />
+              </label>
+              {verificationEmail && (
+                <button
+                  className="auth-secondary-action"
+                  type="button"
+                  onClick={() => {
+                    setPendingVerification(false);
+                    setVerificationEmail('');
+                    setFeedback(null);
+                  }}
+                >
+                  Use a different email
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <label>
+                Email address
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="At least 8 characters"
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  minLength={8}
+                  required
+                />
+              </label>
+            </>
+          )}
           <button className="auth-submit" type="submit" disabled={loading}>
-            {loading ? 'Working…' : mode === 'login' ? 'Log in' : 'Create account'}
+            {loading
+              ? 'Working…'
+              : pendingVerification
+                ? 'Verify email'
+                : mode === 'login'
+                  ? 'Log in'
+                  : 'Create account'}
           </button>
         </form>
         <p className="auth-terms">
           By continuing, you agree to the Terms of Service and Privacy Policy.
         </p>
       </div>
+    </div>
+  );
+}
+
+function AuthFeedbackMessage({ feedback }: { feedback: NonNullable<AuthFeedback> }) {
+  return (
+    <div
+      className={`auth-message ${feedback.tone}`}
+      role={feedback.tone === 'error' ? 'alert' : 'status'}
+    >
+      <span className="auth-message-icon" aria-hidden="true">
+        {feedback.tone === 'error' ? '!' : feedback.tone === 'success' ? '✓' : 'i'}
+      </span>
+      <span>
+        <strong>{feedback.title}</strong>
+        {feedback.message}
+      </span>
     </div>
   );
 }
