@@ -143,6 +143,7 @@
   }
   .hotspots-viewport {
     overflow: hidden;
+    touch-action: pan-y;
   }
   .hotspots-shell .discovery-grid {
     display: flex;
@@ -157,25 +158,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    padding-top: 10px;
+    padding-top: 12px;
   }
   .hotspot-dots {
     display: flex;
     align-items: center;
     gap: 6px;
-  }
-  .hotspot-arrow {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 24px;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--surface);
-    color: var(--copy);
-    cursor: pointer;
   }
   .hotspot-dots button {
     width: 5px;

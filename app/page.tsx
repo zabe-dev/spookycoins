@@ -69,13 +69,14 @@ export default function Home() {
     [adVisible, setAdVisible] = useState(true),
     [urlReady, setUrlReady] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const hotspotTouchStartRef = useRef<number | null>(null);
   const [categoryEdges, setCategoryEdges] = useState({ left: false, right: true });
   const [hotspotsVisible, setHotspotsVisible] = useState(true),
     [hotspotIndex, setHotspotIndex] = useState(0);
   useEffect(() => {
     const applyUrlState = () => {
       const params = new URLSearchParams(window.location.search);
-      const nextView = paramsToView[params.get('view') || ''];
+      const nextView = paramsToView[params.get('coins') || params.get('view') || ''];
       const nextSort = params.get('sort') as ProjectSortKey | null;
       const nextCategory = params.get('category');
       const nextChain = params.get('chain');
@@ -101,7 +102,7 @@ export default function Home() {
   useEffect(() => {
     if (!urlReady) return;
     const params = new URLSearchParams();
-    if (view !== 'Launched coins') params.set('view', viewParams[view]);
+    if (view !== 'Launched coins') params.set('coins', viewParams[view]);
     if (sort.key !== 'rank' || sort.dir !== 1) {
       params.set('sort', sort.key);
       params.set('dir', sort.dir === -1 ? 'desc' : 'asc');
@@ -208,6 +209,14 @@ export default function Home() {
       window.setTimeout(() => setWatchAnimating(null), 600);
     }
   };
+  const handleHotspotSwipe = (x: number) => {
+    const start = hotspotTouchStartRef.current;
+    hotspotTouchStartRef.current = null;
+    if (start === null) return;
+    const delta = start - x;
+    if (Math.abs(delta) < 42) return;
+    setHotspotIndex((i) => (delta > 0 ? i + 1 : i + 2) % 3);
+  };
   return (
     <main className="market-page">
       <SiteHeader />
@@ -233,7 +242,18 @@ export default function Home() {
           </button>
         </div>
         {hotspotsVisible && (
-          <div className="hotspots-viewport">
+          <div
+            className="hotspots-viewport"
+            onPointerDown={(event) => {
+              hotspotTouchStartRef.current = event.clientX;
+            }}
+            onPointerUp={(event) => {
+              handleHotspotSwipe(event.clientX);
+            }}
+            onPointerCancel={() => {
+              hotspotTouchStartRef.current = null;
+            }}
+          >
             <div
               className="discovery-grid"
               style={{ '--hotspot-slide': hotspotIndex } as CSSProperties}
@@ -246,7 +266,7 @@ export default function Home() {
                   .filter((coin) => !coin.promoted)
                   .slice(-5)
                   .reverse()}
-                viewMoreHref="/?view=recent#leaderboard"
+                viewMoreHref="/?coins=recent#leaderboard"
               />
               <Discovery
                 icon="trend"
@@ -256,7 +276,7 @@ export default function Home() {
                   .filter((coin) => !coin.promoted)
                   .sort((a, b) => b.trend - a.trend)
                   .slice(0, 5)}
-                viewMoreHref="/?view=trending#leaderboard"
+                viewMoreHref="/?coins=trending#leaderboard"
               />
               <Discovery
                 icon="watch"
@@ -266,17 +286,10 @@ export default function Home() {
                   .filter((coin) => !coin.promoted)
                   .sort((a, b) => b.watchCount - a.watchCount || b.trend - a.trend)
                   .slice(0, 5)}
-                viewMoreHref="/?view=watched#leaderboard"
+                viewMoreHref="/?coins=watched#leaderboard"
               />
             </div>
             <div className="hotspot-controls">
-              <button
-                className="hotspot-arrow"
-                onClick={() => setHotspotIndex((i) => (i + 2) % 3)}
-                aria-label="Previous ranking hotspot"
-              >
-                ←
-              </button>
               <div className="hotspot-dots">
                 {[0, 1, 2].map((i) => (
                   <button
@@ -287,13 +300,6 @@ export default function Home() {
                   />
                 ))}
               </div>
-              <button
-                className="hotspot-arrow"
-                onClick={() => setHotspotIndex((i) => (i + 1) % 3)}
-                aria-label="Next ranking hotspot"
-              >
-                →
-              </button>
             </div>
           </div>
         )}
