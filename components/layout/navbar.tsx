@@ -62,7 +62,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     </span>
                   </div>
                   <Link href="/account" onClick={closeMenu}>
-                    <MenuIcon type="watchlist" /> Watchlists
+                    <MenuIcon type="watchlist" /> Watchlist
                   </Link>
                   <button className="logout-action" onClick={() => void logout()}>
                     <MenuIcon type="logout" /> Logout
@@ -108,7 +108,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                       </span>
                     </div>
                     <Link href="/account" onClick={() => setUserMenuOpen(false)}>
-                      <MenuIcon type="watchlist" /> Watchlists
+                      <MenuIcon type="watchlist" /> Watchlist
                     </Link>
                     <button className="logout-action" onClick={() => void logout()}>
                       <MenuIcon type="logout" /> Logout

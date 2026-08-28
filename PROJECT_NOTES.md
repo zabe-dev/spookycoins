@@ -152,7 +152,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Clerk provider, middleware, SSO callback route, email/password form actions, Google OAuth trigger and signed-in navbar state are wired.
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
-- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlists and Logout.
+- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist and Logout.
 - [x] Desktop signed-in navigation uses an account-style dropdown with Watchlists and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
 - [x] Logout sends the user to the homepage with a full page reload.

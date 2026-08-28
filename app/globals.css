@@ -239,6 +239,15 @@ nav a.active {
 .user-menu-wrap {
   position: relative;
 }
+.user-menu-wrap:after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 0;
+  display: block;
+  width: 258px;
+  height: 14px;
+}
 .user-avatar-btn {
   display: grid;
   width: 38px;
