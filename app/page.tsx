@@ -143,6 +143,7 @@ export default function Home() {
     const list = marketCoins.filter(
       (c) =>
         !c.promoted &&
+        (view === 'Presales' ? c.lifecycle === 'presale' : c.lifecycle === 'launched') &&
         (category === 'All' || c.category === category) &&
         (chain === 'All chains' || c.chain === chain) &&
         (!search ||
@@ -414,81 +415,70 @@ export default function Home() {
             )}
           </div>
         </div>
-        {view === 'Presales' ? (
-          <div className="presale-placeholder">
-            <b>Presale leaderboard</b>
-            <span>
-              Live and upcoming coins use status, countdown, caps and verification columns.
-            </span>
-          </div>
-        ) : (
-          <TableScroller>
-            <table className="coins-table">
-              <thead>
-                <tr>
-                  <SH l="#" k="rank" s={sort} go={sortBy} />
-                  <SH l="Coin" k="name" s={sort} go={sortBy} />
-                  <SH l="Market cap" k="capN" s={sort} go={sortBy} />
-                  <SH l="Price" k="price" s={sort} go={sortBy} />
-                  <SH l="24h" k="change" s={sort} go={sortBy} />
-                  <SH l="Launch" k="launch" s={sort} go={sortBy} />
-                  <SH l="Boost" k="boost" s={sort} go={sortBy} />
-                  <SH l="Weekly votes" k="votes" s={sort} go={sortBy} />
-                  <SH l="Submitted" k="age" s={sort} go={sortBy} />
-                  <th>Watch</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((c) => {
-                  const has = voted.includes(c.symbol);
-                  return (
-                    <tr key={c.symbol} className={c.boost ? 'boosted-row' : ''}>
-                      <Cells coin={c} />
-                      <td>
-                        <Watch
-                          active={watchlist.includes(c.symbol)}
-                          bursting={watchAnimating === c.symbol}
-                          onClick={() => watch(c.symbol)}
-                        />
-                      </td>
-                      <td>
-                        <button
-                          className={`vote-btn ${has ? 'voted' : ''} ${animating === c.symbol ? 'just-voted' : ''}`}
-                          onClick={() => vote(c.symbol)}
-                        >
-                          <LineBurst />
-                          <span className="vote-label">{has ? 'Voted ✓' : 'Vote +1'}</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </TableScroller>
-        )}
-        {view !== 'Presales' && (
-          <div className="pagination">
-            <span>
-              Showing {(page - 1) * 25 + 1}–{Math.min(page * 25, filtered.length)} of{' '}
-              {filtered.length}
-            </span>
-            <div>
-              <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                ←
+        <TableScroller>
+          <table className="coins-table">
+            <thead>
+              <tr>
+                <SH l="#" k="rank" s={sort} go={sortBy} />
+                <SH l="Coin" k="name" s={sort} go={sortBy} />
+                <SH l="Market cap" k="capN" s={sort} go={sortBy} />
+                <SH l="Price" k="price" s={sort} go={sortBy} />
+                <SH l="24h" k="change" s={sort} go={sortBy} />
+                <SH l="Launch" k="launch" s={sort} go={sortBy} />
+                <SH l="Boost" k="boost" s={sort} go={sortBy} />
+                <SH l="Weekly votes" k="votes" s={sort} go={sortBy} />
+                <SH l="Submitted" k="age" s={sort} go={sortBy} />
+                <th>Watch</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((c) => {
+                const has = voted.includes(c.symbol);
+                return (
+                  <tr key={c.symbol} className={c.boost ? 'boosted-row' : ''}>
+                    <Cells coin={c} />
+                    <td>
+                      <Watch
+                        active={watchlist.includes(c.symbol)}
+                        bursting={watchAnimating === c.symbol}
+                        onClick={() => watch(c.symbol)}
+                      />
+                    </td>
+                    <td>
+                      <button
+                        className={`vote-btn ${has ? 'voted' : ''} ${animating === c.symbol ? 'just-voted' : ''}`}
+                        onClick={() => vote(c.symbol)}
+                      >
+                        <LineBurst />
+                        <span className="vote-label">{has ? 'Voted ✓' : 'Vote +1'}</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </TableScroller>
+        <div className="pagination">
+          <span>
+            Showing {(page - 1) * 25 + 1}–{Math.min(page * 25, filtered.length)} of{' '}
+            {filtered.length}
+          </span>
+          <div>
+            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+              ←
+            </button>
+            {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+              <button key={n} className={page === n ? 'active' : ''} onClick={() => setPage(n)}>
+                {n}
               </button>
-              {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <button key={n} className={page === n ? 'active' : ''} onClick={() => setPage(n)}>
-                  {n}
-                </button>
-              ))}
-              <button disabled={page === pages} onClick={() => setPage((p) => p + 1)}>
-                →
-              </button>
-            </div>
+            ))}
+            <button disabled={page === pages} onClick={() => setPage((p) => p + 1)}>
+              →
+            </button>
           </div>
-        )}
+        </div>
       </section>
       <section className="info-band">
         <div className="container info-rows">

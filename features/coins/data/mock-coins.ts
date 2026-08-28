@@ -13,6 +13,7 @@ type MockCoinInput = {
   id: number;
   name: string;
   symbol: string;
+  lifecycle?: 'launched' | 'presale';
   network: NetworkId;
   category: CoinCategory;
   rank: number;
@@ -148,13 +149,15 @@ const mockProjects: MockCoinInput[] = [
     network: 'base',
     category: 'DeFi',
     rank: 7,
-    price: 0.012,
-    marketCap: 860000,
-    volume: 146000,
-    change: 9.7,
+    lifecycle: 'presale',
+    price: null,
+    marketCap: null,
+    volume: null,
+    change: 0,
     votes: 3310,
     watchers: 2760,
     submittedDaysAgo: 0,
+    launchDate: null,
   },
   {
     id: 1008,
@@ -163,13 +166,15 @@ const mockProjects: MockCoinInput[] = [
     network: 'ethereum',
     category: 'NFT Platform',
     rank: 8,
-    price: 0.052,
-    marketCap: 1900000,
-    volume: 221000,
-    change: 13.1,
+    lifecycle: 'presale',
+    price: null,
+    marketCap: null,
+    volume: null,
+    change: 0,
     votes: 4090,
     watchers: 3105,
     submittedDaysAgo: 1,
+    launchDate: null,
   },
   {
     id: 1009,
@@ -193,13 +198,15 @@ const mockProjects: MockCoinInput[] = [
     network: 'arbitrum',
     category: 'Fan Token',
     rank: 10,
-    price: 0.019,
-    marketCap: 1210000,
-    volume: 94000,
-    change: 7.2,
+    lifecycle: 'presale',
+    price: null,
+    marketCap: null,
+    volume: null,
+    change: 0,
     votes: 2595,
     watchers: 1640,
     submittedDaysAgo: 1,
+    launchDate: null,
   },
   {
     id: 1011,
@@ -208,13 +215,15 @@ const mockProjects: MockCoinInput[] = [
     network: 'sui',
     category: 'Gaming',
     rank: 11,
-    price: 0.031,
-    marketCap: 2600000,
-    volume: 331000,
-    change: 19.5,
+    lifecycle: 'presale',
+    price: null,
+    marketCap: null,
+    volume: null,
+    change: 0,
     votes: 6025,
     watchers: 4200,
     submittedDaysAgo: 3,
+    launchDate: null,
   },
   {
     id: 1012,
@@ -290,6 +299,7 @@ const mockProjects: MockCoinInput[] = [
     votes: 1410,
     watchers: 1175,
     submittedDaysAgo: 0,
+    lifecycle: 'presale',
     launchDate: null,
   },
 ];
@@ -326,6 +336,7 @@ function toMockCoin(project: MockCoinInput): Coin {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, ''),
     assetType: 'token',
+    lifecycle: project.lifecycle ?? 'launched',
     network: project.network,
     contractAddress,
     logoUrl: null,

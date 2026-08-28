@@ -7,6 +7,7 @@ export type CoinListItem = {
   rank: number;
   name: string;
   symbol: string;
+  lifecycle: 'launched' | 'presale';
   chain: string;
   networkName: string;
   logo: string;
@@ -65,6 +66,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     rank: coin.promoted.active ? coin.promoted.priority : (coin.market.marketRank ?? index + 1),
     name: coin.name,
     symbol: coin.symbol,
+    lifecycle: coin.lifecycle,
     chain: NETWORKS[coin.network].shortName,
     networkName: NETWORKS[coin.network].name,
     logo: coin.symbol.slice(0, 1),

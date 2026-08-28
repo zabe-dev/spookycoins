@@ -49,6 +49,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Canonical network, chart, DEX, boost, promoted-state, market, and community configuration exists.
 - [x] Mock data is now the prototype source of truth and later submissions will sit on top of the mock data.
 - [x] Mock data contains token projects deployed on supported networks, not the networks’ native/base coins.
+- [x] Mock data includes both launched projects and presale projects.
 - [x] Exactly one promoted placement placeholder exists: **Spooky · $SPKY · Solana** with a 500× boost.
 
 ## Homepage — implemented
@@ -102,7 +103,8 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] On mobile, Rank and Project remain fixed while remaining columns scroll horizontally.
 - [x] Long project names truncate with ellipses while full names remain available to assistive technology and on hover.
 - [x] Most Watched uses canonical watchlist counts, with trend score as a tie fallback.
-- [x] The Presales tab currently shows a placeholder rather than the final separate table.
+- [x] The Presales tab currently shows presale mock projects using the shared table structure.
+- [ ] Build the final presale-specific table columns for status, starts/ends, soft cap, hard cap, and accepted payments.
 
 ### Weekly reset display
 
@@ -365,7 +367,7 @@ Platform implementation:
 - [ ] Implement authentication, sessions, Google OAuth, and MetaMask signing.
 - [ ] Persist votes, rolling 12-hour cooldowns, weekly archives, watchlists, and portfolios.
 - [ ] Build project submission, ownership/claim, and request-change workflows.
-- [ ] Build the separate presale dataset and leaderboard.
+- [ ] Build the production presale dataset, server-backed leaderboard, and presale-specific table.
 - [ ] Implement reports, moderation, anti-bot controls, and the admin dashboard.
 - [ ] Implement Promoted Coin checkout, payments, approval, scheduling, activation, expiration, and PDF receipts.
 - [ ] Implement boost checkout, payments, approval, activation, expiration, one-active-boost enforcement, and PDF receipts.

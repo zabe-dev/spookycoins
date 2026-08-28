@@ -92,6 +92,7 @@ export type Coin = {
   symbol: string;
   slug: string;
   assetType: 'token';
+  lifecycle: 'launched' | 'presale';
   network: NetworkId;
   contractAddress: string;
   logoUrl: string | null;
