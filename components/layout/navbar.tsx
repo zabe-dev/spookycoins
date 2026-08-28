@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Brand } from '@/components/brand';
-import { AuthModal } from '@/components/auth/auth-modal';
+import { AuthModal } from '@/features/auth/components/auth-modal';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
   const [authOpen, setAuthOpen] = useState(false);
