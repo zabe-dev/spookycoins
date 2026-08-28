@@ -6,6 +6,7 @@ type MarketTicker = { symbol: string; price: number | null; change: number | nul
 
 export function Topbar() {
   const [tickers, setTickers] = useState<MarketTicker[]>([]);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -16,26 +17,19 @@ export function Topbar() {
     return () => controller.abort();
   }, []);
 
+  const visibleTickers = tickers.length
+    ? tickers
+    : [
+        { symbol: 'BTC', price: null, change: null },
+        { symbol: 'ETH', price: null, change: null },
+        { symbol: 'BNB', price: null, change: null },
+      ];
+
   return (
     <div className="topbar-band">
       <div className="container topbar">
         <div className="ticker">
-          {(tickers.length
-            ? tickers
-            : [
-                { symbol: 'BTC', price: null, change: null },
-                { symbol: 'ETH', price: null, change: null },
-                { symbol: 'BNB', price: null, change: null },
-              ]
-          ).map((coin) => (
-            <span key={coin.symbol}>
-              {coin.symbol} <b>{formatTickerPrice(coin.price)}</b>{' '}
-              <i className={(coin.change ?? 0) < 0 ? 'down' : ''}>
-                {(coin.change ?? 0) >= 0 ? '+' : ''}
-                {(coin.change ?? 0).toFixed(2)}%
-              </i>
-            </span>
-          ))}
+          <TickerItems tickers={visibleTickers} />
         </div>
         <div className="platform-stats">
           <span>
@@ -48,8 +42,55 @@ export function Topbar() {
             Total votes <b>12.48M</b>
           </span>
         </div>
+        <div
+          className={`topbar-marquee ${paused ? 'paused' : ''}`}
+          onPointerDown={() => setPaused(true)}
+          onPointerUp={() => setPaused(false)}
+          onPointerCancel={() => setPaused(false)}
+          onPointerLeave={() => setPaused(false)}
+          aria-label="Live market and platform statistics. Hold to pause or swipe to browse."
+        >
+          <div className="topbar-marquee-track">
+            <div className="topbar-marquee-group">
+              <TickerItems tickers={visibleTickers} />
+              <PlatformItems />
+            </div>
+            <div className="topbar-marquee-group" aria-hidden="true">
+              <TickerItems tickers={visibleTickers} />
+              <PlatformItems />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+function TickerItems({ tickers }: { tickers: MarketTicker[] }) {
+  return tickers.map((coin) => (
+    <span key={coin.symbol}>
+      {coin.symbol} <b>{formatTickerPrice(coin.price)}</b>{' '}
+      <i className={(coin.change ?? 0) < 0 ? 'down' : ''}>
+        {(coin.change ?? 0) >= 0 ? '+' : ''}
+        {(coin.change ?? 0).toFixed(2)}%
+      </i>
+    </span>
+  ));
+}
+
+function PlatformItems() {
+  return (
+    <>
+      <span>
+        Projects <b>14,892</b>
+      </span>
+      <span>
+        Users <b>84.2K</b>
+      </span>
+      <span>
+        Total votes <b>12.48M</b>
+      </span>
+    </>
   );
 }
 

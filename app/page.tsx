@@ -14,6 +14,7 @@ import {
 } from '@/components/market-ui';
 import { Brand } from '@/components/brand';
 import { SiteHeader } from '@/components/layout/site-header';
+import { WeeklyResetChip } from '@/components/leaderboard/weekly-reset-chip';
 import { initialProjectListItems } from '@/lib/projects/initial-dataset';
 import {
   projectCategories,
@@ -24,9 +25,35 @@ import {
 import './market.css';
 import './scroll-fix.css';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
+
+type LeaderboardView =
+  'Launched coins' | 'Trending' | 'Most watched' | 'Presales' | 'Recently added';
+
+const viewParams: Record<LeaderboardView, string> = {
+  'Launched coins': 'launched',
+  Trending: 'trending',
+  'Most watched': 'watched',
+  Presales: 'presales',
+  'Recently added': 'recent',
+};
+const paramsToView = Object.fromEntries(
+  Object.entries(viewParams).map(([label, value]) => [value, label]),
+) as Record<string, LeaderboardView>;
+const sortKeys: ProjectSortKey[] = [
+  'rank',
+  'name',
+  'capN',
+  'price',
+  'change',
+  'launch',
+  'boost',
+  'votes',
+  'age',
+];
+
 export default function Home() {
   const [marketCoins, setMarketCoins] = useState<ProjectListItem[]>(initialProjectListItems);
-  const [view, setView] = useState('Launched coins'),
+  const [view, setView] = useState<LeaderboardView>('Launched coins'),
     [category, setCategory] = useState('All'),
     [chain, setChain] = useState('All chains'),
     [search, setSearch] = useState('');
@@ -39,11 +66,57 @@ export default function Home() {
     [animating, setAnimating] = useState<string | null>(null),
     [watchlist, setWatchlist] = useState<string[]>([]),
     [watchAnimating, setWatchAnimating] = useState<string | null>(null),
-    [adVisible, setAdVisible] = useState(true);
+    [adVisible, setAdVisible] = useState(true),
+    [urlReady, setUrlReady] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const [categoryEdges, setCategoryEdges] = useState({ left: false, right: true });
   const [hotspotsVisible, setHotspotsVisible] = useState(true),
     [hotspotIndex, setHotspotIndex] = useState(0);
+  useEffect(() => {
+    const applyUrlState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const nextView = paramsToView[params.get('view') || ''];
+      const nextSort = params.get('sort') as ProjectSortKey | null;
+      const nextCategory = params.get('category');
+      const nextChain = params.get('chain');
+      if (nextView) setView(nextView);
+      if (nextSort && sortKeys.includes(nextSort)) {
+        setSort({ key: nextSort, dir: params.get('dir') === 'desc' ? -1 : 1 });
+      }
+      if (
+        nextCategory &&
+        projectCategories.includes(nextCategory as (typeof projectCategories)[number])
+      ) {
+        setCategory(nextCategory);
+      }
+      if (nextChain && projectChainOptions.includes(nextChain)) setChain(nextChain);
+      setSearch(params.get('q') || '');
+      setPage(Math.max(1, Number(params.get('page')) || 1));
+      setUrlReady(true);
+    };
+    applyUrlState();
+    window.addEventListener('popstate', applyUrlState);
+    return () => window.removeEventListener('popstate', applyUrlState);
+  }, []);
+  useEffect(() => {
+    if (!urlReady) return;
+    const params = new URLSearchParams();
+    if (view !== 'Launched coins') params.set('view', viewParams[view]);
+    if (sort.key !== 'rank' || sort.dir !== 1) {
+      params.set('sort', sort.key);
+      params.set('dir', sort.dir === -1 ? 'desc' : 'asc');
+    }
+    if (category !== 'All') params.set('category', category);
+    if (chain !== 'All chains') params.set('chain', chain);
+    if (search) params.set('q', search);
+    if (page > 1) params.set('page', String(page));
+    const query = params.toString();
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+    );
+  }, [category, chain, page, search, sort, urlReady, view]);
   useEffect(() => {
     const controller = new AbortController();
     fetch('/api/market/coins?limit=100', { signal: controller.signal })
@@ -92,7 +165,13 @@ export default function Home() {
           `${c.name} ${c.symbol} ${c.chain}`.toLowerCase().includes(search.toLowerCase())),
     );
     if (view === 'Trending') return [...list].sort((a, b) => b.trend - a.trend);
-    if (view === 'Most voted') return [...list].sort((a, b) => b.votes - a.votes);
+    if (view === 'Most watched')
+      return [...list].sort(
+        (a, b) =>
+          b.watchCount +
+            Number(watchlist.includes(b.symbol)) -
+            (a.watchCount + Number(watchlist.includes(a.symbol))) || b.trend - a.trend,
+      );
     if (view === 'Recently added')
       return [...list].sort((a, b) => parseInt(a.age) - parseInt(b.age));
     return [...list].sort((a, b) => {
@@ -104,7 +183,7 @@ export default function Home() {
           : String(av).localeCompare(String(bv))) * sort.dir
       );
     });
-  }, [category, chain, marketCoins, search, sort, view]);
+  }, [category, chain, marketCoins, search, sort, view, watchlist]);
   const rows = filtered.slice((page - 1) * 25, page * 25),
     pages = Math.max(1, Math.ceil(filtered.length / 25));
   const sortBy = (key: ProjectSortKey) => {
@@ -167,6 +246,7 @@ export default function Home() {
                   .filter((coin) => !coin.promoted)
                   .slice(-5)
                   .reverse()}
+                viewMoreHref="/?view=recent#leaderboard"
               />
               <Discovery
                 icon="trend"
@@ -176,23 +256,44 @@ export default function Home() {
                   .filter((coin) => !coin.promoted)
                   .sort((a, b) => b.trend - a.trend)
                   .slice(0, 5)}
+                viewMoreHref="/?view=trending#leaderboard"
               />
               <Discovery
                 icon="watch"
                 title="Most watched"
                 sub="Saved to portfolios"
-                coins={marketCoins.filter((coin) => !coin.promoted).slice(0, 5)}
+                coins={marketCoins
+                  .filter((coin) => !coin.promoted)
+                  .sort((a, b) => b.watchCount - a.watchCount || b.trend - a.trend)
+                  .slice(0, 5)}
+                viewMoreHref="/?view=watched#leaderboard"
               />
             </div>
-            <div className="hotspot-dots">
-              {[0, 1, 2].map((i) => (
-                <button
-                  key={i}
-                  className={hotspotIndex === i ? 'active' : ''}
-                  onClick={() => setHotspotIndex(i)}
-                  aria-label={`Show hotspot ${i + 1}`}
-                />
-              ))}
+            <div className="hotspot-controls">
+              <button
+                className="hotspot-arrow"
+                onClick={() => setHotspotIndex((i) => (i + 2) % 3)}
+                aria-label="Previous ranking hotspot"
+              >
+                ←
+              </button>
+              <div className="hotspot-dots">
+                {[0, 1, 2].map((i) => (
+                  <button
+                    key={i}
+                    className={hotspotIndex === i ? 'active' : ''}
+                    onClick={() => setHotspotIndex(i)}
+                    aria-label={`Show hotspot ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                className="hotspot-arrow"
+                onClick={() => setHotspotIndex((i) => (i + 1) % 3)}
+                aria-label="Next ranking hotspot"
+              >
+                →
+              </button>
             </div>
           </div>
         )}
@@ -213,6 +314,7 @@ export default function Home() {
           animating={animating}
           watch={watch}
           vote={vote}
+          projectLinks={false}
         />
       </section>
       <div className="container wide-banner">
@@ -233,14 +335,18 @@ export default function Home() {
               00:00 UTC.
             </p>
           </div>
-          <div className="week-chip">
-            <span>WEEK 35</span>
-            <b>04d : 12h</b>
-            <small>until reset</small>
-          </div>
+          <WeeklyResetChip />
         </div>
         <div className="leader-tabs">
-          {['Launched coins', 'Trending', 'Most voted', 'Presales', 'Recently added'].map((x) => (
+          {(
+            [
+              'Launched coins',
+              'Trending',
+              'Most watched',
+              'Presales',
+              'Recently added',
+            ] as LeaderboardView[]
+          ).map((x) => (
             <button
               key={x}
               className={view === x ? 'selected' : ''}
@@ -427,10 +533,16 @@ export default function Home() {
             <small>AD SPACE</small>
             <b>YOURCOIN</b>
             <div className="bottom-ad-copy">
-              <strong>Reach crypto&apos;s earliest project hunters.</strong>
+              <strong className="bottom-ad-copy-desktop">
+                Reach crypto&apos;s earliest project hunters.
+              </strong>
+              <strong className="bottom-ad-copy-mobile">Reach early crypto hunters.</strong>
               <span>Premium inventory · Measured impressions and clicks</span>
             </div>
-            <button className="ad-cta">View ad packages ↗</button>
+            <button className="ad-cta">
+              <span className="ad-cta-desktop">View ad packages ↗</span>
+              <span className="ad-cta-mobile">Ad packages ↗</span>
+            </button>
             <button className="ad-close" onClick={() => setAdVisible(false)}>
               ×
             </button>

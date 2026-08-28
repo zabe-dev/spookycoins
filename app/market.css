@@ -77,6 +77,9 @@
 .ticker i.down {
   color: #e66e73;
 }
+.topbar-marquee {
+  display: none;
+}
 .navbar {
   height: 68px;
   display: flex;
@@ -207,6 +210,20 @@
   padding: 15px 16px;
   border-bottom: 1px solid var(--border);
 }
+.discovery-heading {
+  display: flex;
+  align-items: center;
+}
+.discovery-heading > span {
+  min-width: 0;
+}
+.discovery-view-more {
+  margin-left: auto;
+  color: var(--lime);
+  font-size: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .discovery-card h3 {
   font-size: 13px;
   margin: 0 0 3px;
@@ -241,8 +258,14 @@
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  min-width: 0;
 }
 .mini-coin strong {
+  display: block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 10px;
 }
 .mini-coin small {
@@ -539,7 +562,56 @@
     grid-template-columns: 1fr;
   }
   .topbar {
-    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+  }
+  .topbar > .ticker,
+  .topbar > .platform-stats {
+    display: none;
+  }
+  .topbar-marquee {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+    cursor: grab;
+  }
+  .topbar-marquee::-webkit-scrollbar {
+    display: none;
+  }
+  .topbar-marquee:active {
+    cursor: grabbing;
+  }
+  .topbar-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: topbar-roll 28s linear infinite;
+  }
+  .topbar-marquee.paused .topbar-marquee-track {
+    animation-play-state: paused;
+  }
+  .topbar-marquee-group {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding-right: 22px;
+  }
+  .topbar-marquee-group > span {
+    display: flex;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .topbar-marquee-group b {
+    color: var(--copy);
+  }
+  .topbar-marquee-group i {
+    color: #68da88;
+    font-style: normal;
+  }
+  .topbar-marquee-group i.down {
+    color: #e66e73;
   }
   .table-wrap {
     overflow-x: auto;
@@ -565,6 +637,16 @@
   }
   .leader-tabs button {
     white-space: nowrap;
+  }
+}
+@keyframes topbar-roll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar-marquee-track {
+    animation: none;
   }
 }
 .banner-ad > b {
@@ -1015,6 +1097,37 @@
 .boost-badge.boost-500 .bolt-icon {
   animation-duration: 5.2s;
 }
+
+/* The premium badge uses one calm gold flow with high-contrast black content. */
+.boost-badge.boost-500 {
+  color: #090a08;
+  border-color: #f0b90b;
+  background: linear-gradient(110deg, #ff7700, #f0b90b 35%, #fff0a3 50%, #f0b90b 65%, #ff7700);
+  background-size: 240% 100%;
+  animation: boost-gold-flow 5.2s ease-in-out infinite;
+}
+.boost-badge.boost-500:before,
+.boost-badge.boost-500:after {
+  display: none;
+}
+.boost-badge.boost-500 .bolt-icon {
+  color: #090a08;
+  animation: none;
+}
+@keyframes boost-gold-flow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boost-badge.boost-500 {
+    animation: none;
+  }
+}
 .filter-row {
   grid-template-columns: minmax(240px, 0.8fr) 210px minmax(0, 1.7fr);
 }
@@ -1125,5 +1238,81 @@
 @keyframes market-border-loop {
   to {
     --border-angle: 360deg;
+  }
+}
+
+.bottom-ad-copy-mobile,
+.ad-cta-mobile {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .leaderboard .section-title {
+    gap: 14px;
+  }
+  .leaderboard .week-chip {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    padding: 9px 11px;
+  }
+  .leaderboard .week-chip span,
+  .leaderboard .week-chip b,
+  .leaderboard .week-chip small {
+    grid-row: auto;
+    grid-column: auto;
+    white-space: nowrap;
+  }
+  .leaderboard .week-chip b {
+    justify-self: center;
+    font-size: 15px;
+  }
+  .leaderboard .week-chip small {
+    justify-self: end;
+  }
+  .market-page .bottom-ad-inner {
+    width: calc(100% - 16px);
+    height: 56px;
+    gap: 7px;
+    padding: 0;
+  }
+  .market-page .bottom-ad-inner > small,
+  .bottom-ad-copy span,
+  .bottom-ad-copy-desktop,
+  .ad-cta-desktop {
+    display: none;
+  }
+  .bottom-ad-copy-mobile,
+  .ad-cta-mobile {
+    display: inline;
+  }
+  .market-page .bottom-ad-inner > b {
+    flex: none;
+    font-size: 10px;
+  }
+  .bottom-ad-copy {
+    min-width: 0;
+  }
+  .bottom-ad-copy strong {
+    overflow: hidden;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .market-page .ad-cta {
+    flex: none;
+    padding: 7px 8px;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+  .market-page .ad-close {
+    flex: none;
+    width: 24px;
+    height: 24px;
   }
 }

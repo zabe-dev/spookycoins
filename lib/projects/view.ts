@@ -8,6 +8,7 @@ export type ProjectListItem = {
   name: string;
   symbol: string;
   chain: string;
+  networkName: string;
   logo: string;
   image?: string;
   description: string | null;
@@ -21,6 +22,7 @@ export type ProjectListItem = {
   boost?: number;
   promoted: boolean;
   votes: number;
+  watchCount: number;
   age: string;
   category: ProjectCategory;
   trend: number;
@@ -66,6 +68,7 @@ export function toProjectListItem(project: Project, index: number): ProjectListI
     name: project.name,
     symbol: project.symbol,
     chain: NETWORKS[project.network].shortName,
+    networkName: NETWORKS[project.network].name,
     logo: project.symbol.slice(0, 1),
     ...(project.logoUrl ? { image: project.logoUrl } : {}),
     description: project.description,
@@ -79,6 +82,7 @@ export function toProjectListItem(project: Project, index: number): ProjectListI
     ...(project.boost.active ? { boost: project.boost.multiplier } : {}),
     promoted: project.promoted.active,
     votes: project.community.weeklyVotes,
+    watchCount: project.community.watchlistCount,
     age: formatAge(project.submittedAt),
     category: project.category,
     trend:

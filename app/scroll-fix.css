@@ -122,7 +122,7 @@
 .hotspots-shell .discovery-grid {
   margin-top: 0;
 }
-.hotspot-dots {
+.hotspot-controls {
   display: none;
 }
 @media (max-width: 620px) {
@@ -153,11 +153,29 @@
   .hotspots-shell .discovery-card {
     min-width: 100%;
   }
+  .hotspot-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding-top: 10px;
+  }
   .hotspot-dots {
     display: flex;
-    justify-content: center;
+    align-items: center;
     gap: 6px;
-    padding-top: 10px;
+  }
+  .hotspot-arrow {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--copy);
+    cursor: pointer;
   }
   .hotspot-dots button {
     width: 5px;

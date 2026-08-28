@@ -111,7 +111,9 @@ export function SortHeader({
   );
 }
 
-export function CoinCells({ coin }: { coin: Coin }) {
+export function CoinCells({ coin, linkEnabled = true }: { coin: Coin; linkEnabled?: boolean }) {
+  const nameClass = coin.boost === 500 ? 'gold-name gold-name-animated' : '';
+
   return (
     <>
       <td>
@@ -124,16 +126,24 @@ export function CoinCells({ coin }: { coin: Coin }) {
             <span className="chain-badge">{coin.chain[0]}</span>
           </div>
           <div>
-            <Link
-              href={`/coin/${coin.projectId}`}
-              className={coin.boost === 500 ? 'gold-name gold-name-animated' : ''}
-              title={coin.name}
-              aria-label={coin.name}
-            >
-              <b>{coin.name}</b>
-            </Link>
+            {linkEnabled ? (
+              <Link
+                href={`/coin/${coin.projectId}`}
+                className={nameClass}
+                title={coin.name}
+                aria-label={coin.name}
+              >
+                <b>{coin.name}</b>
+              </Link>
+            ) : (
+              <span className={`coin-name-static ${nameClass}`} title={coin.name}>
+                <b>{coin.name}</b>
+              </span>
+            )}
             <span>
-              {coin.symbol} · {coin.category}
+              {coin.promoted
+                ? `$${coin.symbol} · ${coin.networkName}`
+                : `${coin.symbol} · ${coin.category}`}
             </span>
           </div>
         </div>
@@ -191,6 +201,7 @@ export type MarketTableProps = {
   vote: (symbol: string) => void;
   header?: ReactNode;
   className?: string;
+  projectLinks?: boolean;
 };
 
 export function MarketTable({
@@ -203,6 +214,7 @@ export function MarketTable({
   vote,
   header,
   className,
+  projectLinks = true,
 }: MarketTableProps) {
   return (
     <TableScroller className={className}>
@@ -229,7 +241,7 @@ export function MarketTable({
             const hasVoted = voted.includes(coin.symbol);
             return (
               <tr key={coin.symbol} className={coin.boost ? 'boosted-row' : ''}>
-                <CoinCells coin={coin} />
+                <CoinCells coin={coin} linkEnabled={projectLinks} />
                 <td>
                   <WatchlistButton
                     active={watchlist.includes(coin.symbol)}
@@ -258,11 +270,13 @@ export function DiscoveryCard({
   title,
   sub,
   coins,
+  viewMoreHref,
 }: {
   icon: 'new' | 'trend' | 'watch';
   title: string;
   sub: string;
   coins: Coin[];
+  viewMoreHref: string;
 }) {
   return (
     <article className="discovery-card">
@@ -272,6 +286,9 @@ export function DiscoveryCard({
           <h3>{title}</h3>
           <small>{sub}</small>
         </span>
+        <a className="discovery-view-more" href={viewMoreHref}>
+          View more →
+        </a>
       </div>
       {coins.map((coin, index) => (
         <div className="mini-coin" key={coin.symbol}>
