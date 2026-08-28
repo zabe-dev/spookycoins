@@ -17,8 +17,8 @@ const timestamps = {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 };
 
-export const projects = pgTable(
-  'projects',
+export const coins = pgTable(
+  'coins',
   {
     id: integer('id').primaryKey(),
     slug: text('slug').notNull(),
@@ -37,10 +37,10 @@ export const projects = pgTable(
     ...timestamps,
   },
   (table) => [
-    uniqueIndex('projects_slug_unique').on(table.slug),
-    index('projects_symbol_idx').on(table.symbol),
-    index('projects_chain_idx').on(table.chain),
-    index('projects_category_idx').on(table.category),
+    uniqueIndex('coins_slug_unique').on(table.slug),
+    index('coins_symbol_idx').on(table.symbol),
+    index('coins_chain_idx').on(table.chain),
+    index('coins_category_idx').on(table.category),
   ],
 );
 
@@ -48,8 +48,8 @@ export const marketSources = pgTable(
   'market_sources',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    projectId: integer('project_id')
-      .references(() => projects.id, { onDelete: 'cascade' })
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
       .notNull(),
     provider: text('provider').notNull(),
     externalId: text('external_id').notNull(),
@@ -60,7 +60,7 @@ export const marketSources = pgTable(
   },
   (table) => [
     uniqueIndex('market_sources_provider_external_unique').on(table.provider, table.externalId),
-    uniqueIndex('market_sources_project_provider_unique').on(table.projectId, table.provider),
+    uniqueIndex('market_sources_coin_provider_unique').on(table.coinId, table.provider),
   ],
 );
 
@@ -68,8 +68,8 @@ export const marketSnapshots = pgTable(
   'market_snapshots',
   {
     id: bigint('id', { mode: 'number' }).generatedAlwaysAsIdentity().primaryKey(),
-    projectId: integer('project_id')
-      .references(() => projects.id, { onDelete: 'cascade' })
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
       .notNull(),
     priceUsd: numeric('price_usd', { precision: 30, scale: 12 }),
     marketCapUsd: numeric('market_cap_usd', { precision: 30, scale: 2 }),
@@ -78,29 +78,29 @@ export const marketSnapshots = pgTable(
     marketRank: integer('market_rank'),
     recordedAt: timestamp('recorded_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (table) => [index('market_snapshots_project_recorded_idx').on(table.projectId, table.recordedAt)],
+  (table) => [index('market_snapshots_coin_recorded_idx').on(table.coinId, table.recordedAt)],
 );
 
-export const projectLinks = pgTable(
-  'project_links',
+export const coinLinks = pgTable(
+  'coin_links',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    projectId: integer('project_id')
-      .references(() => projects.id, { onDelete: 'cascade' })
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
       .notNull(),
     type: text('type').notNull(),
     url: text('url').notNull(),
     ...timestamps,
   },
-  (table) => [uniqueIndex('project_links_project_type_unique').on(table.projectId, table.type)],
+  (table) => [uniqueIndex('coin_links_coin_type_unique').on(table.coinId, table.type)],
 );
 
 export const changeRequests = pgTable(
   'change_requests',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    projectId: integer('project_id')
-      .references(() => projects.id, { onDelete: 'cascade' })
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
       .notNull(),
     requesterEmail: text('requester_email').notNull(),
     requesterTelegram: text('requester_telegram'),
@@ -110,30 +110,30 @@ export const changeRequests = pgTable(
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index('change_requests_project_status_idx').on(table.projectId, table.status)],
+  (table) => [index('change_requests_coin_status_idx').on(table.coinId, table.status)],
 );
 
-export const projectSubmissions = pgTable(
-  'project_submissions',
+export const coinSubmissions = pgTable(
+  'coin_submissions',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    projectId: integer('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    coinId: integer('coin_id').references(() => coins.id, { onDelete: 'set null' }),
     requesterEmail: text('requester_email').notNull(),
     requesterTelegram: text('requester_telegram'),
-    submissionType: text('submission_type').default('new-project').notNull(),
+    submissionType: text('submission_type').default('new-coin').notNull(),
     status: text('status').default('pending').notNull(),
-    projectData: jsonb('project_data').notNull(),
+    coinData: jsonb('coin_data').notNull(),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index('project_submissions_status_created_idx').on(table.status, table.createdAt)],
+  (table) => [index('coin_submissions_status_created_idx').on(table.status, table.createdAt)],
 );
 
 export const payments = pgTable(
   'payments',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    projectId: integer('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    coinId: integer('coin_id').references(() => coins.id, { onDelete: 'set null' }),
     productType: text('product_type').notNull(),
     amount: numeric('amount', { precision: 20, scale: 8 }).notNull(),
     currency: text('currency').notNull(),
@@ -144,6 +144,6 @@ export const payments = pgTable(
   },
   (table) => [
     uniqueIndex('payments_provider_reference_unique').on(table.providerReference),
-    index('payments_project_status_idx').on(table.projectId, table.status),
+    index('payments_coin_status_idx').on(table.coinId, table.status),
   ],
 );
