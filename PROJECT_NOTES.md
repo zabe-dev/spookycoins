@@ -63,7 +63,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Topbar, navbar, section backgrounds, borders, and fixed placeholder surfaces can span the viewport.
 - [x] Navbar order is Discover, Promoted, Partners, Advertise.
 - [x] Navbar actions are Submit Coin and Sign In; light/dark mode was removed.
-- [x] Mobile navbar includes a compact menu button with Discover, Promoted, Partners, Advertise, and Sign In.
+- [x] Mobile navbar uses a combined dropdown for site links and account actions instead of separate menus.
 - [x] Shared brand, topbar, navbar, site-header, table, action-button, placeholder-surface, and modal components exist.
 - [x] Desktop and mobile layouts are responsive.
 - [x] Supported chain icons are stored locally and used for table chain badges.
@@ -153,10 +153,13 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlists and Logout.
+- [x] Desktop signed-in navigation uses an account-style dropdown with Watchlists and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
 - [x] Logout sends the user to the homepage with a full page reload.
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
-- [x] Temporary admin role detection accepts `role: "admin"` or `roles: ["admin"]` from Clerk public or private metadata only.
+- [x] Auth feedback is handled inside the modal with styled inline messages and loading states.
+- [x] Global toast notifications were removed from the prototype.
+- [ ] RBAC/admin roles are not fixed or production-ready yet.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
 
 ## Single-project page — existing prototype
@@ -377,6 +380,7 @@ Platform implementation:
 - [ ] Provision the production database and apply migrations.
 - [x] Implement Clerk app shell, sessions, custom signup verification, password reset, Google OAuth trigger, signed-in dropdown, and test protected pages.
 - [ ] Complete database user sync and protected persistent actions.
+- [ ] Fix and finalize production RBAC/admin authorization.
 - [ ] Persist votes, rolling 12-hour cooldowns, weekly archives, watchlists, and portfolios.
 - [ ] Build project submission, ownership/claim, and request-change workflows.
 - [ ] Build the production presale dataset, server-backed leaderboard, and presale-specific table.
@@ -393,6 +397,7 @@ Platform implementation:
 - User-owned consumable boosters and booster-count ranking were discarded.
 - The fixed seven-day boost package proposal is superseded by varied boost durations: 24 hours, 3 days, and 7 days.
 - MetaMask and Coinbase Wallet authentication were removed from the current auth decision; keep Clerk email/password and Google only for now.
+- Global toast notifications were removed; keep auth and form feedback inline until a better notification pattern is chosen.
 - Banner ad spaces are no longer part of the MVP commercial plan; the MVP sells only Promoted Coins and Boosts.
 - The old electric-surge 500× badge is replaced by the slower animated gold-gradient badge with black content.
 - The proposed `/coin/[chain]/[contract]` and symbol routes are replaced by `/coin/[numeric-project-id]`.

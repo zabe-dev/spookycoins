@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { Brand } from '@/components/ui/brand';
-import { queueToast } from '@/components/ui/toaster';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
@@ -26,11 +25,6 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   async function logout() {
     setUserMenuOpen(false);
     closeMenu();
-    queueToast({
-      tone: 'success',
-      title: 'Logged out',
-      message: 'You have been safely signed out.',
-    });
     await signOut();
     window.location.replace('/');
   }
