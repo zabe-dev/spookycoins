@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { VoteButton, WatchlistButton } from '@/components/actions/action-buttons';
+import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import {
   formatVotes,
   type CoinListItem as Coin,
@@ -100,7 +100,7 @@ export function CoinCells({ coin, linkEnabled = true }: { coin: Coin; linkEnable
   );
 }
 
-export { ActionBurst as LineBurst } from '@/components/actions/action-buttons';
+export { ActionBurst as LineBurst } from '@/components/ui/action-buttons';
 
 export function WatchButton({
   active,
