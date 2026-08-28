@@ -78,7 +78,17 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
           <div className="nav-actions">
             <button className="submit-coin-btn">＋ Submit coin</button>
             {isSignedIn ? (
-              <div className="user-menu-wrap">
+              <div
+                className="user-menu-wrap"
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setUserMenuOpen(false)}
+                onFocus={() => setUserMenuOpen(true)}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setUserMenuOpen(false);
+                  }
+                }}
+              >
                 <button
                   className="user-avatar-btn"
                   onClick={() => setUserMenuOpen((open) => !open)}

@@ -160,6 +160,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Auth feedback is handled inside the modal with styled inline messages and loading states.
 - [x] Global toast notifications were removed from the prototype.
 - [ ] RBAC/admin roles are not fixed or production-ready yet.
+- [ ] RBAC/admin-role cleanup is deferred to the next work session.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
 
 ## Single-project page — existing prototype

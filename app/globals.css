@@ -261,7 +261,6 @@ nav a.active {
     0 8px 20px rgba(0, 0, 0, 0.22);
   transition:
     box-shadow 0.18s ease,
-    transform 0.18s ease,
     border-color 0.18s ease;
 }
 .user-menu-wrap > .user-avatar-btn:hover,
@@ -270,7 +269,6 @@ nav a.active {
   box-shadow:
     0 0 0 3px rgba(240, 185, 11, 0.12),
     0 10px 22px rgba(0, 0, 0, 0.28);
-  transform: translateY(-1px);
 }
 .user-avatar-cue {
   position: absolute;
