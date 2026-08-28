@@ -14,7 +14,7 @@ import {
 } from '@/features/coins/components';
 import { Brand } from '@/components/brand';
 import { SiteHeader } from '@/components/layout/site-header';
-import { WeeklyResetChip } from '@/components/leaderboard/weekly-reset-chip';
+import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
 import { initialCoinListItems } from '@/features/coins/data/initial-dataset';
 import {
   coinCategories,
