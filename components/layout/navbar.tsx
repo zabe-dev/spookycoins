@@ -85,7 +85,8 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                   aria-expanded={userMenuOpen}
                   aria-label="Open user menu"
                 >
-                  {userInitials}
+                  <span>{userInitials}</span>
+                  <ChevronDownIcon />
                 </button>
                 {userMenuOpen && (
                   <div className="user-dropdown">
@@ -155,6 +156,14 @@ function UserIcon() {
         strokeWidth="2"
         d="M20 21a8 8 0 0 0-16 0m8-9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z"
       />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg className="user-avatar-cue" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M4.1 6.2a.8.8 0 0 1 1.1 0L8 8.9l2.8-2.7a.8.8 0 1 1 1.1 1.1L8.6 10.5a.9.9 0 0 1-1.2 0L4.1 7.3a.8.8 0 0 1 0-1.1Z" />
     </svg>
   );
 }

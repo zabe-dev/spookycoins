@@ -254,6 +254,41 @@ nav a.active {
   cursor: pointer;
   letter-spacing: 0.02em;
 }
+.user-menu-wrap > .user-avatar-btn {
+  position: relative;
+  box-shadow:
+    0 0 0 0 rgba(240, 185, 11, 0),
+    0 8px 20px rgba(0, 0, 0, 0.22);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+.user-menu-wrap > .user-avatar-btn:hover,
+.user-menu-wrap > .user-avatar-btn[aria-expanded='true'] {
+  border-color: rgba(255, 214, 77, 0.78);
+  box-shadow:
+    0 0 0 3px rgba(240, 185, 11, 0.12),
+    0 10px 22px rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
+}
+.user-avatar-cue {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(240, 185, 11, 0.5);
+  border-radius: 999px;
+  background: #101417;
+  color: #f0b90b;
+  fill: currentColor;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s ease;
+}
+.user-menu-wrap > .user-avatar-btn[aria-expanded='true'] .user-avatar-cue {
+  transform: rotate(180deg);
+}
 .user-dropdown {
   position: absolute;
   top: calc(100% + 12px);
