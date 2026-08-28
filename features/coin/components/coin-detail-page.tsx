@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Brand } from '@/components/brand';
+import { Brand } from '@/components/ui/brand';
 import { SiteHeader } from '@/components/layout/site-header';
 import type { Coin } from '@/features/coins/types';
 import { toCoinListItem } from '@/features/coins/view';

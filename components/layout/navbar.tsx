@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Brand } from '@/components/brand';
+import { Brand } from '@/components/ui/brand';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {

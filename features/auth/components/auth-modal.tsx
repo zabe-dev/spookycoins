@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
-import { Brand } from '@/components/brand';
+import { Brand } from '@/components/ui/brand';
 import { AuthProviderButtons } from './auth-provider-buttons';
 
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {

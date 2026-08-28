@@ -12,7 +12,7 @@ import {
   TableScroller,
   WatchButton as Watch,
 } from '@/features/coins/components';
-import { Brand } from '@/components/brand';
+import { Brand } from '@/components/ui/brand';
 import { SiteHeader } from '@/components/layout/site-header';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
 import { initialCoinListItems } from '@/features/coins/data/initial-dataset';
