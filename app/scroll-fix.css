@@ -182,7 +182,7 @@
     padding: 9px 10px;
     font-size: 9px;
   }
-  .navbar .wallet-btn {
+  .navbar .wallet-btn:not(.auth-icon-btn) {
     display: none;
   }
 }

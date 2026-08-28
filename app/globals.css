@@ -211,7 +211,7 @@ nav a.active {
   font-weight: 700;
 }
 .auth-icon-btn {
-  display: inline-grid;
+  display: inline-grid !important;
   width: 38px;
   height: 38px;
   place-items: center;
@@ -1503,10 +1503,13 @@ body.modal-open {
 }
 .auth-code-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, 44px);
   gap: 8px;
+  justify-content: space-between;
+  width: 100%;
 }
 .auth-form .auth-code-grid input {
+  width: 44px;
   height: 48px;
   padding: 0;
   text-align: center;
@@ -1597,19 +1600,25 @@ body.modal-open {
   color: #f4f6f7;
 }
 .auth-link-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
   margin-top: 12px;
-  border: 0;
-  background: transparent;
-  color: #aeb8bd;
-  padding: 0;
-  font-size: 9px;
+  border: 1px solid rgba(196, 255, 68, 0.14);
+  border-radius: 8px;
+  background: rgba(196, 255, 68, 0.04);
+  color: #d8e7c2;
+  padding: 0 12px;
+  font-size: 10px;
   font-weight: 800;
   cursor: pointer;
 }
 .auth-link-action:hover {
+  border-color: rgba(196, 255, 68, 0.28);
+  background: rgba(196, 255, 68, 0.08);
   color: #f4f6f7;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .auth-terms {
   margin-top: 14px;
@@ -1667,6 +1676,14 @@ body.modal-open {
 @media (max-width: 500px) {
   .auth-modal {
     padding: 21px;
+  }
+  .auth-code-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .auth-form .auth-code-grid input {
+    width: 100%;
+    height: 44px;
   }
 }
 .gold-name {
