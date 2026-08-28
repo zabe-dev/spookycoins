@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { Brand } from '@/components/ui/brand';
+import { queueToast } from '@/components/ui/toaster';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
@@ -15,6 +16,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   const closeMenu = () => setMenuOpen(false);
   const email = user?.primaryEmailAddress?.emailAddress || '';
   const userInitials = getEmailInitials(email);
+  const accountLabel = getAccountLabel(user?.firstName, user?.username, email);
 
   function openAuth() {
     closeMenu();
@@ -24,8 +26,13 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   async function logout() {
     setUserMenuOpen(false);
     closeMenu();
+    queueToast({
+      tone: 'success',
+      title: 'Logged out',
+      message: 'You have been safely signed out.',
+    });
     await signOut();
-    window.location.replace('/?toast=signed-out');
+    window.location.replace('/');
   }
 
   return (
@@ -56,7 +63,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                   <div className="mobile-user-card">
                     <span className="user-avatar-btn">{userInitials}</span>
                     <span>
-                      <b>{user?.firstName || 'Spooky user'}</b>
+                      <b>{accountLabel}</b>
                       <small>{email}</small>
                     </span>
                   </div>
@@ -91,7 +98,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     <div className="desktop-user-card">
                       <span className="user-avatar-btn">{userInitials}</span>
                       <span>
-                        <b>{user?.firstName || 'Spooky user'}</b>
+                        <b>{accountLabel}</b>
                         <small>{email}</small>
                       </span>
                     </div>
@@ -137,6 +144,10 @@ function getEmailInitials(email: string) {
     .slice(0, 2)
     .toUpperCase();
   return letters || 'SC';
+}
+
+function getAccountLabel(firstName?: string | null, username?: string | null, email?: string) {
+  return firstName || username || email?.split('@')[0] || 'Account';
 }
 
 function UserIcon() {

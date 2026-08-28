@@ -256,25 +256,40 @@ nav a.active {
 }
 .user-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   right: 0;
   z-index: 30;
   display: grid;
-  min-width: 210px;
-  gap: 4px;
+  width: 258px;
+  gap: 6px;
   border: 1px solid #2b3338;
-  border-radius: 10px;
-  background: rgba(16, 20, 23, 0.98);
-  padding: 8px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(25, 30, 34, 0.98), rgba(12, 16, 18, 0.98)), #101417;
+  padding: 10px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+  animation: account-menu-in 0.16s ease-out;
+}
+.user-dropdown:before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 13px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #2b3338;
+  border-left: 1px solid #2b3338;
+  background: #191e22;
+  transform: rotate(45deg);
 }
 .desktop-user-card {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 4px;
-  padding: 8px;
-  border-bottom: 1px solid #252c31;
+  margin-bottom: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 10px;
 }
 .desktop-user-card .user-avatar-btn {
   width: 34px;
@@ -306,10 +321,12 @@ nav a.active {
   display: flex;
   align-items: center;
   gap: 9px;
+  width: 100%;
+  min-height: 39px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 9px;
   background: transparent;
-  padding: 9px 10px;
+  padding: 0 10px;
   color: #d8dee1;
   text-align: left;
   font-size: 10px;
@@ -325,7 +342,7 @@ nav a.active {
 }
 .user-dropdown a:hover,
 .user-dropdown button:hover {
-  background: #20272b;
+  background: rgba(255, 255, 255, 0.055);
   color: #fff;
 }
 .user-dropdown .logout-action {
@@ -334,6 +351,16 @@ nav a.active {
 .user-dropdown .logout-action:hover {
   background: rgba(244, 97, 97, 0.11);
   color: #ffc2c2;
+}
+@keyframes account-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .status-dot {
   display: inline-block;

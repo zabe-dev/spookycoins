@@ -29,6 +29,10 @@ export function showToast(toast: ToastEvent) {
   window.dispatchEvent(new CustomEvent<ToastEvent>('spooky-toast', { detail: toast }));
 }
 
+export function queueToast(toast: ToastEvent) {
+  window.sessionStorage.setItem('spooky-toast', JSON.stringify(toast));
+}
+
 export function Toaster() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -49,6 +53,16 @@ export function Toaster() {
     }
 
     window.addEventListener('spooky-toast', pushToast);
+
+    const storedToast = window.sessionStorage.getItem('spooky-toast');
+    if (storedToast) {
+      window.sessionStorage.removeItem('spooky-toast');
+      try {
+        window.setTimeout(() => showToast(JSON.parse(storedToast) as ToastEvent), 150);
+      } catch {
+        window.setTimeout(() => showToast(toastMessages['signed-out']), 150);
+      }
+    }
 
     const params = new URLSearchParams(window.location.search);
     const queuedToast = params.get('toast');

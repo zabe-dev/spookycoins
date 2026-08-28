@@ -1,7 +1,7 @@
 'use client';
 
 import { Brand } from '@/components/ui/brand';
-import { showToast } from '@/components/ui/toaster';
+import { queueToast, showToast } from '@/components/ui/toaster';
 import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
 import {
   useEffect,
@@ -177,12 +177,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         if (!signInLoaded || !signIn) throw new Error('Authentication is still loading.');
         const result = await signIn.create({ identifier: email, password });
         if (result.status === 'complete' && result.createdSessionId) {
-          await setSignInActive({ session: result.createdSessionId });
-          showToast({
+          notifyAuthSuccess({
             tone: 'success',
             title: 'Logged in',
             message: 'Welcome back to SpookyCoins.',
           });
+          await setSignInActive({ session: result.createdSessionId });
           closeModal();
           return;
         }
@@ -197,12 +197,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       if (!signUpLoaded || !signUp) throw new Error('Authentication is still loading.');
       const result = await signUp.create({ emailAddress: email, password });
       if (result.status === 'complete' && result.createdSessionId) {
-        await setSignUpActive({ session: result.createdSessionId });
-        showToast({
+        notifyAuthSuccess({
           tone: 'success',
           title: 'Account created',
           message: 'Your SpookyCoins account is ready.',
         });
+        await setSignUpActive({ session: result.createdSessionId });
         closeModal();
         return;
       }
@@ -242,12 +242,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const result = await signUp.attemptEmailAddressVerification({ code });
 
       if (result.status === 'complete' && result.createdSessionId) {
-        await setSignUpActive({ session: result.createdSessionId });
-        showToast({
+        notifyAuthSuccess({
           tone: 'success',
           title: 'Email verified',
           message: 'Your account is ready.',
         });
+        await setSignUpActive({ session: result.createdSessionId });
         closeModal();
         return;
       }
@@ -325,12 +325,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       }
 
       if (result.status === 'complete' && result.createdSessionId) {
-        await setSignInActive({ session: result.createdSessionId });
-        showToast({
+        notifyAuthSuccess({
           tone: 'success',
           title: 'Password reset',
           message: 'Your password was updated and you are logged in.',
         });
+        await setSignInActive({ session: result.createdSessionId });
         closeModal();
         return;
       }
@@ -360,12 +360,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const result = await signIn.resetPassword({ password: parsedPassword.data.password });
 
       if (result.status === 'complete' && result.createdSessionId) {
-        await setSignInActive({ session: result.createdSessionId });
-        showToast({
+        notifyAuthSuccess({
           tone: 'success',
           title: 'Password reset',
           message: 'Your password was updated and you are logged in.',
         });
+        await setSignInActive({ session: result.createdSessionId });
         closeModal();
         return;
       }
@@ -631,6 +631,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       </div>
     </div>
   );
+}
+
+function notifyAuthSuccess(toast: Parameters<typeof showToast>[0]) {
+  queueToast(toast);
+  showToast(toast);
+  window.setTimeout(() => window.sessionStorage.removeItem('spooky-toast'), 1200);
 }
 
 function AuthFeedbackMessage({ feedback }: { feedback: NonNullable<AuthFeedback> }) {
