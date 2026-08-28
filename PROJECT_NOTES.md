@@ -147,8 +147,10 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Reusable Log In / Sign Up modal is opened from the navbar.
 - [x] Email and password fields are present.
 - [x] Google and MetaMask options are present.
+- [x] Coinbase Wallet option is present.
 - [x] Modal supports responsive layout, backdrop close, Escape close, and page-scroll locking.
-- [ ] Email authentication, Google OAuth, MetaMask signing, sessions, and account persistence are not connected.
+- [x] Clerk provider, middleware, SSO callback route, email/password form actions, Google OAuth trigger, MetaMask trigger, Coinbase Wallet trigger, and signed-in navbar state are wired.
+- [ ] Custom email verification code entry, password reset, full error refinement, account persistence, and user sync are not connected.
 
 ## Single-project page — existing prototype
 
@@ -365,7 +367,8 @@ Next product decisions:
 Platform implementation:
 
 - [ ] Provision the production database and apply migrations.
-- [ ] Implement authentication, sessions, Google OAuth, and MetaMask signing.
+- [x] Implement Clerk app shell, sessions, Google OAuth trigger, MetaMask trigger, and Coinbase Wallet trigger.
+- [ ] Complete custom auth verification flows, password reset, protected actions, and database user sync.
 - [ ] Persist votes, rolling 12-hour cooldowns, weekly archives, watchlists, and portfolios.
 - [ ] Build project submission, ownership/claim, and request-change workflows.
 - [ ] Build the production presale dataset, server-backed leaderboard, and presale-specific table.

@@ -1,11 +1,24 @@
-export function AuthProviderButtons() {
+export function AuthProviderButtons({
+  onGoogle,
+  onMetaMask,
+  onCoinbase,
+  disabled = false,
+}: {
+  onGoogle: () => void;
+  onMetaMask: () => void;
+  onCoinbase: () => void;
+  disabled?: boolean;
+}) {
   return (
     <div className="auth-providers">
-      <button type="button">
+      <button type="button" onClick={onGoogle} disabled={disabled}>
         <GoogleIcon /> Continue with Google
       </button>
-      <button type="button">
+      <button type="button" onClick={onMetaMask} disabled={disabled}>
         <MetaMaskIcon /> Connect MetaMask
+      </button>
+      <button type="button" onClick={onCoinbase} disabled={disabled}>
+        <CoinbaseIcon /> Coinbase Wallet
       </button>
     </div>
   );
@@ -56,6 +69,18 @@ function MetaMaskIcon() {
       <path
         fill="#f6851b"
         d="m17.9 12.3-4.5.2.4 2.3.6-1.5 1.6.8 1.9-1.8Zm-9.8 1.8 1.6-.8.6 1.5.3-2.3-4.5-.2 2 1.8Z"
+      />
+    </svg>
+  );
+}
+
+function CoinbaseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#0052ff" />
+      <path
+        fill="#fff"
+        d="M12 6.2a5.8 5.8 0 1 0 0 11.6 5.8 5.8 0 0 0 5.7-4.7h-3.8a2.4 2.4 0 1 1 0-2.2h3.8A5.8 5.8 0 0 0 12 6.2Z"
       />
     </svg>
   );

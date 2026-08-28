@@ -1,14 +1,24 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- Clerk avatars are tiny navbar images. */
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { Brand } from '@/components/ui/brand';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { signOut } = useClerk();
+  const { isSignedIn, user } = useUser();
   const closeMenu = () => setMenuOpen(false);
+  const displayName = user?.firstName || user?.username || user?.primaryEmailAddress?.emailAddress;
+
+  function openAuth() {
+    closeMenu();
+    setAuthOpen(true);
+  }
 
   return (
     <>
@@ -32,21 +42,28 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             <Link href="/#footer" onClick={closeMenu}>
               Advertise
             </Link>
-            <button
-              className="mobile-nav-auth"
-              onClick={() => {
-                closeMenu();
-                setAuthOpen(true);
-              }}
-            >
-              Sign in
-            </button>
+            {isSignedIn ? (
+              <button className="mobile-nav-auth" onClick={() => void signOut()}>
+                Sign out
+              </button>
+            ) : (
+              <button className="mobile-nav-auth" onClick={openAuth}>
+                Sign in
+              </button>
+            )}
           </nav>
           <div className="nav-actions">
             <button className="submit-coin-btn">＋ Submit coin</button>
-            <button className="wallet-btn" onClick={() => setAuthOpen(true)}>
-              Sign in
-            </button>
+            {isSignedIn ? (
+              <button className="wallet-btn user-pill" onClick={() => void signOut()}>
+                {user?.imageUrl && <img src={user.imageUrl} alt="" />}
+                {displayName ? `Hi, ${displayName}` : 'Sign out'}
+              </button>
+            ) : (
+              <button className="wallet-btn" onClick={openAuth}>
+                Sign in
+              </button>
+            )}
             <button
               className={`mobile-menu-btn ${menuOpen ? 'open' : ''}`}
               onClick={() => setMenuOpen((open) => !open)}
