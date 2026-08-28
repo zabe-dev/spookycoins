@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { getUserRole } from '@/lib/auth/roles';
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
@@ -8,7 +9,7 @@ export default async function AccountPage() {
   if (!user) redirect('/');
 
   const email = user.primaryEmailAddress?.emailAddress || 'signed-in user';
-  const role = String(user.publicMetadata.role || 'user');
+  const role = getUserRole([user.publicMetadata, user.privateMetadata]);
 
   return (
     <main className="market-page">

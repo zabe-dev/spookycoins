@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { getUserRole } from '@/lib/auth/roles';
 import { currentUser } from '@clerk/nextjs/server';
 import { notFound, redirect } from 'next/navigation';
 
@@ -7,7 +8,7 @@ export default async function AdminPage() {
 
   if (!user) redirect('/');
 
-  const role = String(user.publicMetadata.role || 'user');
+  const role = getUserRole([user.publicMetadata, user.privateMetadata]);
   if (role !== 'admin') notFound();
 
   return (

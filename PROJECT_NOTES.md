@@ -153,8 +153,10 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlists and Logout.
+- [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
 - [x] Logout sends the user to the homepage with a full page reload.
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
+- [x] Temporary admin role detection accepts `role: "admin"` or `roles: ["admin"]` from Clerk public or private metadata only.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
 
 ## Single-project page — existing prototype

@@ -609,15 +609,16 @@
     right: 12px;
     left: auto;
     display: grid;
-    gap: 3px;
-    width: min(230px, calc(100vw - 24px));
+    gap: 4px;
+    width: min(280px, calc(100vw - 24px));
     max-height: 0;
     margin-left: 0;
     padding: 0;
     overflow: hidden;
     border: 0 solid var(--border);
     border-radius: 12px;
-    background: rgba(13, 16, 19, 0.98);
+    background:
+      linear-gradient(180deg, rgba(26, 31, 34, 0.98), rgba(12, 16, 18, 0.98)), var(--page);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
     transition:
       max-height 0.22s ease,
@@ -625,36 +626,88 @@
       border-width 0.22s ease;
   }
   .navbar nav.open {
-    max-height: 220px;
-    padding: 9px;
+    max-height: 390px;
+    padding: 10px;
     border-width: 1px;
   }
-  .navbar nav a {
+  .navbar nav a,
+  .mobile-menu-account button {
     display: flex;
     align-items: center;
+    gap: 10px;
     min-height: 40px;
     padding: 0 12px;
-    border-radius: 9px;
-    font-weight: 750;
-  }
-  .mobile-nav-auth {
-    display: flex;
-    align-items: center;
-    min-height: 38px;
-    padding: 0 12px;
     border: 0;
-    border-top: 1px solid var(--border);
+    border-radius: 9px;
     background: transparent;
     color: var(--copy);
-    font: inherit;
     text-align: left;
+    font: inherit;
+    font-weight: 750;
     cursor: pointer;
+  }
+  .menu-item-icon,
+  .mobile-login-action svg {
+    display: flex;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    color: var(--lime);
+  }
+  .mobile-menu-account {
+    display: grid;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .mobile-user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px 10px;
+  }
+  .mobile-user-card .user-avatar-btn {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    cursor: default;
+  }
+  .mobile-user-card span:last-child {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .mobile-user-card b,
+  .mobile-user-card small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-user-card b {
+    color: #f2f4f5;
+    font-size: 11px;
+  }
+  .mobile-user-card small {
+    color: var(--sub);
+    font-size: 9px;
+  }
+  .mobile-menu-account .logout-action {
+    color: #ff8f8f;
+  }
+  .mobile-menu-account .logout-action .menu-item-icon {
+    color: #ff8f8f;
   }
   .navbar nav a.active {
     background: var(--surface2);
   }
-  .navbar nav a:hover {
+  .navbar nav a:hover,
+  .mobile-menu-account button:hover {
     background: rgba(255, 255, 255, 0.04);
+  }
+  .navbar .user-menu-wrap,
+  .navbar .auth-icon-btn {
+    display: none !important;
   }
   .mobile-menu-btn {
     display: block;
