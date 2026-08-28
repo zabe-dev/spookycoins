@@ -1363,7 +1363,7 @@ body.modal-open {
 .auth-providers button {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 8px;
   min-height: 42px;
   border: 1px solid #30383d;

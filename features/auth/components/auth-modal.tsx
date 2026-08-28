@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
-import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
-import { z } from 'zod';
 import { Brand } from '@/components/ui/brand';
+import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
+import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
+import { z } from 'zod';
 import { AuthProviderButtons } from './auth-provider-buttons';
 
 const emailPasswordSchema = z.object({
@@ -199,50 +199,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     }
   }
 
-  async function continueWithWallet(provider: 'metamask' | 'coinbase') {
-    setFeedback(null);
-    setLoading(true);
-    try {
-      const result = mode === 'login' ? await signInWallet(provider) : await signUpWallet(provider);
-
-      if (result?.status === 'complete' && result.createdSessionId) {
-        const setActive = mode === 'login' ? setSignInActive : setSignUpActive;
-        if (!setActive) throw new Error('Authentication is still loading.');
-        await setActive({ session: result.createdSessionId });
-        onClose();
-        return;
-      }
-
-      setFeedback({
-        tone: 'info',
-        title: 'Wallet verification started',
-        message: 'Follow the wallet prompt to finish connecting.',
-      });
-    } catch (caught) {
-      setFeedback({
-        tone: 'error',
-        title: 'Wallet connection failed',
-        message: getAuthError(caught),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signInWallet(provider: 'metamask' | 'coinbase') {
-    if (!signInLoaded || !signIn) throw new Error('Authentication is still loading.');
-    return provider === 'metamask'
-      ? signIn.authenticateWithMetamask()
-      : signIn.authenticateWithCoinbaseWallet();
-  }
-
-  async function signUpWallet(provider: 'metamask' | 'coinbase') {
-    if (!signUpLoaded || !signUp) throw new Error('Authentication is still loading.');
-    return provider === 'metamask'
-      ? signUp.authenticateWithMetamask()
-      : signUp.authenticateWithCoinbaseWallet();
-  }
-
   return (
     <div className="auth-overlay" role="presentation" onMouseDown={onClose}>
       <div
@@ -282,12 +238,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
         {!pendingVerification && (
           <>
-            <AuthProviderButtons
-              disabled={loading}
-              onGoogle={continueWithGoogle}
-              onMetaMask={() => continueWithWallet('metamask')}
-              onCoinbase={() => continueWithWallet('coinbase')}
-            />
+            <AuthProviderButtons disabled={loading} onGoogle={continueWithGoogle} />
 
             <div className="auth-divider">
               <span>or continue with email</span>
