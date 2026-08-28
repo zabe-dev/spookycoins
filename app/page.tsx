@@ -67,6 +67,7 @@ export default function Home() {
     [watchlist, setWatchlist] = useState<string[]>([]),
     [watchAnimating, setWatchAnimating] = useState<string | null>(null),
     [adVisible, setAdVisible] = useState(true),
+    [viewParamExplicit, setViewParamExplicit] = useState(false),
     [urlReady, setUrlReady] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const hotspotTouchStartRef = useRef<number | null>(null);
@@ -76,11 +77,13 @@ export default function Home() {
   useEffect(() => {
     const applyUrlState = () => {
       const params = new URLSearchParams(window.location.search);
+      const hasViewParam = params.has('coins') || params.has('view');
       const nextView = paramsToView[params.get('coins') || params.get('view') || ''];
       const nextSort = params.get('sort') as CoinSortKey | null;
       const nextCategory = params.get('category');
       const nextChain = params.get('chain');
-      if (nextView) setView(nextView);
+      setView(nextView || 'Launched coins');
+      setViewParamExplicit(hasViewParam);
       if (nextSort && sortKeys.includes(nextSort)) {
         setSort({ key: nextSort, dir: params.get('dir') === 'desc' ? -1 : 1 });
       }
@@ -102,7 +105,9 @@ export default function Home() {
   useEffect(() => {
     if (!urlReady) return;
     const params = new URLSearchParams();
-    params.set('coins', viewParams[view]);
+    if (viewParamExplicit || view !== 'Launched coins') {
+      params.set('coins', viewParams[view]);
+    }
     if (sort.key !== 'rank' || sort.dir !== 1) {
       params.set('sort', sort.key);
       params.set('dir', sort.dir === -1 ? 'desc' : 'asc');
@@ -117,7 +122,7 @@ export default function Home() {
       '',
       `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
     );
-  }, [category, chain, page, search, sort, urlReady, view]);
+  }, [category, chain, page, search, sort, urlReady, view, viewParamExplicit]);
   useEffect(() => {
     const el = categoryRef.current;
     if (!el) return;
@@ -340,6 +345,7 @@ export default function Home() {
               key={x}
               className={view === x ? 'selected' : ''}
               onClick={() => {
+                setViewParamExplicit(true);
                 setView(x);
                 setPage(1);
               }}

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { Brand } from '@/components/ui/brand';
 import { AuthModal } from '@/features/auth/components/auth-modal';
@@ -11,7 +10,6 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const router = useRouter();
   const { signOut } = useClerk();
   const { isSignedIn, user } = useUser();
   const closeMenu = () => setMenuOpen(false);
@@ -27,8 +25,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
     setUserMenuOpen(false);
     closeMenu();
     await signOut();
-    router.push('/');
-    router.refresh();
+    window.location.replace('/?toast=signed-out');
   }
 
   return (
@@ -91,12 +88,18 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                 </button>
                 {userMenuOpen && (
                   <div className="user-dropdown">
-                    <p>{email}</p>
+                    <div className="desktop-user-card">
+                      <span className="user-avatar-btn">{userInitials}</span>
+                      <span>
+                        <b>{user?.firstName || 'Spooky user'}</b>
+                        <small>{email}</small>
+                      </span>
+                    </div>
                     <Link href="/account" onClick={() => setUserMenuOpen(false)}>
-                      Watchlists
+                      <MenuIcon type="watchlist" /> Watchlists
                     </Link>
                     <button className="logout-action" onClick={() => void logout()}>
-                      Logout
+                      <MenuIcon type="logout" /> Logout
                     </button>
                   </div>
                 )}

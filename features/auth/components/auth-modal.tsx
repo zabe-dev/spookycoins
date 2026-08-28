@@ -1,6 +1,7 @@
 'use client';
 
 import { Brand } from '@/components/ui/brand';
+import { showToast } from '@/components/ui/toaster';
 import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
 import {
   useEffect,
@@ -177,6 +178,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         const result = await signIn.create({ identifier: email, password });
         if (result.status === 'complete' && result.createdSessionId) {
           await setSignInActive({ session: result.createdSessionId });
+          showToast({
+            tone: 'success',
+            title: 'Logged in',
+            message: 'Welcome back to SpookyCoins.',
+          });
           closeModal();
           return;
         }
@@ -192,6 +198,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const result = await signUp.create({ emailAddress: email, password });
       if (result.status === 'complete' && result.createdSessionId) {
         await setSignUpActive({ session: result.createdSessionId });
+        showToast({
+          tone: 'success',
+          title: 'Account created',
+          message: 'Your SpookyCoins account is ready.',
+        });
         closeModal();
         return;
       }
@@ -232,6 +243,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
       if (result.status === 'complete' && result.createdSessionId) {
         await setSignUpActive({ session: result.createdSessionId });
+        showToast({
+          tone: 'success',
+          title: 'Email verified',
+          message: 'Your account is ready.',
+        });
         closeModal();
         return;
       }
@@ -310,6 +326,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
       if (result.status === 'complete' && result.createdSessionId) {
         await setSignInActive({ session: result.createdSessionId });
+        showToast({
+          tone: 'success',
+          title: 'Password reset',
+          message: 'Your password was updated and you are logged in.',
+        });
         closeModal();
         return;
       }
@@ -340,6 +361,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
       if (result.status === 'complete' && result.createdSessionId) {
         await setSignInActive({ session: result.createdSessionId });
+        showToast({
+          tone: 'success',
+          title: 'Password reset',
+          message: 'Your password was updated and you are logged in.',
+        });
         closeModal();
         return;
       }

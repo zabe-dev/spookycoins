@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Fira_Mono, Poppins, Space_Grotesk } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
+import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 const poppins = Poppins({
@@ -48,6 +49,7 @@ export default function RootLayout({
           className={`${poppins.variable} ${spaceGrotesk.variable} ${firaMono.variable} antialiased`}
         >
           {children}
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
