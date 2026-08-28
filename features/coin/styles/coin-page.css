@@ -488,7 +488,7 @@
 .detail-watch.just-watched,
 .detail-vote.just-voted,
 .sidebar-vote.just-voted {
-  animation: vote-pop 0.48s cubic-bezier(0.2, 1.7, 0.4, 1);
+  animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
 }
 .coin-ad {
   margin-top: 18px;

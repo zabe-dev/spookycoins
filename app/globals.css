@@ -210,6 +210,17 @@ nav a.active {
   color: #101214;
   font-weight: 700;
 }
+.auth-icon-btn {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  padding: 0;
+}
+.auth-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
 .user-pill {
   display: inline-flex;
   align-items: center;
@@ -220,6 +231,64 @@ nav a.active {
   height: 18px;
   border-radius: 50%;
   object-fit: cover;
+}
+.user-menu-wrap {
+  position: relative;
+}
+.user-avatar-btn {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(240, 185, 11, 0.42);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 119, 0, 0.98), rgba(240, 185, 11, 0.98)), #f0b90b;
+  color: #151006;
+  font:
+    800 11px var(--font-space-grotesk),
+    sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 210px;
+  gap: 4px;
+  border: 1px solid #2b3338;
+  border-radius: 10px;
+  background: rgba(16, 20, 23, 0.98);
+  padding: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+}
+.user-dropdown p {
+  margin: 0 0 4px;
+  overflow: hidden;
+  color: #7f8a92;
+  padding: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+}
+.user-dropdown a,
+.user-dropdown button {
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 9px 10px;
+  color: #d8dee1;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.user-dropdown a:hover,
+.user-dropdown button:hover {
+  background: #20272b;
+  color: #fff;
 }
 .status-dot {
   display: inline-block;
@@ -1432,6 +1501,19 @@ body.modal-open {
 .auth-form input:focus {
   border-color: var(--lime);
 }
+.auth-code-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.auth-form .auth-code-grid input {
+  height: 48px;
+  padding: 0;
+  text-align: center;
+  font:
+    800 18px var(--font-space-grotesk),
+    sans-serif;
+}
 .auth-message {
   display: grid;
   grid-template-columns: 24px 1fr;
@@ -1514,10 +1596,73 @@ body.modal-open {
 .auth-secondary-action:hover {
   color: #f4f6f7;
 }
+.auth-link-action {
+  margin-top: 12px;
+  border: 0;
+  background: transparent;
+  color: #aeb8bd;
+  padding: 0;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.auth-link-action:hover {
+  color: #f4f6f7;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .auth-terms {
   margin-top: 14px;
   text-align: center;
   font-size: 8px;
+}
+.protected-shell {
+  min-height: calc(100dvh - 120px);
+  padding-block: 80px;
+}
+.protected-shell h1 {
+  margin: 14px 0 12px;
+  color: #f4f6f7;
+  font:
+    760 clamp(38px, 6vw, 72px) var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.06em;
+}
+.protected-shell p:last-child {
+  max-width: 620px;
+  color: #8d979f;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.protected-shell--loading {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.protected-shell--loading div {
+  height: 20px;
+  max-width: 640px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14191d, #20282d, #14191d);
+  background-size: 180% 100%;
+  animation: skeleton-sweep 1.2s ease-in-out infinite;
+}
+.protected-shell--loading div:first-child {
+  width: 160px;
+}
+.protected-shell--loading div:nth-child(2) {
+  height: 64px;
+}
+.protected-shell--loading div:last-child {
+  width: 420px;
+}
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 @media (max-width: 500px) {
   .auth-modal {
@@ -1576,7 +1721,7 @@ body.modal-open {
   display: block;
 }
 .vote-btn.voted {
-  animation: vote-pop 0.48s cubic-bezier(0.2, 1.7, 0.4, 1);
+  animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
 }
 .vote-burst {
   position: absolute;
@@ -1591,7 +1736,7 @@ body.modal-open {
   opacity: 0;
 }
 .vote-btn.voted .vote-burst {
-  animation: vote-burst 0.65s ease-out;
+  animation: vote-burst 0.42s ease-out;
 }
 .vote-btn.voted .vote-burst:before,
 .vote-btn.voted .vote-burst:after {
@@ -1622,7 +1767,7 @@ body.modal-open {
   opacity: 0.7;
 }
 .vote-btn.voted .vote-label {
-  animation: vote-label 0.42s ease-out;
+  animation: vote-label 0.28s ease-out;
 }
 @keyframes vote-pop {
   0% {

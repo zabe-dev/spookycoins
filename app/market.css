@@ -571,10 +571,10 @@
   animation: none;
 }
 .vote-btn.just-voted {
-  animation: vote-pop 0.48s cubic-bezier(0.2, 1.7, 0.4, 1);
+  animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
 }
 .vote-btn.just-voted .vote-burst {
-  animation: vote-burst 0.65s ease-out;
+  animation: vote-burst 0.42s ease-out;
 }
 .vote-btn.just-voted .vote-burst:before,
 .vote-btn.just-voted .vote-burst:after {
@@ -596,7 +596,7 @@
   mask: radial-gradient(circle, transparent 48%, #000 50% 56%, transparent 58%);
 }
 .vote-btn.just-voted .vote-label {
-  animation: vote-label 0.42s ease-out;
+  animation: vote-label 0.28s ease-out;
 }
 @media (max-width: 900px) {
   .ghost-btn,
@@ -1175,7 +1175,7 @@
 }
 .just-voted .action-burst i,
 .just-watched .action-burst i {
-  animation: line-pop 0.48s cubic-bezier(0.1, 0.7, 0.25, 1) both;
+  animation: line-pop 0.32s cubic-bezier(0.1, 0.7, 0.25, 1) both;
 }
 .just-voted .action-burst i:nth-child(2n),
 .just-watched .action-burst i:nth-child(2n) {
@@ -1195,7 +1195,7 @@
   }
 }
 .watch-btn.just-watched > span:last-child {
-  animation: star-pop 0.38s cubic-bezier(0.2, 1.7, 0.4, 1);
+  animation: star-pop 0.26s cubic-bezier(0.2, 1.7, 0.4, 1);
 }
 @keyframes star-pop {
   0% {

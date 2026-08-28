@@ -1,6 +1,6 @@
 # SpookyCoins — Product and Implementation Notes
 
-Last updated: August 28, 2026
+Last updated: August 29, 2026
 
 This is the project's single canonical notes file and source of truth. All future decisions, brainstorming, implementation status, and deferred work must be recorded here rather than in separate notes, todo, roadmap, or planning files. Superseded ideas are kept near the end so they are not accidentally reintroduced.
 
@@ -17,13 +17,13 @@ Working positioning:
 | Area           | Technology                                                           |
 | -------------- | -------------------------------------------------------------------- |
 | Framework      | Next.js + TypeScript                                                 |
-| Authentication | Clerk — email, Google                                                |
+| Authentication | Clerk — email/password and Google only                               |
 | Database       | Neon (Postgres) + Drizzle ORM                                        |
 | Validation     | Zod                                                                  |
 | File storage   | Cloudflare R2                                                        |
 | Payments       | Coinbase Commerce or NOWPayments; final provider is not yet selected |
 
-Clerk is responsible for identity and sessions. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, promoted placements, boosts, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs.
+Clerk is responsible for identity and sessions. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, promoted placements, boosts, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs. MetaMask and Coinbase Wallet auth were removed from the current product decision.
 
 ## Product principles
 
@@ -119,6 +119,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Watchlist controls use an inline SVG star instead of text emoji.
 - [x] Vote confirmation uses a centered short-line burst and bounce.
 - [x] Watchlist confirmation animates only when adding a project, not when removing it.
+- [x] Vote and watchlist click animations were sped up so the feedback feels more natural.
 - [x] Prototype state permits one vote per project during the browser session.
 - [ ] Enforce the real rolling 12-hour voting rule on the server.
 - [ ] Persist votes and watchlists to authenticated accounts.
@@ -145,12 +146,16 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 ### Authentication UI
 
 - [x] Reusable Log In / Sign Up modal is opened from the navbar.
-- [x] Email and password fields are present.
-- [x] Google options are present.
-- [x] Coinbase Wallet option is present.
+- [x] Email/password and Google auth options are present.
+- [x] MetaMask and Coinbase Wallet options were intentionally removed.
 - [x] Modal supports responsive layout, backdrop close, Escape close, and page-scroll locking.
 - [x] Clerk provider, middleware, SSO callback route, email/password form actions, Google OAuth trigger and signed-in navbar state are wired.
-- [ ] Custom email verification code entry, password reset, full error refinement, account persistence, and user sync are not connected.
+- [x] Custom signup email verification uses six individual code fields.
+- [x] Password reset by email code is available from the custom auth modal.
+- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlists and Logout.
+- [x] Logout sends the user to the homepage with a full page reload.
+- [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
+- [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
 
 ## Single-project page — existing prototype
 
@@ -217,21 +222,22 @@ Promoted Coin placements are still subject to manual approval. Purchasing a plac
 
 ## Boost packages — current commercial decision
 
-The old user-owned consumable booster concept is discarded. Boosts belong to a project and always run for a full seven days from activation.
+The old user-owned consumable booster concept is discarded. Boosts belong to a project and run for their purchased active period from activation.
 
 Boost pricing:
 
 | Package | Price | Vote multiplier | Duration |
 | ------: | ----: | --------------: | -------: |
-|     10× |   $39 |              ×2 |   7 days |
-|     30× |   $89 |              ×3 |   7 days |
-|     50× |  $149 |              ×4 |   7 days |
-|    100× |  $299 |              ×5 |   7 days |
-|    500× |  $799 |             ×10 |   7 days |
+|     10× |   TBD |              ×2 | 24 hours |
+|     30× |   TBD |              ×2 |   3 days |
+|     50× |   TBD |              ×3 | 24 hours |
+|    100× |   TBD |              ×3 |   3 days |
+|    500× |   TBD |              ×5 |   7 days |
 
-- The multiplier stays the same for the entire seven-day boost period.
-- Price does not decay based on purchase day; a boost always costs the package price and runs for seven days regardless of the day it starts.
-- Example: 1,000 raw votes with a ×5 multiplier displays as 5,000 boosted/displayed votes.
+- Boosts shoot a project up the rankings for a paid period by multiplying its displayed/ranking vote value.
+- The multiplier stays the same for the purchased boost duration.
+- Price does not decay based on purchase day; a boost always costs the package price and runs for the purchased duration regardless of when it starts.
+- Example: 1,000 raw votes with a ×5 multiplier displays as 5,000 boosted/displayed votes while the boost is active.
 - Treat pricing as introductory and revisit after real traffic, conversion, and advertiser-demand data exists.
 - Boosts never change stored raw-vote counts.
 - Only one active boost may apply to a project at a time.
@@ -367,8 +373,8 @@ Next product decisions:
 Platform implementation:
 
 - [ ] Provision the production database and apply migrations.
-- [x] Implement Clerk app shell, sessions, Google OAuth trigger.
-- [ ] Complete custom auth verification flows, password reset, protected actions, and database user sync.
+- [x] Implement Clerk app shell, sessions, custom signup verification, password reset, Google OAuth trigger, signed-in dropdown, and test protected pages.
+- [ ] Complete database user sync and protected persistent actions.
 - [ ] Persist votes, rolling 12-hour cooldowns, weekly archives, watchlists, and portfolios.
 - [ ] Build project submission, ownership/claim, and request-change workflows.
 - [ ] Build the production presale dataset, server-backed leaderboard, and presale-specific table.
@@ -383,7 +389,8 @@ Platform implementation:
 - Light/dark mode was removed.
 - Most Voted homepage view was replaced by Most Watched.
 - User-owned consumable boosters and booster-count ranking were discarded.
-- The older 12/24-hour five-pack boost pricing proposal and the week-until-reset/time-decay pricing proposal are superseded by fixed seven-day boost packages.
+- The fixed seven-day boost package proposal is superseded by varied boost durations: 24 hours, 3 days, and 7 days.
+- MetaMask and Coinbase Wallet authentication were removed from the current auth decision; keep Clerk email/password and Google only for now.
 - Banner ad spaces are no longer part of the MVP commercial plan; the MVP sells only Promoted Coins and Boosts.
 - The old electric-surge 500× badge is replaced by the slower animated gold-gradient badge with black content.
 - The proposed `/coin/[chain]/[contract]` and symbol routes are replaced by `/coin/[numeric-project-id]`.

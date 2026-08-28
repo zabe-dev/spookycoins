@@ -33,7 +33,7 @@
   left: auto;
 }
 .watch-btn.just-watched {
-  animation: vote-pop 0.48s cubic-bezier(0.2, 1.7, 0.4, 1);
+  animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   .watch-btn.just-watched {
