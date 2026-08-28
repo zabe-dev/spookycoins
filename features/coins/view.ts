@@ -76,7 +76,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     volume24h: formatMoney(coin.market.volume24hUsd),
     price: formatPrice(priceUsd),
     change,
-    launch: coin.launchDate ? formatDate(coin.launchDate) : '—',
+    launch: coin.launchDate ? formatAge(coin.launchDate) : '—',
     ...(coin.boost.active ? { boost: coin.boost.multiplier } : {}),
     promoted: coin.promoted.active,
     votes: coin.community.weeklyVotes,
@@ -114,13 +114,14 @@ function formatPrice(value: number | null) {
   return `$${value.toLocaleString('en-US', { maximumFractionDigits: digits })}`;
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit' }).format(
-    new Date(value),
-  );
-}
-
 function formatAge(value: string) {
   const days = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000));
-  return days === 0 ? 'Today' : `${days}d ago`;
+  if (days === 0) return 'Today';
+  if (days < 30) return `${days}d ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+
+  const years = Math.floor(months / 12);
+  return `${years}y ago`;
 }
