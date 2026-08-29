@@ -1,7 +1,7 @@
 'use client';
 
 import { Brand } from '@/components/ui/brand';
-import { useSignIn, useSignUp } from '@clerk/nextjs/legacy';
+import { authClient } from '@/lib/auth/client';
 import {
   useEffect,
   useCallback,
@@ -50,11 +50,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   const [step, setStep] = useState<AuthStep>('credentials');
   const [feedback, setFeedback] = useState<AuthFeedback>(null);
   const [verificationEmail, setVerificationEmail] = useState('');
+  const [pendingPassword, setPendingPassword] = useState('');
+  const [resetCode, setResetCode] = useState('');
   const [codeDigits, setCodeDigits] = useState(emptyCode);
   const [loading, setLoading] = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
-  const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn();
-  const { isLoaded: signUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
 
   const isCodeStep = step === 'verify-signup' || step === 'reset-code';
 
@@ -64,6 +64,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       setStep('credentials');
       setFeedback(null);
       setVerificationEmail('');
+      setPendingPassword('');
+      setResetCode('');
       setCodeDigits(emptyCode);
       setLoading(false);
     },
@@ -173,32 +175,34 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     setLoading(true);
     try {
       if (mode === 'login') {
-        if (!signInLoaded || !signIn) throw new Error('Authentication is still loading.');
-        const result = await signIn.create({ identifier: email, password });
-        if (result.status === 'complete' && result.createdSessionId) {
-          await setSignInActive({ session: result.createdSessionId });
+        const { error } = await authClient.signIn.email({ email, password });
+        if (!error) {
           closeModal();
+          window.location.reload();
           return;
         }
-        setFeedback({
-          tone: 'info',
-          title: 'Extra security check',
-          message: 'This account needs another verification step before it can log in.',
-        });
-        return;
+        if (error.status === 403) {
+          setVerificationEmail(email);
+          setPendingPassword(password);
+          await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
+          setStep('verify-signup');
+          setCodeDigits(emptyCode);
+          setFeedback({
+            tone: 'info',
+            title: 'Verify your email',
+            message: `We sent a 6-digit code to ${email}. Enter it below to finish logging in.`,
+          });
+          return;
+        }
+        throw new Error(error.message || 'Login failed.');
       }
 
-      if (!signUpLoaded || !signUp) throw new Error('Authentication is still loading.');
-      const result = await signUp.create({ emailAddress: email, password });
-      if (result.status === 'complete' && result.createdSessionId) {
-        await setSignUpActive({ session: result.createdSessionId });
-        closeModal();
-        return;
-      }
-
-      if (result.unverifiedFields.includes('email_address')) {
-        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      const name = getNameFromEmail(email);
+      const { error } = await authClient.signUp.email({ email, password, name });
+      if (!error) {
         setVerificationEmail(email);
+        setPendingPassword(password);
+        await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
         setStep('verify-signup');
         setCodeDigits(emptyCode);
         setFeedback({
@@ -208,12 +212,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         });
         return;
       }
-
-      setFeedback({
-        tone: 'info',
-        title: 'One more step',
-        message: 'This signup needs another verification step before it can finish.',
-      });
+      throw new Error(error.message || 'Signup failed.');
     } catch (caught) {
       setFeedback({ tone: 'error', title: 'Could not continue', message: getAuthError(caught) });
     } finally {
@@ -227,20 +226,23 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
     setLoading(true);
     try {
-      if (!signUpLoaded || !signUp) throw new Error('Authentication is still loading.');
-      const result = await signUp.attemptEmailAddressVerification({ code });
+      const { error } = await authClient.emailOtp.verifyEmail({
+        email: verificationEmail,
+        otp: code,
+      });
+      if (error) throw new Error(error.message || 'Verification failed.');
 
-      if (result.status === 'complete' && result.createdSessionId) {
-        await setSignUpActive({ session: result.createdSessionId });
-        closeModal();
-        return;
+      if (pendingPassword) {
+        const login = await authClient.signIn.email({
+          email: verificationEmail,
+          password: pendingPassword,
+        });
+        if (login.error)
+          throw new Error(login.error.message || 'Email verified, but login failed.');
       }
 
-      setFeedback({
-        tone: 'info',
-        title: 'Almost there',
-        message: 'The code was accepted, but Clerk still needs one more account step.',
-      });
+      closeModal();
+      window.location.reload();
     } catch (caught) {
       setFeedback({
         tone: 'error',
@@ -261,11 +263,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
     setLoading(true);
     try {
-      if (!signInLoaded || !signIn) throw new Error('Authentication is still loading.');
-      await signIn.create({
-        strategy: 'reset_password_email_code',
-        identifier: parsedEmail.data.email,
+      const { error } = await authClient.emailOtp.requestPasswordReset({
+        email: parsedEmail.data.email,
       });
+      if (error) throw new Error(error.message || 'Could not send reset code.');
       setVerificationEmail(parsedEmail.data.email);
       setStep('reset-code');
       setCodeDigits(emptyCode);
@@ -291,33 +292,19 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
     setLoading(true);
     try {
-      if (!signInLoaded || !signIn) throw new Error('Authentication is still loading.');
-      const result = await signIn.attemptFirstFactor({
-        strategy: 'reset_password_email_code',
-        code,
+      const { error } = await authClient.emailOtp.checkVerificationOtp({
+        email: verificationEmail,
+        type: 'forget-password',
+        otp: code,
       });
-
-      if (result.status === 'needs_new_password') {
-        setStep('new-password');
-        setCodeDigits(emptyCode);
-        setFeedback({
-          tone: 'success',
-          title: 'Code confirmed',
-          message: 'Now choose a new password for your account.',
-        });
-        return;
-      }
-
-      if (result.status === 'complete' && result.createdSessionId) {
-        await setSignInActive({ session: result.createdSessionId });
-        closeModal();
-        return;
-      }
-
+      if (error) throw new Error(error.message || 'Invalid reset code.');
+      setResetCode(code);
+      setStep('new-password');
+      setCodeDigits(emptyCode);
       setFeedback({
-        tone: 'info',
-        title: 'One more step',
-        message: 'The reset code was accepted, but the account still needs another step.',
+        tone: 'success',
+        title: 'Code confirmed',
+        message: 'Now choose a new password for your account.',
       });
     } catch (caught) {
       setFeedback({ tone: 'error', title: 'Invalid reset code', message: getAuthError(caught) });
@@ -335,14 +322,12 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
     setLoading(true);
     try {
-      if (!signInLoaded || !signIn) throw new Error('Authentication is still loading.');
-      const result = await signIn.resetPassword({ password: parsedPassword.data.password });
-
-      if (result.status === 'complete' && result.createdSessionId) {
-        await setSignInActive({ session: result.createdSessionId });
-        closeModal();
-        return;
-      }
+      const { error } = await authClient.emailOtp.resetPassword({
+        email: verificationEmail,
+        otp: resetCode,
+        password: parsedPassword.data.password,
+      });
+      if (error) throw new Error(error.message || 'Could not update password.');
 
       setFeedback({
         tone: 'success',
@@ -386,26 +371,14 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   async function continueWithGoogle() {
-    const loaded = mode === 'login' || mode === 'reset' ? signInLoaded : signUpLoaded;
-    if (!loaded) return;
     setFeedback(null);
     setLoading(true);
     try {
-      if (mode === 'login' || mode === 'reset') {
-        if (!signIn) throw new Error('Authentication is still loading.');
-        await signIn.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: '/sso-callback',
-          redirectUrlComplete: window.location.href,
-        });
-      } else {
-        if (!signUp) throw new Error('Authentication is still loading.');
-        await signUp.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: '/sso-callback',
-          redirectUrlComplete: window.location.href,
-        });
-      }
+      const { error } = await authClient.signIn.social({
+        provider: 'google',
+        callbackURL: window.location.href,
+      });
+      if (error) throw new Error(error.message || 'Google login failed.');
     } catch (caught) {
       setFeedback({ tone: 'error', title: 'Google login failed', message: getAuthError(caught) });
       setLoading(false);
@@ -656,6 +629,10 @@ function EyeClosedIcon() {
       <path d="M4.3 3.1 21 19.8l-1.4 1.4-3-3A11.4 11.4 0 0 1 12 19c-5.7 0-9.4-5.6-9.6-5.8-.4-.6-.4-1.4 0-2a17.4 17.4 0 0 1 4-3.9L2.9 4.5l1.4-1.4Zm3.5 5.6A15.4 15.4 0 0 0 4 12c.5.6 3.6 4.8 8 4.8 1 0 2-.2 2.8-.5l-1.7-1.7A3.2 3.2 0 0 1 9.4 11L7.8 8.7Zm3.4 3.4 1.7 1.7a1.2 1.2 0 0 0-1.7-1.7ZM12 5.2c5.7 0 9.4 5.6 9.6 5.8.4.6.4 1.4 0 2a15 15 0 0 1-2.5 2.8l-1.4-1.4A13.7 13.7 0 0 0 20 12c-.5-.6-3.6-4.8-8-4.8-.7 0-1.4.1-2 .3L8.4 5.9c1.1-.5 2.3-.7 3.6-.7Z" />
     </svg>
   );
+}
+
+function getNameFromEmail(email: string) {
+  return email.split('@')[0] || 'SpookyCoins user';
 }
 
 function AuthFeedbackMessage({ feedback }: { feedback: NonNullable<AuthFeedback> }) {

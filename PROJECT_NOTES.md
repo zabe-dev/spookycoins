@@ -17,13 +17,13 @@ Working positioning:
 | Area           | Technology                                                           |
 | -------------- | -------------------------------------------------------------------- |
 | Framework      | Next.js + TypeScript                                                 |
-| Authentication | Clerk — email/password and Google only                               |
+| Authentication | Better Auth — email/password, email OTP, Google, app-owned roles     |
 | Database       | Neon (Postgres) + Drizzle ORM                                        |
 | Validation     | Zod                                                                  |
 | File storage   | Cloudflare R2                                                        |
 | Payments       | Coinbase Commerce or NOWPayments; final provider is not yet selected |
 
-Clerk is responsible for identity and sessions. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, promoted placements, boosts, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs. MetaMask and Coinbase Wallet auth were removed from the current product decision.
+Better Auth is responsible for identity and sessions using SpookyCoins-owned database tables. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, promoted placements, boosts, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs. MetaMask and Coinbase Wallet auth were removed from the current product decision.
 
 ## Product principles
 
@@ -51,6 +51,9 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Mock data contains token projects deployed on supported networks, not the networks’ native/base coins.
 - [x] Mock data includes both launched projects and presale projects.
 - [x] Exactly one promoted placement placeholder exists: **Spooky · $SPKY · Solana** with a 500× boost.
+- [x] Database migrations were reset to a fresh baseline because no existing production data needs to be preserved.
+- [x] Old project-to-coin rename migrations, obsolete mappings, and abandoned database history were removed.
+- [x] The current baseline migration creates only the active schema: coins, auth tables, market metadata/snapshots, links, change requests, submissions, and payments.
 
 ## Homepage — implemented
 
@@ -149,7 +152,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Email/password and Google auth options are present.
 - [x] MetaMask and Coinbase Wallet options were intentionally removed.
 - [x] Modal supports responsive layout, backdrop close, Escape close, and page-scroll locking.
-- [x] Clerk provider, middleware, SSO callback route, email/password form actions, Google OAuth trigger and signed-in navbar state are wired.
+- [x] Better Auth server instance, API route, Drizzle adapter, email/password flow, email OTP plugin, Google OAuth trigger, signed-in navbar state, and admin plugin are wired.
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist and Logout.
@@ -159,9 +162,11 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
 - [x] Auth feedback is handled inside the modal with styled inline messages and loading states.
 - [x] Global toast notifications were removed from the prototype.
-- [x] Clerk middleware remains configured, but route protection is handled inside pages/server resources to avoid Clerk hosted organization/setup redirects.
-- [ ] RBAC/admin roles are not fixed or production-ready yet.
-- [ ] RBAC/admin-role cleanup is deferred to the next work session.
+- [x] Clerk middleware was removed during the Better Auth migration to avoid hosted organization/setup redirects.
+- [x] RBAC now uses app-owned user roles through Better Auth's admin plugin instead of Clerk Organizations.
+- [x] Local/dev email OTP delivery logs the code to the server console for testing.
+- [ ] Production email delivery must be connected before real users can receive signup and password-reset codes.
+- [ ] Production RBAC still needs final admin seeding, denial UI, and database-backed audit controls.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
 
 ## Single-project page — existing prototype
@@ -380,9 +385,10 @@ Next product decisions:
 Platform implementation:
 
 - [ ] Provision the production database and apply migrations.
-- [x] Implement Clerk app shell, sessions, custom signup verification, password reset, Google OAuth trigger, signed-in dropdown, and test protected pages.
+- [ ] Start production database from the fresh baseline migration; do not apply the old discarded migration chain.
+- [x] Implement Better Auth app shell, sessions, custom signup verification, password reset, Google OAuth trigger, signed-in dropdown, admin-role field, and test protected pages.
 - [ ] Complete database user sync and protected persistent actions.
-- [ ] Fix and finalize production RBAC/admin authorization.
+- [ ] Finalize production RBAC/admin authorization with first-admin setup, denial UI, and audit logging.
 - [ ] Persist votes, rolling 12-hour cooldowns, weekly archives, watchlists, and portfolios.
 - [ ] Build project submission, ownership/claim, and request-change workflows.
 - [ ] Build the production presale dataset, server-backed leaderboard, and presale-specific table.
@@ -398,7 +404,8 @@ Platform implementation:
 - Most Voted homepage view was replaced by Most Watched.
 - User-owned consumable boosters and booster-count ranking were discarded.
 - The fixed seven-day boost package proposal is superseded by varied boost durations: 24 hours, 3 days, and 7 days.
-- MetaMask and Coinbase Wallet authentication were removed from the current auth decision; keep Clerk email/password and Google only for now.
+- Clerk authentication was replaced by Better Auth so SpookyCoins owns auth tables, session checks, and roles.
+- MetaMask and Coinbase Wallet authentication were removed from the current auth decision; keep email/password and Google only for now.
 - Global toast notifications were removed; keep auth and form feedback inline until a better notification pattern is chosen.
 - Banner ad spaces are no longer part of the MVP commercial plan; the MVP sells only Promoted Coins and Boosts.
 - The old electric-surge 500× badge is replaced by the slower animated gold-gradient badge with black content.

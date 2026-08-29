@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useClerk, useUser } from '@clerk/nextjs';
+import { authClient } from '@/lib/auth/client';
 import { Brand } from '@/components/ui/brand';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 
@@ -10,12 +10,12 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { signOut } = useClerk();
-  const { isSignedIn, user } = useUser();
+  const { data: session } = authClient.useSession();
   const closeMenu = () => setMenuOpen(false);
-  const email = user?.primaryEmailAddress?.emailAddress || '';
+  const isSignedIn = Boolean(session?.user);
+  const email = session?.user.email || '';
   const userInitials = getEmailInitials(email);
-  const accountLabel = getAccountLabel(user?.firstName, user?.username, email);
+  const accountLabel = getAccountLabel(session?.user.name, email);
 
   function openAuth() {
     closeMenu();
@@ -25,7 +25,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   async function logout() {
     setUserMenuOpen(false);
     closeMenu();
-    await signOut();
+    await authClient.signOut();
     window.location.replace('/');
   }
 
@@ -151,8 +151,8 @@ function getEmailInitials(email: string) {
   return letters || 'SC';
 }
 
-function getAccountLabel(firstName?: string | null, username?: string | null, email?: string) {
-  return firstName || username || email?.split('@')[0] || 'Account';
+function getAccountLabel(name?: string | null, email?: string) {
+  return name || email?.split('@')[0] || 'Account';
 }
 
 function UserIcon() {

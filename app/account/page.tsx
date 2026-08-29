@@ -1,15 +1,17 @@
 import { SiteHeader } from '@/components/layout/site-header';
-import { getUserRole } from '@/lib/auth/roles';
-import { currentUser } from '@clerk/nextjs/server';
+import { auth } from '@/lib/auth/server';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export default async function AccountPage() {
-  const user = await currentUser();
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  if (!user) redirect('/');
+  if (!session) redirect('/');
 
-  const email = user.primaryEmailAddress?.emailAddress || 'signed-in user';
-  const role = getUserRole([user.publicMetadata, user.privateMetadata]);
+  const email = session.user.email || 'signed-in user';
+  const role = session.user.role || 'user';
 
   return (
     <main className="market-page">
