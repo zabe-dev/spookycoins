@@ -1852,6 +1852,43 @@ body.modal-open {
 }
 .admin-dashboard {
   min-height: calc(100dvh - 120px);
+  padding-block: 64px 100px;
+}
+.admin-dashboard h1 {
+  margin: 12px 0 8px;
+  font:
+    760 clamp(42px, 6vw, 68px) var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.06em;
+}
+.admin-dashboard > p:last-of-type {
+  max-width: 720px;
+  margin: 0;
+  color: #89939a;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 30px;
+}
+.admin-dashboard-grid div {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 18px;
+}
+.admin-dashboard-grid strong {
+  color: #f2f4f5;
+  font-size: 13px;
+}
+.admin-dashboard-grid span {
+  color: var(--sub);
+  font-size: 11px;
 }
 .settings-shell {
   min-height: calc(100dvh - 120px);
@@ -2120,6 +2157,12 @@ body.modal-open {
   cursor: pointer;
 }
 @media (max-width: 760px) {
+  .admin-dashboard {
+    padding-block: 40px 70px;
+  }
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
   .settings-shell {
     padding-block: 40px 70px;
   }
