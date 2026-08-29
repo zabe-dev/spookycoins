@@ -196,7 +196,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         const { error } = await authClient.signIn.email({ email, password });
         if (!error) {
           closeModal();
-          router.push('/account');
+          router.push('/settings');
+          router.refresh();
           return;
         }
         throw new Error(error.message || 'Login failed.');
@@ -206,7 +207,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
         closeModal();
-        router.push('/account');
+        router.push('/settings');
+        router.refresh();
         return;
       }
       throw new Error(error.message || 'Signup failed.');
@@ -330,7 +332,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     try {
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: '/account',
+        callbackURL: '/settings',
       });
       if (error) throw new Error(error.message || 'Google login failed.');
     } catch (caught) {

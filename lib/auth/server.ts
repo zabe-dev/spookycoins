@@ -77,6 +77,10 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
   },
+  user: {
+    changeEmail: { enabled: true },
+    deleteUser: { enabled: true },
+  },
   socialProviders:
     googleClientId && googleClientSecret
       ? {

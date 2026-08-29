@@ -61,15 +61,17 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                       <small>{email}</small>
                     </span>
                   </div>
-                  <Link href="/account" onClick={closeMenu}>
-                    <MenuIcon type="watchlist" /> Watchlist
-                  </Link>
-                  <Link href="/account?section=orders" onClick={closeMenu}>
-                    <MenuIcon type="orders" /> Orders
-                  </Link>
-                  <Link href="/account?section=settings" onClick={closeMenu}>
+                  <Link href="/settings" onClick={closeMenu}>
                     <MenuIcon type="settings" /> Settings
                   </Link>
+                  <button className="menu-disabled" disabled>
+                    <MenuIcon type="orders" /> Orders <small>Soon</small>
+                  </button>
+                  {session?.user.role === 'admin' && (
+                    <Link href="/admin/dashboard" onClick={closeMenu}>
+                      <MenuIcon type="admin" /> Admin panel
+                    </Link>
+                  )}
                   <button className="logout-action" onClick={() => void logout()}>
                     <MenuIcon type="logout" /> Logout
                   </button>
@@ -116,15 +118,17 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                           <small>{email}</small>
                         </span>
                       </div>
-                      <Link href="/account" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="watchlist" /> Watchlist
-                      </Link>
-                      <Link href="/account?section=orders" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="orders" /> Orders
-                      </Link>
-                      <Link href="/account?section=settings" onClick={() => setUserMenuOpen(false)}>
+                      <Link href="/settings" onClick={() => setUserMenuOpen(false)}>
                         <MenuIcon type="settings" /> Settings
                       </Link>
+                      <button className="menu-disabled" disabled>
+                        <MenuIcon type="orders" /> Orders <small>Soon</small>
+                      </button>
+                      {session?.user.role === 'admin' && (
+                        <Link href="/admin/dashboard" onClick={() => setUserMenuOpen(false)}>
+                          <MenuIcon type="admin" /> Admin panel
+                        </Link>
+                      )}
                       <button className="logout-action" onClick={() => void logout()}>
                         <MenuIcon type="logout" /> Logout
                       </button>
@@ -199,23 +203,16 @@ function MenuIcon({
   type,
 }: {
   type:
-    | 'discover'
-    | 'promoted'
-    | 'partners'
-    | 'advertise'
-    | 'watchlist'
-    | 'orders'
-    | 'settings'
-    | 'logout';
+    'discover' | 'promoted' | 'partners' | 'advertise' | 'orders' | 'settings' | 'admin' | 'logout';
 }) {
   const paths = {
     discover: 'M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0Zm8-4 2.2 4.2L10 14.4 12 8Z',
     promoted: 'M13 2 4 14h7l-1 8 10-13h-7l1-7Z',
     partners: 'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8 10v-1a8 8 0 0 0-16 0v1m18-10a3 3 0 1 0 0-6',
     advertise: 'M4 7h3l9-3v16l-9-3H4V7Zm0 0v10m13-7 3 2-3 2',
-    watchlist: 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.2 6.4 20.2 7.5 14 3 9.6l6.2-.9L12 3Z',
     orders: 'M6 3h12l1 4H5l1-4Zm-1 4h14l-1 14H6L5 7Zm4 4h6m-6 4h5',
     settings: 'M5 7h14M5 17h14M8 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm5 10a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z',
+    admin: 'M12 3 4 6v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-3Zm0 5v7m-3-4h6',
     logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9',
   };
 
@@ -223,11 +220,7 @@ function MenuIcon({
     <svg className="menu-item-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path
         d={paths[type]}
-        fill={
-          type === 'promoted' || type === 'discover' || type === 'watchlist'
-            ? 'currentColor'
-            : 'none'
-        }
+        fill={type === 'promoted' || type === 'discover' ? 'currentColor' : 'none'}
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
