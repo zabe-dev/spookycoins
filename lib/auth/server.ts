@@ -75,11 +75,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
-  },
-  emailVerification: {
-    autoSignInAfterVerification: true,
-    sendOnSignUp: false,
+    requireEmailVerification: false,
   },
   socialProviders:
     googleClientId && googleClientSecret
@@ -98,7 +94,6 @@ export const auth = betterAuth({
     emailOTP({
       otpLength: 6,
       expiresIn: 10 * 60,
-      overrideDefaultEmailVerification: true,
       async sendVerificationOTP({ email, otp, type }, ctx) {
         await sendAuthCodeEmail({ email, otp, type, request: ctx?.request });
       },

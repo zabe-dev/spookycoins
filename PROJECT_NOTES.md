@@ -154,7 +154,7 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] MetaMask and Coinbase Wallet options were intentionally removed.
 - [x] Modal supports responsive layout, backdrop close, Escape close, and page-scroll locking.
 - [x] Better Auth server instance, API route, Drizzle adapter, email/password flow, email OTP plugin, Google OAuth trigger, signed-in navbar state, and admin plugin are wired.
-- [x] Custom signup email verification uses six individual code fields.
+- [x] Signup currently uses direct Better Auth email/password account creation without a signup OTP step.
 - [x] Password reset by email code is available from the custom auth modal.
 - [x] Password reset uses the OTP only during the final password update so the code is not consumed before password validation.
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist, Orders, Settings, and Logout.
@@ -166,10 +166,10 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Global toast notifications were removed from the prototype.
 - [x] Clerk middleware was removed during the Better Auth migration to avoid hosted organization/setup redirects.
 - [x] RBAC now uses app-owned user roles through Better Auth's admin plugin instead of Clerk Organizations.
-- [x] Signup email verification and password recovery use six-digit OTP codes.
-- [x] Signup verification uses Better Auth `autoSignInAfterVerification` so successful OTP verification creates the session directly.
+- [x] Password recovery uses six-digit OTP codes.
+- [x] Signup OTP verification was intentionally removed from the current MVP flow to avoid account/session confusion during testing.
 - [x] Better Auth account schema includes the required `issuer` column for credential/social account lookup.
-- [x] Production email delivery for signup verification and password-reset codes is wired through Resend.
+- [x] Production email delivery for password-reset codes is wired through Resend.
 - [x] Auth emails use short plain text with “XXXXXX is your verification code” subjects and include request IP/location/time when available.
 - [x] Local/dev email OTP delivery falls back to logging the code to the server console when Resend is not configured.
 - [ ] Production RBAC still needs final admin seeding, denial UI, and database-backed audit controls.
@@ -411,7 +411,7 @@ Platform implementation:
 
 - [ ] Provision the production database and apply migrations.
 - [ ] Start production database from the fresh baseline migration; do not apply the old discarded migration chain.
-- [x] Implement Better Auth app shell, sessions, custom signup verification, password reset, Google OAuth trigger, signed-in dropdown, admin-role field, and test protected pages.
+- [x] Implement Better Auth app shell, sessions, direct email/password signup, password reset, Google OAuth trigger, signed-in dropdown, admin-role field, and test protected pages.
 - [ ] Complete database user sync and protected persistent actions.
 - [ ] Finalize production RBAC/admin authorization with first-admin setup, denial UI, and audit logging.
 - [ ] Persist votes, rolling 12-hour cooldowns, weekly archives, watchlists, and portfolios.
@@ -455,7 +455,7 @@ Advertise page planned for the next session:
 
 - Final resolution of boost effects on main ranking versus organic-only ranking.
 - Exact production market-data licensing/provider plan and whether/when to reintroduce live enrichment.
-- Production email sender for signup verification and password-reset OTPs.
+- Production email sender/provider hardening for password-reset OTPs.
 - Payment provider and accepted fiat/crypto methods.
 - Initial Promoted Coins slot cap.
 - Project-verification requirements and public warning presentation.

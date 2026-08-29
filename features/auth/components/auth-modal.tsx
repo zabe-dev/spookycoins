@@ -35,7 +35,7 @@ const resetPasswordSchema = z
   });
 
 type AuthMode = 'login' | 'signup' | 'reset';
-type AuthStep = 'credentials' | 'verify-signup' | 'reset-code' | 'new-password';
+type AuthStep = 'credentials' | 'reset-code' | 'new-password';
 
 type AuthFeedback = {
   tone: 'info' | 'success' | 'error';
@@ -46,10 +46,6 @@ type AuthFeedback = {
 const emptyCode = ['', '', '', '', '', ''];
 
 const authFeedbackCopy = {
-  emailVerificationSent:
-    'We sent a 6-digit verification code. Enter it below to finish signing in.',
-  signupCodeSent:
-    'If this email needs verification, we sent a 6-digit code. Enter it below to continue.',
   resetCodeSent:
     'If an account can use password reset, a 6-digit code has been sent. Enter it below to continue.',
   default: 'Something went wrong while processing your request. Check your details and try again.',
@@ -82,7 +78,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   const [loading, setLoading] = useState(false);
   const codeRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  const isCodeStep = step === 'verify-signup' || step === 'reset-code';
+  const isCodeStep = step === 'reset-code';
 
   const resetFlow = useCallback(
     (nextMode = mode) => {
@@ -156,11 +152,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     event.preventDefault();
     setFeedback(null);
 
-    if (step === 'verify-signup') {
-      await verifySignupCode();
-      return;
-    }
-
     if (step === 'reset-code') {
       await verifyResetCode();
       return;
@@ -206,25 +197,14 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           window.location.reload();
           return;
         }
-        if (error.status === 403) {
-          setVerificationEmail(email);
-          await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
-          setStep('verify-signup');
-          setCodeDigits(emptyCode);
-          setFeedback({
-            tone: 'info',
-            title: 'Verify your email',
-            message: authFeedbackCopy.emailVerificationSent,
-          });
-          return;
-        }
         throw new Error(error.message || 'Login failed.');
       }
 
       const name = getNameFromEmail(email);
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
-        await continueSignupAfterCreate(email, password);
+        closeModal();
+        window.location.reload();
         return;
       }
       throw new Error(error.message || 'Signup failed.');
@@ -233,56 +213,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         tone: 'error',
         title: mode === 'login' ? 'Could not log in' : 'Could not create account',
         message: getAuthError(caught, mode === 'login' ? 'login' : 'signup'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function continueSignupAfterCreate(email: string, password: string) {
-    const login = await authClient.signIn.email({ email, password });
-
-    if (!login.error) {
-      closeModal();
-      window.location.reload();
-      return;
-    }
-
-    if (login.error.status === 403) {
-      setVerificationEmail(email);
-      await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
-      setStep('verify-signup');
-      setCodeDigits(emptyCode);
-      setFeedback({
-        tone: 'success',
-        title: 'Code sent',
-        message: authFeedbackCopy.signupCodeSent,
-      });
-      return;
-    }
-
-    throw new Error(login.error.message || 'Signup failed.');
-  }
-
-  async function verifySignupCode() {
-    const code = readVerificationCode();
-    if (!code) return;
-
-    setLoading(true);
-    try {
-      const { error } = await authClient.emailOtp.verifyEmail({
-        email: verificationEmail,
-        otp: code,
-      });
-      if (error) throw new Error(error.message || 'Verification failed.');
-
-      closeModal();
-      window.location.reload();
-    } catch (caught) {
-      setFeedback({
-        tone: 'error',
-        title: 'Wrong or expired code',
-        message: getAuthError(caught, 'verification'),
       });
     } finally {
       setLoading(false);
@@ -416,23 +346,19 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       ? 'Reset your password'
       : mode === 'login'
         ? 'Welcome back'
-        : step === 'verify-signup'
-          ? 'Verify your email'
-          : 'Create your account';
+        : 'Create your account';
 
   const submitLabel = loading
     ? 'Working…'
-    : step === 'verify-signup'
-      ? 'Verify email'
-      : step === 'reset-code'
-        ? 'Verify reset code'
-        : step === 'new-password'
-          ? 'Update password'
-          : mode === 'reset'
-            ? 'Send reset code'
-            : mode === 'login'
-              ? 'Log in'
-              : 'Create account';
+    : step === 'reset-code'
+      ? 'Verify reset code'
+      : step === 'new-password'
+        ? 'Update password'
+        : mode === 'reset'
+          ? 'Send reset code'
+          : mode === 'login'
+            ? 'Log in'
+            : 'Create account';
 
   return (
     <div className="auth-overlay" role="presentation" onMouseDown={closeModal}>
@@ -490,7 +416,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           {isCodeStep ? (
             <>
               <label>
-                {step === 'reset-code' ? 'Password reset code' : 'Verification code'}
+                Password reset code
                 <span className="auth-code-grid">
                   {codeDigits.map((digit, index) => (
                     <input
