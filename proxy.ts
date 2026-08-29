@@ -1,17 +1,16 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-
-const isProtectedRoute = createRouteMatcher(['/account(.*)', '/admin(.*)']);
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
 export default clerkMiddleware(
-  async (auth, req) => {
-    if (isProtectedRoute(req)) await auth.protect();
+  () => {
+    // Keep Clerk middleware active while protected pages perform resource-level checks.
   },
-  { debug: true },
+  { debug: process.env.NODE_ENV === 'development' },
 );
 
 export const config = {
   matcher: [
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ico|ttf|woff2?|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
+    '/__clerk/(.*)',
   ],
 };

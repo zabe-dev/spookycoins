@@ -159,6 +159,7 @@ Clerk is responsible for identity and sessions. SpookyCoins keeps application da
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
 - [x] Auth feedback is handled inside the modal with styled inline messages and loading states.
 - [x] Global toast notifications were removed from the prototype.
+- [x] Clerk middleware remains configured, but route protection is handled inside pages/server resources to avoid Clerk hosted organization/setup redirects.
 - [ ] RBAC/admin roles are not fixed or production-ready yet.
 - [ ] RBAC/admin-role cleanup is deferred to the next work session.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
