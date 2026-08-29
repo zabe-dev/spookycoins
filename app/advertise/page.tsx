@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { BoltIcon } from '@/features/coins/components';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import '../market.css';
@@ -36,7 +37,7 @@ const boostRates = [
 
 const approvalSteps = [
   'Choose the project and promotion type',
-  'Contact SpookyCoinsSupport on Telegram',
+  'Contact @SpookyCoinsSupport on Telegram',
   'We review eligibility, dates, and placement availability',
   'Payment/order is confirmed',
   'Approved placement goes live on schedule',
@@ -59,7 +60,7 @@ export default function AdvertisePage() {
           </p>
           <div className="advertise-actions">
             <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
-              Contact SpookyCoinsSupport
+              Contact @SpookyCoinsSupport
             </a>
             <Link className="advertise-secondary" href="/submit">
               Submit your project first
@@ -70,7 +71,7 @@ export default function AdvertisePage() {
         <div className="advertise-grid">
           <section className="advertise-card">
             <span className="advertise-card-icon">★</span>
-            <h2>Promoted Coin slots</h2>
+            <h2>Promoted Coins</h2>
             <p>
               Promoted Coin placement gives approved projects premium table visibility for the dates
               purchased. This is advertising inventory, not a safety endorsement.
@@ -84,11 +85,12 @@ export default function AdvertisePage() {
                 </div>
               ))}
             </div>
-            <p className="advertise-note">Example: 7 days = $210 → 30% off → $147 total.</p>
           </section>
 
           <section className="advertise-card">
-            <span className="advertise-card-icon bolt">⚡</span>
+            <span className="advertise-card-icon bolt">
+              <BoltIcon />
+            </span>
             <h2>Boost packages</h2>
             <p>
               Boosts multiply a project’s displayed/ranking vote value for the purchased active
@@ -120,7 +122,7 @@ export default function AdvertisePage() {
               activation at 12:00 AM. Requests after cutoff may move to the next activation cycle.
             </p>
           </div>
-          <ol className="approval-list">
+          <ol className="approval-list" type="1">
             {approvalSteps.map((step) => (
               <li key={step}>{step}</li>
             ))}

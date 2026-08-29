@@ -51,8 +51,8 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             <Link href="/advertise" onClick={closeMenu}>
               <MenuIcon type="advertise" /> Advertise
             </Link>
-            {isSignedIn && (
-              <div className="mobile-menu-account">
+            <div className="mobile-menu-account">
+              {isSignedIn ? (
                 <>
                   <div className="mobile-user-card">
                     <span className="user-avatar-btn">{userInitials}</span>
@@ -74,8 +74,12 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     <MenuIcon type="logout" /> Logout
                   </button>
                 </>
-              </div>
-            )}
+              ) : (
+                <button className="mobile-login-action" onClick={openAuth}>
+                  <UserIcon /> Login or signup
+                </button>
+              )}
+            </div>
           </nav>
           <div className="nav-actions">
             {isSignedIn ? (

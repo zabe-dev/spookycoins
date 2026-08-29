@@ -171,7 +171,7 @@
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 18px;
+  margin-top: 36px;
 }
 
 .advertise-boosts div {
@@ -218,13 +218,18 @@
 }
 
 .approval-list {
-  display: grid;
-  gap: 10px;
+  list-style: decimal;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* space between items */
   margin: 0;
   padding-left: 18px;
-  color: #dfe5e5;
-  font-weight: 750;
+  color: var(--sub);
   line-height: 1.55;
+}
+
+.approval-list li {
+  display: list-item;
 }
 
 .approval-list li::marker {
