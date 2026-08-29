@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export function GhostLogo() {
   return (
     <svg className="ghost-logo" viewBox="0 0 40 40" aria-hidden="true">
@@ -32,12 +34,12 @@ export function GhostLogo() {
 
 export function Brand({ beta = false }: { beta?: boolean }) {
   return (
-    <a className="brand" href="#" aria-label="SpookyCoins home">
+    <Link className="brand" href="/" aria-label="SpookyCoins home">
       <span className="brand-mark">
         <GhostLogo />
       </span>
       <span>spookycoins</span>
       {beta && <em>beta</em>}
-    </a>
+    </Link>
   );
 }
