@@ -363,7 +363,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
             : 'Create account';
 
   return (
-    <div className="auth-overlay" role="presentation" onMouseDown={closeModal}>
+    <div className="auth-overlay" role="presentation">
       <div
         className="auth-modal"
         role="dialog"

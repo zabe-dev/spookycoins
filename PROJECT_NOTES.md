@@ -152,7 +152,9 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Reusable Log In / Sign Up modal is opened from the navbar.
 - [x] Email/password and Google auth options are present.
 - [x] MetaMask and Coinbase Wallet options were intentionally removed.
-- [x] Modal supports responsive layout, backdrop close, Escape close, and page-scroll locking.
+- [x] Auth modal supports responsive layout, Escape close, explicit close button, and page-scroll locking.
+- [x] Auth modal must not close when clicking/tapping outside the modal because accidental close can interrupt login, signup, and reset-password flows.
+- [ ] Future non-auth modals should decide backdrop-click behavior case by case; do not blindly copy the auth modal rule.
 - [x] Better Auth server instance, API route, Drizzle adapter, email/password flow, email OTP plugin, Google OAuth trigger, signed-in navbar state, and admin plugin are wired.
 - [x] Signup currently uses direct Better Auth email/password account creation without a signup OTP step.
 - [x] Password reset by email code is available from the custom auth modal.
