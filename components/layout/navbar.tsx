@@ -48,11 +48,11 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             <Link href="/#partners" onClick={closeMenu}>
               <MenuIcon type="partners" /> Partners
             </Link>
-            <Link href="/#footer" onClick={closeMenu}>
+            <Link href="/advertise" onClick={closeMenu}>
               <MenuIcon type="advertise" /> Advertise
             </Link>
-            <div className="mobile-menu-account">
-              {isSignedIn ? (
+            {isSignedIn && (
+              <div className="mobile-menu-account">
                 <>
                   <div className="mobile-user-card">
                     <span className="user-avatar-btn">{userInitials}</span>
@@ -74,69 +74,68 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     <MenuIcon type="logout" /> Logout
                   </button>
                 </>
-              ) : (
-                <button className="mobile-login-action" onClick={openAuth}>
-                  <UserIcon /> Log in or sign up
-                </button>
-              )}
-            </div>
+              </div>
+            )}
           </nav>
           <div className="nav-actions">
-            <Link className="submit-coin-btn" href="/submit">
-              ＋ Submit coin
-            </Link>
             {isSignedIn ? (
-              <div
-                className="user-menu-wrap"
-                onMouseEnter={() => setUserMenuOpen(true)}
-                onMouseLeave={() => setUserMenuOpen(false)}
-                onFocus={() => setUserMenuOpen(true)}
-                onBlur={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget)) {
-                    setUserMenuOpen(false);
-                  }
-                }}
-              >
-                <button
-                  className="user-avatar-btn"
-                  onClick={() => setUserMenuOpen((open) => !open)}
-                  aria-expanded={userMenuOpen}
-                  aria-label="Open user menu"
+              <>
+                <Link className="submit-coin-btn" href="/submit">
+                  ＋ Submit coin
+                </Link>
+                <div
+                  className="user-menu-wrap"
+                  onMouseEnter={() => setUserMenuOpen(true)}
+                  onMouseLeave={() => setUserMenuOpen(false)}
+                  onFocus={() => setUserMenuOpen(true)}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                      setUserMenuOpen(false);
+                    }
+                  }}
                 >
-                  <span>{userInitials}</span>
-                  <ChevronDownIcon />
-                </button>
-                {userMenuOpen && (
-                  <div className="user-dropdown">
-                    <div className="desktop-user-card">
-                      <span className="user-avatar-btn">{userInitials}</span>
-                      <span>
-                        <b>{accountLabel}</b>
-                        <small>{email}</small>
-                      </span>
+                  <button
+                    className="user-avatar-btn"
+                    onClick={() => setUserMenuOpen((open) => !open)}
+                    aria-expanded={userMenuOpen}
+                    aria-label="Open user menu"
+                  >
+                    <span>{userInitials}</span>
+                    <ChevronDownIcon />
+                  </button>
+                  {userMenuOpen && (
+                    <div className="user-dropdown">
+                      <div className="desktop-user-card">
+                        <span className="user-avatar-btn">{userInitials}</span>
+                        <span>
+                          <b>{accountLabel}</b>
+                          <small>{email}</small>
+                        </span>
+                      </div>
+                      <Link href="/account" onClick={() => setUserMenuOpen(false)}>
+                        <MenuIcon type="watchlist" /> Watchlist
+                      </Link>
+                      <Link href="/account?section=orders" onClick={() => setUserMenuOpen(false)}>
+                        <MenuIcon type="orders" /> Orders
+                      </Link>
+                      <Link href="/account?section=settings" onClick={() => setUserMenuOpen(false)}>
+                        <MenuIcon type="settings" /> Settings
+                      </Link>
+                      <button className="logout-action" onClick={() => void logout()}>
+                        <MenuIcon type="logout" /> Logout
+                      </button>
                     </div>
-                    <Link href="/account" onClick={() => setUserMenuOpen(false)}>
-                      <MenuIcon type="watchlist" /> Watchlist
-                    </Link>
-                    <Link href="/account?section=orders" onClick={() => setUserMenuOpen(false)}>
-                      <MenuIcon type="orders" /> Orders
-                    </Link>
-                    <Link href="/account?section=settings" onClick={() => setUserMenuOpen(false)}>
-                      <MenuIcon type="settings" /> Settings
-                    </Link>
-                    <button className="logout-action" onClick={() => void logout()}>
-                      <MenuIcon type="logout" /> Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </>
             ) : (
               <button
-                className="wallet-btn auth-icon-btn"
+                className="wallet-btn auth-login-btn"
                 onClick={openAuth}
                 aria-label="Open login or signup"
               >
                 <UserIcon />
+                <span>Login or signup</span>
               </button>
             )}
             <button

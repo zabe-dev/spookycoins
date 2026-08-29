@@ -429,13 +429,14 @@ Platform implementation:
 - [ ] Implement boost checkout, payments, approval, activation, expiration, one-active-boost enforcement, and PDF receipts.
 - [ ] Keep banner ad placements paused and non-operational until there is a deliberate product decision to reopen them.
 
-Advertise page planned for the next session:
+Advertise page:
 
-- [ ] Create `/advertise` as a polished education/sales page for current promotion products.
-- [ ] Explain that the MVP sells only Promoted Coin slots and Boosts.
-- [ ] Clearly state that banner ad placements are visible as prototype placeholders but are not available for purchase yet.
-- [ ] Include Promoted Coin slot pricing, boost package pricing, Golden Ticker details, review/activation flow, and manual approval disclaimers.
-- [ ] Direct banner ad inquiries to contact **SpookyCoinsSupport** on Telegram because banner placements are paused and manually handled only.
+- [x] Create `/advertise` as a polished education/sales page for current promotion products.
+- [x] Explain that the MVP sells only Promoted Coin slots and Boosts.
+- [x] Clearly state that banner ad placements are visible as prototype placeholders but are not available for purchase yet.
+- [x] Include Promoted Coin slot pricing, boost package pricing, Golden Ticker details, review/activation flow, and manual approval disclaimers.
+- [x] Direct promotion scheduling and banner-ad inquiries to **SpookyCoinsSupport** on Telegram.
+- [x] Navbar Advertise now routes to `/advertise`.
 - [ ] Explain that Boosts and Promoted Coin slots are intended to become automated self-serve products once checkout and eligibility checks are built.
 - [ ] Update navbar Advertise link to `/advertise`.
 

@@ -844,6 +844,9 @@
   .wallet-btn {
     padding-inline: 10px;
   }
+  .auth-login-btn span {
+    display: none;
+  }
   .ad-grid {
     padding-top: 10px;
   }
