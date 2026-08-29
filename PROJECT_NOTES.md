@@ -156,8 +156,8 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Better Auth server instance, API route, Drizzle adapter, email/password flow, email OTP plugin, Google OAuth trigger, signed-in navbar state, and admin plugin are wired.
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
-- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist and Logout.
-- [x] Desktop signed-in navigation uses an account-style dropdown with Watchlist and a red Logout action with a matching red icon.
+- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist, Orders, Settings, and Logout.
+- [x] Desktop signed-in navigation uses an account-style dropdown with Watchlist, Orders, Settings, and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
 - [x] Logout sends the user to the homepage with a full page reload.
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
@@ -232,7 +232,7 @@ Promoted Coins base price is **$30/day**.
 
 Example: 7 days = $210 before discount, 30% off, **$147 total**.
 
-Promoted Coin placements are still subject to manual approval. Purchasing a placement guarantees the approved promoted surface and dates, not safety endorsement.
+Promoted Coin placements can be automated after checkout if eligibility checks pass: the project must already exist on SpookyCoins, must not be suspended, must not be rejected/flagged, and the requested date/slot must be available. Purchasing a placement guarantees the approved promoted surface and dates, not safety endorsement.
 
 ## Boost packages — current commercial decision
 
@@ -257,13 +257,16 @@ Boost pricing:
 - Only one active boost may apply to a project at a time.
 - Boosts do not stack; if a project already has an active boost, additional boosts for that project are disabled until the current boost expires.
 - The 500× tier includes Golden Ticker styling: animated orange/gold project-name treatment and premium 500× badge styling while active.
+- Boost checkout can be automated if eligibility checks pass: the project must already exist on SpookyCoins, must not be suspended, must not be rejected/flagged, and must not already have an active boost.
 
 ## Review and activation — current commercial decision
 
 - Daily review cutoff is **6:00 PM**.
 - Requests submitted before 6:00 PM are reviewed for possible activation at **12:00 AM**, giving up to a six-hour review window.
 - Requests submitted after 6:00 PM are not guaranteed to be reviewed or activated by 12:00 AM and may move to the next activation cycle.
-- All Promoted Coin placements and Boosts are subject to manual approval.
+- Promoted Coin placements and Boosts should move toward automated payment, eligibility checks, scheduling, activation, expiration, and receipt generation.
+- Banner ad placements are paused, not operational, and not available for self-serve purchase.
+- Future banner ad placements require manual review and direct scheduling through Telegram before they become operational.
 
 ### Unresolved boost-ranking rule
 
@@ -281,6 +284,20 @@ The homepage currently displays boost status but does not implement either ranki
 - Reject undisclosed redirect chains or destination URLs that differ from the approved submission.
 - Store a clear rejection reason and track repeated violations for possible buyer/account blocking.
 - If review misses a selected start date, handle the SLA failure manually through extension, rescheduling, or refund; never silently run a paid placement on dates the buyer did not select.
+
+### Promotion automation brainstorm — planned
+
+- [ ] Require a project to be already submitted/listed on SpookyCoins before buying a Boost or Promoted Coin slot.
+- [ ] Block checkout for suspended, rejected, fraud-flagged, hidden, or under-review projects.
+- [ ] For Boosts, block checkout while the project has an active boost because boosts do not stack.
+- [ ] For Promoted Coin slots, show an availability calendar or duration picker before payment.
+- [ ] Calculate Promoted Coin discounts automatically based on selected duration.
+- [ ] Create an order with pending payment status before redirecting to the payment provider.
+- [ ] Activate automatically after confirmed payment only if the project still passes eligibility checks.
+- [ ] If eligibility changes after payment but before activation, move the order to manual review/refund handling.
+- [ ] Generate a PDF receipt after payment confirmation.
+- [ ] Keep an admin override for refunds, comps, extensions, forced expiration, and abuse response.
+- [ ] Keep banner ads out of the automated checkout until the banner product is intentionally reopened.
 
 ## Project submission — planned
 
@@ -399,6 +416,7 @@ Platform implementation:
 - [ ] Implement reports, moderation, anti-bot controls, and the admin dashboard.
 - [ ] Implement Promoted Coin checkout, payments, approval, scheduling, activation, expiration, and PDF receipts.
 - [ ] Implement boost checkout, payments, approval, activation, expiration, one-active-boost enforcement, and PDF receipts.
+- [ ] Keep banner ad placements paused and non-operational until there is a deliberate product decision to reopen them.
 
 Advertise page planned for the next session:
 
@@ -406,7 +424,8 @@ Advertise page planned for the next session:
 - [ ] Explain that the MVP sells only Promoted Coin slots and Boosts.
 - [ ] Clearly state that banner ad placements are visible as prototype placeholders but are not available for purchase yet.
 - [ ] Include Promoted Coin slot pricing, boost package pricing, Golden Ticker details, review/activation flow, and manual approval disclaimers.
-- [ ] Direct buyers to contact **SpookyCoinsSupport** on Telegram to schedule placements manually.
+- [ ] Direct banner ad inquiries to contact **SpookyCoinsSupport** on Telegram because banner placements are paused and manually handled only.
+- [ ] Explain that Boosts and Promoted Coin slots are intended to become automated self-serve products once checkout and eligibility checks are built.
 - [ ] Update navbar Advertise link to `/advertise`.
 
 ## Superseded decisions

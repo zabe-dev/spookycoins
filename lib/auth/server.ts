@@ -49,6 +49,10 @@ async function sendAuthCodeEmail({
     throw new Error('AUTH_EMAIL_SEND_FAILED');
   }
 
+  if (process.env.NODE_ENV !== 'production') {
+    console.info(`[SpookyCoins auth] Sending ${type} OTP to ${email} with Resend.`);
+  }
+
   const { error } = await resend.emails.send({
     from: authEmailFrom,
     to: email,
@@ -91,6 +95,10 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+  },
+  emailVerification: {
+    autoSignInAfterVerification: true,
+    sendOnSignUp: false,
   },
   socialProviders:
     googleClientId && googleClientSecret

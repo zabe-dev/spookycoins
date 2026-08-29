@@ -61,6 +61,7 @@ const authFeedbackCopy = {
   verification: 'That code is incorrect or expired. Check the latest email and enter all 6 digits.',
   passwordReset: 'We could not update the password. Request a new reset code and try again.',
   resetRequest: 'We could not start password reset right now. Wait a moment, then try again.',
+  emailDelivery: 'We could not send the email code right now. Wait a moment, then try again.',
   weakPassword: 'Use a stronger password with at least 8 characters.',
   leakedPassword: 'Use a different password that has not appeared in a known data leak.',
   rateLimited: 'Too many attempts. Wait a bit before trying again.',
@@ -75,7 +76,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   const [step, setStep] = useState<AuthStep>('credentials');
   const [feedback, setFeedback] = useState<AuthFeedback>(null);
   const [verificationEmail, setVerificationEmail] = useState('');
-  const [pendingPassword, setPendingPassword] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [codeDigits, setCodeDigits] = useState(emptyCode);
   const [loading, setLoading] = useState(false);
@@ -89,7 +89,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       setStep('credentials');
       setFeedback(null);
       setVerificationEmail('');
-      setPendingPassword('');
       setResetCode('');
       setCodeDigits(emptyCode);
       setLoading(false);
@@ -208,7 +207,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         }
         if (error.status === 403) {
           setVerificationEmail(email);
-          setPendingPassword(password);
           await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
           setStep('verify-signup');
           setCodeDigits(emptyCode);
@@ -226,7 +224,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
         setVerificationEmail(email);
-        setPendingPassword(password);
         await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
         setStep('verify-signup');
         setCodeDigits(emptyCode);
@@ -260,15 +257,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         otp: code,
       });
       if (error) throw new Error(error.message || 'Verification failed.');
-
-      if (pendingPassword) {
-        const login = await authClient.signIn.email({
-          email: verificationEmail,
-          password: pendingPassword,
-        });
-        if (login.error)
-          throw new Error(login.error.message || 'Email verified, but login failed.');
-      }
 
       closeModal();
       window.location.reload();
@@ -693,6 +681,10 @@ function getAuthError(error: unknown, context: AuthErrorContext) {
   const code = readAuthErrorCode(error);
   const status = readAuthErrorStatus(error);
   const message = error instanceof Error ? error.message.toLowerCase() : '';
+
+  if (message.includes('auth_email_send_failed') || code.includes('auth_email_send_failed')) {
+    return authFeedbackCopy.emailDelivery;
+  }
 
   if (status === 429 || code.includes('rate') || message.includes('rate')) {
     return authFeedbackCopy.rateLimited;
