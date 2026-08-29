@@ -2,6 +2,7 @@
 
 import { Brand } from '@/components/ui/brand';
 import { authClient } from '@/lib/auth/client';
+import { useRouter } from 'next/navigation';
 import {
   useEffect,
   useCallback,
@@ -69,6 +70,7 @@ type AuthErrorContext =
   'login' | 'signup' | 'verification' | 'passwordReset' | 'resetRequest' | 'google';
 
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('login');
   const [step, setStep] = useState<AuthStep>('credentials');
   const [feedback, setFeedback] = useState<AuthFeedback>(null);
@@ -194,7 +196,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         const { error } = await authClient.signIn.email({ email, password });
         if (!error) {
           closeModal();
-          window.location.reload();
+          router.push('/account');
           return;
         }
         throw new Error(error.message || 'Login failed.');
@@ -204,7 +206,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
         closeModal();
-        window.location.reload();
+        router.push('/account');
         return;
       }
       throw new Error(error.message || 'Signup failed.');
@@ -328,7 +330,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     try {
       const { error } = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: window.location.href,
+        callbackURL: '/account',
       });
       if (error) throw new Error(error.message || 'Google login failed.');
     } catch (caught) {
