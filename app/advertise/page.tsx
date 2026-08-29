@@ -1,7 +1,23 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import '../market.css';
 import './advertise.css';
+
+export const metadata: Metadata = {
+  title: 'Advertise Crypto Projects',
+  description:
+    'Advertise on SpookyCoins with Promoted Coin slots and Boost packages for listed crypto projects. Banner ad placements are paused for now.',
+  alternates: {
+    canonical: '/advertise',
+  },
+  openGraph: {
+    title: 'Advertise Crypto Projects on SpookyCoins',
+    description:
+      'Promote listed crypto projects with Promoted Coin placements, Boost packages, and Golden Ticker visibility.',
+    url: '/advertise',
+  },
+};
 
 const promotedRates = [
   { duration: '1–2 days', discount: 'No discount', price: '$30/day' },

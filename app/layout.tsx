@@ -21,17 +21,45 @@ const firaMono = Fira_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SpookyCoins — Community Crypto Discovery',
+  metadataBase: new URL('https://spookycoins.com'),
+  title: {
+    default: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
+    template: '%s | SpookyCoins',
+  },
   description:
-    'Discover early crypto coins, vote every 12 hours, and follow the signals communities create.',
+    'Discover new crypto projects, token presales, trending coins, and weekly community-voted rankings across ETH, BSC, Solana, Base, Polygon, and more.',
+  keywords: [
+    'new crypto projects',
+    'crypto voting',
+    'crypto presales',
+    'trending crypto coins',
+    'new tokens',
+    'meme coins',
+    'DeFi tokens',
+    'community crypto rankings',
+    'crypto watchlist',
+    'SpookyCoins',
+  ],
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'SpookyCoins — Find what’s moving next.',
-    description: 'Community-powered crypto discovery.',
+    title: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
+    description:
+      'Track early crypto projects, vote every 12 hours, follow watchlists, and discover weekly community signals before they get crowded.',
+    url: '/',
+    siteName: 'SpookyCoins',
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SpookyCoins — Find what’s moving next.',
-    description: 'Community-powered crypto discovery.',
+    title: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
+    description:
+      'Discover new crypto projects, presales, trending coins, and weekly community-voted rankings.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

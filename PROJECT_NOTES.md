@@ -12,6 +12,14 @@ Working positioning:
 
 > Discover crypto projects before everyone else.
 
+## SEO positioning — current decision
+
+- [x] Global SEO targets “new crypto projects,” “crypto voting,” “crypto presales,” “trending crypto coins,” “weekly community rankings,” and “watchlist” language.
+- [x] Metadata avoids implying that listed projects are safe, endorsed, or verified investments.
+- [x] Public project pages generate project-specific titles/descriptions from canonical project data.
+- [x] Advertise has dedicated indexable metadata for Promoted Coin slots and Boost packages.
+- [x] Account, Admin, and Submit pages are noindex because they are authenticated/product workflow pages rather than public discovery pages.
+
 ## Agreed technology stack
 
 | Area           | Technology                                                           |

@@ -1,7 +1,16 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { auth } from '@/lib/auth/server';
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+
+export const metadata: Metadata = {
+  title: 'Admin',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function AdminPage() {
   const session = await auth.api.getSession({
