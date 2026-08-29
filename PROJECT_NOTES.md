@@ -21,6 +21,7 @@ Working positioning:
 | Database       | Neon (Postgres) + Drizzle ORM                                        |
 | Validation     | Zod                                                                  |
 | File storage   | Cloudflare R2                                                        |
+| Email delivery | Resend                                                               |
 | Payments       | Coinbase Commerce or NOWPayments; final provider is not yet selected |
 
 Better Auth is responsible for identity and sessions using SpookyCoins-owned database tables. SpookyCoins keeps application data—such as user profiles, votes, watchlists, project claims, submissions, promoted placements, boosts, and payments—in its own database. Sensitive records such as payments and submissions use UUIDs. MetaMask and Coinbase Wallet auth were removed from the current product decision.
@@ -156,16 +157,17 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist and Logout.
-- [x] Desktop signed-in navigation uses an account-style dropdown with Watchlists and a red Logout action with a matching red icon.
+- [x] Desktop signed-in navigation uses an account-style dropdown with Watchlist and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
 - [x] Logout sends the user to the homepage with a full page reload.
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
-- [x] Auth feedback is handled inside the modal with styled inline messages and loading states.
+- [x] Auth feedback is handled inside the modal with styled inline messages, loading states, and sanitized descriptive copy that avoids sensitive/debug details.
 - [x] Global toast notifications were removed from the prototype.
 - [x] Clerk middleware was removed during the Better Auth migration to avoid hosted organization/setup redirects.
 - [x] RBAC now uses app-owned user roles through Better Auth's admin plugin instead of Clerk Organizations.
-- [x] Local/dev email OTP delivery logs the code to the server console for testing.
-- [ ] Production email delivery must be connected before real users can receive signup and password-reset codes.
+- [x] Signup email verification and password recovery use six-digit OTP codes.
+- [x] Production email delivery for signup verification and password-reset codes is wired through Resend.
+- [x] Local/dev email OTP delivery falls back to logging the code to the server console when Resend is not configured.
 - [ ] Production RBAC still needs final admin seeding, denial UI, and database-backed audit controls.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
 
@@ -238,13 +240,13 @@ The old user-owned consumable booster concept is discarded. Boosts belong to a p
 
 Boost pricing:
 
-| Package | Price | Vote multiplier | Duration |
-| ------: | ----: | --------------: | -------: |
-|     10× |   TBD |              ×2 | 24 hours |
-|     30× |   TBD |              ×2 |   3 days |
-|     50× |   TBD |              ×3 | 24 hours |
-|    100× |   TBD |              ×3 |   3 days |
-|    500× |   TBD |              ×5 |   7 days |
+| Package | Price | Vote multiplier | Duration | Extra         |
+| ------: | ----: | --------------: | -------: | ------------- |
+|     10× |   $39 |              ×2 | 24 hours | —             |
+|     30× |   $89 |              ×2 |   3 days | —             |
+|     50× |  $149 |              ×3 | 24 hours | —             |
+|    100× |  $299 |              ×3 |   3 days | —             |
+|    500× |  $799 |              ×5 |   7 days | Golden Ticker |
 
 - Boosts shoot a project up the rankings for a paid period by multiplying its displayed/ranking vote value.
 - The multiplier stays the same for the purchased boost duration.
@@ -254,6 +256,7 @@ Boost pricing:
 - Boosts never change stored raw-vote counts.
 - Only one active boost may apply to a project at a time.
 - Boosts do not stack; if a project already has an active boost, additional boosts for that project are disabled until the current boost expires.
+- The 500× tier includes Golden Ticker styling: animated orange/gold project-name treatment and premium 500× badge styling while active.
 
 ## Review and activation — current commercial decision
 
@@ -361,7 +364,8 @@ Report moderation states are New, Under Review, Action Taken, Rejected, and Reso
 
 ## Current prototype boundaries
 
-- Votes, watchlists, authentication, reports, project changes, paid placement actions, boost actions, and payments are not persistent.
+- Votes, watchlists, reports, project changes, paid placement actions, boost actions, and payments are not persistent.
+- Authentication sessions now use Better Auth and the database, with Resend wired for production OTP email delivery; final RBAC hardening is still pending.
 - Initial watchlist counts are placeholder values, so Most Watched uses trend as a tie fallback.
 - Topbar project/user/total-vote totals are presentation values.
 - The Spooky promoted row is placeholder inventory, not a paid order.
@@ -396,6 +400,15 @@ Platform implementation:
 - [ ] Implement Promoted Coin checkout, payments, approval, scheduling, activation, expiration, and PDF receipts.
 - [ ] Implement boost checkout, payments, approval, activation, expiration, one-active-boost enforcement, and PDF receipts.
 
+Advertise page planned for the next session:
+
+- [ ] Create `/advertise` as a polished education/sales page for current promotion products.
+- [ ] Explain that the MVP sells only Promoted Coin slots and Boosts.
+- [ ] Clearly state that banner ad placements are visible as prototype placeholders but are not available for purchase yet.
+- [ ] Include Promoted Coin slot pricing, boost package pricing, Golden Ticker details, review/activation flow, and manual approval disclaimers.
+- [ ] Direct buyers to contact **SpookyCoinsSupport** on Telegram to schedule placements manually.
+- [ ] Update navbar Advertise link to `/advertise`.
+
 ## Superseded decisions
 
 - **VYRAL**, **TokenPulse**, and other brainstorm names are replaced by **spookycoins**.
@@ -419,7 +432,7 @@ Platform implementation:
 
 - Final resolution of boost effects on main ranking versus organic-only ranking.
 - Exact production market-data licensing/provider plan and whether/when to reintroduce live enrichment.
-- Authentication implementation and account-verification requirements.
+- Production email sender for signup verification and password-reset OTPs.
 - Payment provider and accepted fiat/crypto methods.
 - Initial Promoted Coins slot cap.
 - Project-verification requirements and public warning presentation.

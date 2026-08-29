@@ -45,6 +45,31 @@ type AuthFeedback = {
 
 const emptyCode = ['', '', '', '', '', ''];
 
+const authFeedbackCopy = {
+  emailVerificationSent:
+    'We sent a 6-digit verification code. Enter it below to finish signing in.',
+  signupCodeSent:
+    'We sent a 6-digit verification code. Enter it below to finish creating your account.',
+  resetCodeSent:
+    'If an account can use password reset, a 6-digit code has been sent. Enter it below to continue.',
+  default: 'Something went wrong while processing your request. Check your details and try again.',
+  google:
+    'Google could not finish connecting. Try again, or continue with your email and password.',
+  login:
+    'We could not sign you in with those details. Check your email and password, then try again.',
+  signup: 'We could not create the account. Check your email and password, then try again.',
+  verification: 'That code is incorrect or expired. Check the latest email and enter all 6 digits.',
+  passwordReset: 'We could not update the password. Request a new reset code and try again.',
+  resetRequest: 'We could not start password reset right now. Wait a moment, then try again.',
+  weakPassword: 'Use a stronger password with at least 8 characters.',
+  leakedPassword: 'Use a different password that has not appeared in a known data leak.',
+  rateLimited: 'Too many attempts. Wait a bit before trying again.',
+  network: 'We could not reach the auth service. Check your connection and try again.',
+} satisfies Record<string, string>;
+
+type AuthErrorContext =
+  'login' | 'signup' | 'verification' | 'passwordReset' | 'resetRequest' | 'google';
+
 export function AuthModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [mode, setMode] = useState<AuthMode>('login');
   const [step, setStep] = useState<AuthStep>('credentials');
@@ -190,7 +215,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           setFeedback({
             tone: 'info',
             title: 'Verify your email',
-            message: `We sent a 6-digit code to ${email}. Enter it below to finish logging in.`,
+            message: authFeedbackCopy.emailVerificationSent,
           });
           return;
         }
@@ -208,13 +233,17 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         setFeedback({
           tone: 'success',
           title: 'Code sent',
-          message: `We sent a 6-digit code to ${email}. Enter it below to finish creating your account.`,
+          message: authFeedbackCopy.signupCodeSent,
         });
         return;
       }
       throw new Error(error.message || 'Signup failed.');
     } catch (caught) {
-      setFeedback({ tone: 'error', title: 'Could not continue', message: getAuthError(caught) });
+      setFeedback({
+        tone: 'error',
+        title: mode === 'login' ? 'Could not log in' : 'Could not create account',
+        message: getAuthError(caught, mode === 'login' ? 'login' : 'signup'),
+      });
     } finally {
       setLoading(false);
     }
@@ -247,7 +276,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       setFeedback({
         tone: 'error',
         title: 'Wrong or expired code',
-        message: getAuthError(caught),
+        message: getAuthError(caught, 'verification'),
       });
     } finally {
       setLoading(false);
@@ -273,13 +302,13 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       setFeedback({
         tone: 'success',
         title: 'Reset code sent',
-        message: `We sent a 6-digit password reset code to ${parsedEmail.data.email}.`,
+        message: authFeedbackCopy.resetCodeSent,
       });
     } catch (caught) {
       setFeedback({
         tone: 'error',
         title: 'Could not send reset code',
-        message: getAuthError(caught),
+        message: getAuthError(caught, 'resetRequest'),
       });
     } finally {
       setLoading(false);
@@ -307,7 +336,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         message: 'Now choose a new password for your account.',
       });
     } catch (caught) {
-      setFeedback({ tone: 'error', title: 'Invalid reset code', message: getAuthError(caught) });
+      setFeedback({
+        tone: 'error',
+        title: 'Invalid reset code',
+        message: getAuthError(caught, 'verification'),
+      });
     } finally {
       setLoading(false);
     }
@@ -339,7 +372,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       setFeedback({
         tone: 'error',
         title: 'Could not update password',
-        message: getAuthError(caught),
+        message: getAuthError(caught, 'passwordReset'),
       });
     } finally {
       setLoading(false);
@@ -380,7 +413,11 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       });
       if (error) throw new Error(error.message || 'Google login failed.');
     } catch (caught) {
-      setFeedback({ tone: 'error', title: 'Google login failed', message: getAuthError(caught) });
+      setFeedback({
+        tone: 'error',
+        title: 'Google login failed',
+        message: getAuthError(caught, 'google'),
+      });
       setLoading(false);
     }
   }
@@ -652,29 +689,71 @@ function AuthFeedbackMessage({ feedback }: { feedback: NonNullable<AuthFeedback>
   );
 }
 
-function getAuthError(error: unknown) {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'errors' in error &&
-    Array.isArray(
-      (error as { errors?: Array<{ longMessage?: string; message?: string; code?: string }> })
-        .errors,
-    )
-  ) {
-    const [first] = (
-      error as { errors: Array<{ longMessage?: string; message?: string; code?: string }> }
-    ).errors;
-    if (first?.code === 'form_password_incorrect')
-      return 'That password does not match this account.';
-    if (first?.code === 'form_identifier_not_found') return 'No account was found with that email.';
-    if (first?.code === 'verification_failed')
-      return 'That code is wrong or expired. Check the email and try again.';
-    if (first?.code === 'form_password_pwned')
-      return 'Use a stronger password that has not appeared in a data leak.';
-    return first?.longMessage || first?.message || 'Authentication failed.';
+function getAuthError(error: unknown, context: AuthErrorContext) {
+  const code = readAuthErrorCode(error);
+  const status = readAuthErrorStatus(error);
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+
+  if (status === 429 || code.includes('rate') || message.includes('rate')) {
+    return authFeedbackCopy.rateLimited;
   }
 
-  if (error instanceof Error) return error.message;
-  return 'Authentication failed. Please try again.';
+  if (
+    code.includes('password') ||
+    message.includes('password') ||
+    message.includes('8 character') ||
+    message.includes('too short')
+  ) {
+    if (message.includes('pwned') || message.includes('data leak')) {
+      return authFeedbackCopy.leakedPassword;
+    }
+    if (context === 'passwordReset' || context === 'signup') return authFeedbackCopy.weakPassword;
+  }
+
+  if (
+    context === 'verification' ||
+    code.includes('otp') ||
+    code.includes('verification') ||
+    message.includes('otp') ||
+    message.includes('code')
+  ) {
+    return authFeedbackCopy.verification;
+  }
+
+  if (
+    message.includes('fetch') ||
+    message.includes('network') ||
+    message.includes('failed to fetch')
+  ) {
+    return authFeedbackCopy.network;
+  }
+
+  return authFeedbackCopy[context] || authFeedbackCopy.default;
+}
+
+function readAuthErrorCode(error: unknown) {
+  if (typeof error !== 'object' || error === null) return '';
+
+  if ('code' in error && typeof error.code === 'string') return error.code.toLowerCase();
+
+  if ('errors' in error && Array.isArray((error as { errors?: Array<{ code?: string }> }).errors)) {
+    return (error as { errors: Array<{ code?: string }> }).errors[0]?.code?.toLowerCase() || '';
+  }
+
+  return '';
+}
+
+function readAuthErrorStatus(error: unknown) {
+  if (typeof error !== 'object' || error === null) return undefined;
+
+  if ('status' in error && typeof error.status === 'number') return error.status;
+
+  if (
+    'errors' in error &&
+    Array.isArray((error as { errors?: Array<{ status?: number }> }).errors)
+  ) {
+    return (error as { errors: Array<{ status?: number }> }).errors[0]?.status;
+  }
+
+  return undefined;
 }
