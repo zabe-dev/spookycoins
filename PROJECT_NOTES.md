@@ -305,6 +305,11 @@ The homepage currently displays boost status but does not implement either ranki
 
 ## Project submission — planned
 
+- [x] A signed-in-only `/submit` route now exists with a multi-step prototype form.
+- [x] The submit form uses Zod validation and covers Basics, Chain & Links, Trust & Contact, conditional Presale details, and Review.
+- [x] Navbar “Submit coin” now routes to the submit form.
+- [ ] Submission persistence is not implemented yet; current form submission only confirms a structured draft in the browser.
+
 ### Public project data
 
 - Logo, name, symbol, description, category, and presale yes/no.

@@ -82,7 +82,9 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             </div>
           </nav>
           <div className="nav-actions">
-            <button className="submit-coin-btn">＋ Submit coin</button>
+            <Link className="submit-coin-btn" href="/submit">
+              ＋ Submit coin
+            </Link>
             {isSignedIn ? (
               <div
                 className="user-menu-wrap"

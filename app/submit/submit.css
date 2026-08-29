@@ -1,0 +1,358 @@
+.submission-shell {
+  padding: 34px 0 120px;
+}
+
+.submission-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(19, 24, 27, 0.96), rgba(10, 13, 15, 0.98)), var(--surface);
+  padding: 24px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.24);
+}
+
+.submission-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    radial-gradient(circle at 8% 0, rgba(203, 255, 74, 0.1), transparent 24%),
+    radial-gradient(circle at 100% 20%, rgba(240, 185, 11, 0.08), transparent 28%);
+}
+
+.submission-card > * {
+  position: relative;
+}
+
+.submission-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.submission-card h1 {
+  margin: 8px 0 8px;
+  font:
+    700 clamp(28px, 5vw, 54px) / 0.95 var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.05em;
+}
+
+.submission-card p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--sub);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.submission-status {
+  display: grid;
+  min-width: 130px;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 13px;
+  text-align: right;
+}
+
+.submission-status b {
+  color: #f2f4f5;
+  font-size: 12px;
+}
+
+.submission-status span {
+  color: var(--sub);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.submission-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.submission-steps button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface2);
+  color: var(--sub);
+  padding: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.submission-steps span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--copy);
+  font-size: 9px;
+}
+
+.submission-steps button.active,
+.submission-steps button.done {
+  border-color: rgba(203, 255, 74, 0.4);
+  color: #f4f7f4;
+}
+
+.submission-steps button.active span,
+.submission-steps button.done span {
+  background: var(--lime);
+  color: #090c0c;
+}
+
+.submission-form {
+  display: grid;
+  gap: 20px;
+}
+
+.submission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.submission-field {
+  display: grid;
+  gap: 7px;
+  color: #dce2e2;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.submission-field.wide,
+.submission-toggle,
+.submission-presale-panel {
+  grid-column: 1 / -1;
+}
+
+.submission-field input,
+.submission-field select,
+.submission-field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(6, 8, 10, 0.72);
+  color: var(--copy);
+  padding: 12px;
+  font:
+    600 12px var(--font-poppins),
+    sans-serif;
+  outline: none;
+}
+
+.submission-field textarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.submission-field input:focus,
+.submission-field select:focus,
+.submission-field textarea:focus {
+  border-color: rgba(203, 255, 74, 0.55);
+  box-shadow: 0 0 0 3px rgba(203, 255, 74, 0.08);
+}
+
+.submission-field small {
+  color: #ff9c9c;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.submission-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #eaf0ee;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.submission-toggle input {
+  position: absolute;
+  opacity: 0;
+}
+
+.submission-toggle span {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface2);
+}
+
+.submission-toggle span::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #68727a;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.submission-toggle input:checked + span::after {
+  transform: translateX(16px);
+  background: var(--lime);
+}
+
+.submission-presale-panel {
+  border: 1px solid rgba(240, 185, 11, 0.22);
+  border-radius: 18px;
+  background: rgba(240, 185, 11, 0.04);
+  padding: 16px;
+}
+
+.submission-presale-panel h2,
+.submission-review-card h2 {
+  margin: 0 0 12px;
+  font:
+    700 18px var(--font-space-grotesk),
+    sans-serif;
+}
+
+.submission-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.submission-primary,
+.submission-secondary {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.submission-primary {
+  border-color: var(--lime);
+  background: var(--lime);
+  color: #080b0b;
+}
+
+.submission-secondary {
+  background: var(--surface2);
+  color: var(--copy);
+}
+
+.submission-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.submission-review {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.submission-review-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 16px;
+}
+
+.submission-review-card p {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.submission-review-card p:last-child {
+  border-bottom: 0;
+}
+
+.submission-review-card span {
+  color: var(--sub);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.submission-review-card b {
+  overflow-wrap: anywhere;
+  color: #eef1f2;
+  font-size: 12px;
+}
+
+.submission-success {
+  display: grid;
+  place-items: start;
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+.submission-success-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  background: var(--lime);
+  color: #080b0b;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .submission-shell {
+    padding-top: 22px;
+  }
+
+  .submission-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .submission-card-head,
+  .submission-actions {
+    display: grid;
+  }
+
+  .submission-status {
+    width: 100%;
+    text-align: left;
+  }
+
+  .submission-steps {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .submission-steps button {
+    min-width: 150px;
+  }
+
+  .submission-grid,
+  .submission-review {
+    grid-template-columns: 1fr;
+  }
+}
