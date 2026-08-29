@@ -116,7 +116,7 @@ function getAuthRequestDetails(request?: Request) {
   const country = formatCountry(
     decodeHeader(headers?.get('x-vercel-ip-country')) ||
       decodeHeader(headers?.get('cf-ipcountry')) ||
-      decodeHeader(headers?.get('x-country-code')) ||
+      decodeHeader(headers?.get('x-country')) ||
       '',
   );
   const now = new Date();
@@ -176,7 +176,7 @@ function buildAuthCodeEmailText({
   requestDetails: ReturnType<typeof getAuthRequestDetails>;
 }) {
   return [
-    'SPOOKYCOINS',
+    'Verification code',
     '',
     'Enter the following verification code when prompted:',
     '',

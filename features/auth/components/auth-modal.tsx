@@ -49,7 +49,7 @@ const authFeedbackCopy = {
   emailVerificationSent:
     'We sent a 6-digit verification code. Enter it below to finish signing in.',
   signupCodeSent:
-    'We sent a 6-digit verification code. Enter it below to finish creating your account.',
+    'If this email needs verification, we sent a 6-digit code. Enter it below to continue.',
   resetCodeSent:
     'If an account can use password reset, a 6-digit code has been sent. Enter it below to continue.',
   default: 'Something went wrong while processing your request. Check your details and try again.',
@@ -57,7 +57,8 @@ const authFeedbackCopy = {
     'Google could not finish connecting. Try again, or continue with your email and password.',
   login:
     'We could not sign you in with those details. Check your email and password, then try again.',
-  signup: 'We could not create the account. Check your email and password, then try again.',
+  signup:
+    'We could not create the account. If this email is already registered, log in or reset your password.',
   verification: 'That code is incorrect or expired. Check the latest email and enter all 6 digits.',
   passwordReset: 'We could not update the password. Request a new reset code and try again.',
   resetRequest: 'We could not start password reset right now. Wait a moment, then try again.',
@@ -223,15 +224,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const name = getNameFromEmail(email);
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
-        setVerificationEmail(email);
-        await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
-        setStep('verify-signup');
-        setCodeDigits(emptyCode);
-        setFeedback({
-          tone: 'success',
-          title: 'Code sent',
-          message: authFeedbackCopy.signupCodeSent,
-        });
+        await continueSignupAfterCreate(email, password);
         return;
       }
       throw new Error(error.message || 'Signup failed.');
@@ -244,6 +237,31 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     } finally {
       setLoading(false);
     }
+  }
+
+  async function continueSignupAfterCreate(email: string, password: string) {
+    const login = await authClient.signIn.email({ email, password });
+
+    if (!login.error) {
+      closeModal();
+      window.location.reload();
+      return;
+    }
+
+    if (login.error.status === 403) {
+      setVerificationEmail(email);
+      await authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' });
+      setStep('verify-signup');
+      setCodeDigits(emptyCode);
+      setFeedback({
+        tone: 'success',
+        title: 'Code sent',
+        message: authFeedbackCopy.signupCodeSent,
+      });
+      return;
+    }
+
+    throw new Error(login.error.message || 'Signup failed.');
   }
 
   async function verifySignupCode() {

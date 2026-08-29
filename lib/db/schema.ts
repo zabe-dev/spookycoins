@@ -87,7 +87,7 @@ export const accounts = pgTable(
     id: text('id').primaryKey(),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
-    issuer: text('issuer').default('credential').notNull(),
+    issuer: text('issuer').default('local:credential').notNull(),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
