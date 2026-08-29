@@ -170,7 +170,7 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Signup verification uses Better Auth `autoSignInAfterVerification` so successful OTP verification creates the session directly.
 - [x] Better Auth account schema includes the required `issuer` column for credential/social account lookup.
 - [x] Production email delivery for signup verification and password-reset codes is wired through Resend.
-- [x] Auth emails use “XXXXXX is your verification code” subject styling and include request IP/location/time when available.
+- [x] Auth emails use short plain text with “XXXXXX is your verification code” subjects and include request IP/location/time when available.
 - [x] Local/dev email OTP delivery falls back to logging the code to the server console when Resend is not configured.
 - [ ] Production RBAC still needs final admin seeding, denial UI, and database-backed audit controls.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
