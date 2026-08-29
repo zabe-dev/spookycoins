@@ -307,31 +307,14 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
     const code = readVerificationCode();
     if (!code) return;
 
-    setLoading(true);
-    try {
-      const { error } = await authClient.emailOtp.checkVerificationOtp({
-        email: verificationEmail,
-        type: 'forget-password',
-        otp: code,
-      });
-      if (error) throw new Error(error.message || 'Invalid reset code.');
-      setResetCode(code);
-      setStep('new-password');
-      setCodeDigits(emptyCode);
-      setFeedback({
-        tone: 'success',
-        title: 'Code confirmed',
-        message: 'Now choose a new password for your account.',
-      });
-    } catch (caught) {
-      setFeedback({
-        tone: 'error',
-        title: 'Invalid reset code',
-        message: getAuthError(caught, 'verification'),
-      });
-    } finally {
-      setLoading(false);
-    }
+    setResetCode(code);
+    setStep('new-password');
+    setCodeDigits(emptyCode);
+    setFeedback({
+      tone: 'info',
+      title: 'Choose a new password',
+      message: 'Enter a new password to finish resetting your account.',
+    });
   }
 
   async function finishPasswordReset(passwords: { password: string; confirmPassword: string }) {

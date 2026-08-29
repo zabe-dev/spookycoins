@@ -156,6 +156,7 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Better Auth server instance, API route, Drizzle adapter, email/password flow, email OTP plugin, Google OAuth trigger, signed-in navbar state, and admin plugin are wired.
 - [x] Custom signup email verification uses six individual code fields.
 - [x] Password reset by email code is available from the custom auth modal.
+- [x] Password reset uses the OTP only during the final password update so the code is not consumed before password validation.
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist, Orders, Settings, and Logout.
 - [x] Desktop signed-in navigation uses an account-style dropdown with Watchlist, Orders, Settings, and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
@@ -166,7 +167,10 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Clerk middleware was removed during the Better Auth migration to avoid hosted organization/setup redirects.
 - [x] RBAC now uses app-owned user roles through Better Auth's admin plugin instead of Clerk Organizations.
 - [x] Signup email verification and password recovery use six-digit OTP codes.
+- [x] Signup verification uses Better Auth `autoSignInAfterVerification` so successful OTP verification creates the session directly.
+- [x] Better Auth account schema includes the required `issuer` column for credential/social account lookup.
 - [x] Production email delivery for signup verification and password-reset codes is wired through Resend.
+- [x] Auth emails use “XXXXXX is your verification code” subject styling and include request IP/location/time when available.
 - [x] Local/dev email OTP delivery falls back to logging the code to the server console when Resend is not configured.
 - [ ] Production RBAC still needs final admin seeding, denial UI, and database-backed audit controls.
 - [ ] Account persistence, database user sync, production admin roles, and protected persistent user actions are not connected.
