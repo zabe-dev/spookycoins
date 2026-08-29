@@ -626,7 +626,7 @@
       border-width 0.22s ease;
   }
   .navbar nav.open {
-    max-height: 390px;
+    max-height: 460px;
     padding: 10px;
     border-width: 1px;
   }
