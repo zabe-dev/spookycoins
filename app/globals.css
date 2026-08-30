@@ -1918,6 +1918,7 @@ body.modal-open {
 .settings-grid {
   display: grid;
   grid-template-columns: minmax(0, 760px);
+  justify-content: center;
   gap: 16px;
   margin-top: 30px;
 }
@@ -1974,6 +1975,36 @@ body.modal-open {
   padding: 11px 12px;
   color: #eef1f2;
   font-size: 12px;
+}
+.settings-password-wrap {
+  position: relative;
+  display: block;
+}
+.settings-password-wrap input {
+  padding-right: 42px;
+}
+.settings-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #7f8991;
+  cursor: pointer;
+}
+.settings-password-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f0f3f4;
+}
+.settings-password-toggle svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
 }
 .settings-form input:focus,
 .edit-request-form textarea:focus {
@@ -2135,7 +2166,9 @@ body.modal-open {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  width: min(760px, 100%);
   margin-top: 16px;
+  margin-inline: auto;
   border-color: rgba(255, 91, 91, 0.25);
 }
 .danger-card p {
