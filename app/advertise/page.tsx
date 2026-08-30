@@ -7,13 +7,12 @@ import {
   BarChart3,
   Megaphone,
   MessageCircle,
-  Send,
   ShieldCheck,
 } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import '../market.css';
 import './advertise.css';
+import { SubmitProjectAction } from './submit-project-action';
 
 export const metadata: Metadata = {
   title: 'Advertise Crypto Projects',
@@ -73,10 +72,7 @@ export default function AdvertisePage() {
               <MessageCircle aria-hidden="true" />
               Contact @SpookyCoinsSupport
             </a>
-            <Link className="advertise-secondary" href="/submit">
-              <Send aria-hidden="true" />
-              Submit your project first
-            </Link>
+            <SubmitProjectAction />
           </div>
         </div>
 
