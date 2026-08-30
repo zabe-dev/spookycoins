@@ -7,7 +7,7 @@ export default function Forbidden() {
       eyebrow="403"
       title="You can’t access this area."
       description="This page is limited to users with the right permissions. If you think this is wrong, check your account role and try again."
-      icon={ShieldX}
+      icon={<ShieldX aria-hidden="true" />}
     />
   );
 }

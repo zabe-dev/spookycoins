@@ -20,7 +20,7 @@ export default function Error({
       eyebrow="Something broke"
       title="The page hit a snag."
       description="Something went wrong while loading this part of SpookyCoins. You can try again or head back home."
-      icon={TriangleAlert}
+      icon={<TriangleAlert aria-hidden="true" />}
       secondaryLabel="Try again"
       onSecondaryClick={reset}
     />

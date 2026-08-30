@@ -2,15 +2,15 @@
 
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
-import type { LucideIcon } from 'lucide-react';
 import { Home, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 export type SystemStatePageProps = {
   eyebrow: string;
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: ReactNode;
   primaryLabel?: string;
   secondaryLabel?: string;
   onSecondaryClick?: () => void;
@@ -20,7 +20,7 @@ export function SystemStatePage({
   eyebrow,
   title,
   description,
-  icon: Icon,
+  icon,
   primaryLabel = 'Back to home',
   secondaryLabel,
   onSecondaryClick,
@@ -30,9 +30,7 @@ export function SystemStatePage({
       <SiteHeader active="none" />
       <section className="container system-state-shell">
         <div className="system-state-card">
-          <div className="system-state-icon">
-            <Icon aria-hidden="true" />
-          </div>
+          <div className="system-state-icon">{icon}</div>
           <p className="eyebrow">
             <span>●</span> {eyebrow}
           </p>

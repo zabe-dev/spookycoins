@@ -7,7 +7,7 @@ export default function Unauthorized() {
       eyebrow="401"
       title="Sign in to continue."
       description="This page needs an active SpookyCoins session before it can show private account details."
-      icon={LockKeyhole}
+      icon={<LockKeyhole aria-hidden="true" />}
     />
   );
 }
