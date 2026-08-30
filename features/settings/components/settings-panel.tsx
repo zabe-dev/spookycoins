@@ -4,8 +4,14 @@ import { PasswordField } from '@/components/ui/password-field';
 import { authClient } from '@/lib/auth/client';
 import { useState, type FormEvent } from 'react';
 
+const deleteConfirmationPhrase = 'delete my account';
+
 export function SettingsPanel({ user }: { user: { name: string; email: string } }) {
   const [notice, setNotice] = useState('');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const deleteConfirmed = deletePhrase === deleteConfirmationPhrase;
 
   async function updateProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,10 +53,35 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
   }
 
   async function deleteAccount() {
-    if (!window.confirm('Permanently delete your account? This cannot be undone.')) return;
+    if (!deleteConfirmed || deleting) return;
+
+    setDeleting(true);
     setNotice('Deleting account…');
     const result = await authClient.deleteUser({ callbackURL: '/' });
-    if (result.error) setNotice(result.error.message || 'Could not delete your account.');
+    if (result.error) {
+      setNotice(result.error.message || 'Could not delete your account.');
+      setDeleting(false);
+      return;
+    }
+
+    try {
+      await authClient.signOut();
+    } catch {
+      // The account deletion request may already remove the active session.
+    }
+
+    window.location.replace('/');
+  }
+
+  function openDeleteModal() {
+    setDeletePhrase('');
+    setDeleteModalOpen(true);
+  }
+
+  function closeDeleteModal() {
+    if (deleting) return;
+    setDeletePhrase('');
+    setDeleteModalOpen(false);
   }
 
   return (
@@ -129,10 +160,74 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
           <h2>Delete account</h2>
           <p>Permanently remove your profile and sign-in data. This action cannot be undone.</p>
         </div>
-        <button type="button" onClick={() => void deleteAccount()}>
+        <button type="button" onClick={openDeleteModal}>
           Delete my account
         </button>
       </section>
+
+      {deleteModalOpen && (
+        <div className="delete-confirm-overlay" role="presentation">
+          <div
+            aria-labelledby="delete-confirm-title"
+            aria-modal="true"
+            className="delete-confirm-modal"
+            role="dialog"
+          >
+            <button
+              aria-label="Close delete account confirmation"
+              className="delete-confirm-close"
+              disabled={deleting}
+              type="button"
+              onClick={closeDeleteModal}
+            >
+              ×
+            </button>
+            <p className="eyebrow">
+              <span>●</span> Danger zone
+            </p>
+            <h2 id="delete-confirm-title">Delete account?</h2>
+            <p>
+              This permanently removes your profile and sign-in data. You will be signed out and
+              sent back to the homepage.
+            </p>
+            <form
+              className="delete-confirm-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void deleteAccount();
+              }}
+            >
+              <label>
+                Type <strong>{deleteConfirmationPhrase}</strong> to confirm.
+                <input
+                  autoComplete="off"
+                  autoFocus
+                  placeholder={deleteConfirmationPhrase}
+                  value={deletePhrase}
+                  onChange={(event) => setDeletePhrase(event.target.value)}
+                />
+              </label>
+              <div className="delete-confirm-actions">
+                <button
+                  className="delete-confirm-cancel"
+                  disabled={deleting}
+                  type="button"
+                  onClick={closeDeleteModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="delete-confirm-danger"
+                  disabled={!deleteConfirmed || deleting}
+                  type="submit"
+                >
+                  {deleting ? 'Deleting…' : 'Delete account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
