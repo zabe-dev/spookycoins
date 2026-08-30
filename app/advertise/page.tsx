@@ -1,7 +1,7 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { BoltIcon } from '@/features/coins/components';
-import { ArrowRight, BarChart3, MessageCircle, Send, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, BarChart3, Megaphone, MessageCircle, Send, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import '../market.css';
@@ -75,7 +75,7 @@ export default function AdvertisePage() {
         <div className="advertise-grid">
           <section className="advertise-card">
             <span className="advertise-card-icon">
-              <Sparkles aria-hidden="true" />
+              <Megaphone aria-hidden="true" />
             </span>
             <h2>Promoted Coins</h2>
             <p>

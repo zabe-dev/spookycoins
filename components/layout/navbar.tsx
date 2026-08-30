@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
+  BadgeDollarSign,
   ChevronDown,
   Compass,
   Handshake,
   LogOut,
-  Megaphone,
   Package,
   Plus,
   CircleUserRound,
@@ -222,7 +222,7 @@ function MenuIcon({
     discover: Compass,
     promoted: Zap,
     partners: Handshake,
-    advertise: Megaphone,
+    advertise: BadgeDollarSign,
     account: CircleUserRound,
     orders: Package,
     settings: Settings,

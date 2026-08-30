@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock3, Heart, Rocket, Sparkles } from 'lucide-react';
+import { Clock3, Heart, Rocket } from 'lucide-react';
 
 export function BoltIcon() {
   return (
@@ -15,7 +15,7 @@ export function BoltIcon() {
 
 export function DiscoveryIcon({ type }: { type: 'new' | 'presale' | 'watch' }) {
   if (type === 'new') {
-    return <Sparkles className="discovery-icon new-icon" aria-hidden="true" />;
+    return <Clock3 className="discovery-icon new-icon" aria-hidden="true" />;
   }
 
   if (type === 'presale') {
@@ -23,8 +23,4 @@ export function DiscoveryIcon({ type }: { type: 'new' | 'presale' | 'watch' }) {
   }
 
   return <Heart className="discovery-icon watch-icon" aria-hidden="true" />;
-}
-
-export function AddedMetricIcon() {
-  return <Clock3 aria-hidden="true" />;
 }

@@ -1,12 +1,13 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import {
-  ArrowRight,
-  Handshake,
+  CalendarClock,
+  ChartLine,
   MessageCircle,
+  Network,
   ShieldCheck,
-  Sparkles,
   UsersRound,
+  Wrench,
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import '../market.css';
@@ -28,12 +29,12 @@ export const metadata: Metadata = {
 };
 
 const partnerTypes = [
-  { label: 'Launchpads and presale platforms', icon: Sparkles },
+  { label: 'Launchpads and presale platforms', icon: CalendarClock },
   { label: 'KYC and audit providers', icon: ShieldCheck },
   { label: 'Crypto communities and media pages', icon: UsersRound },
-  { label: 'DEX, chart, and data tooling teams', icon: ArrowRight },
-  { label: 'Project service providers', icon: Handshake },
-  { label: 'Ecosystem growth partners', icon: Sparkles },
+  { label: 'DEX, chart, and data tooling teams', icon: ChartLine },
+  { label: 'Project service providers', icon: Wrench },
+  { label: 'Ecosystem growth partners', icon: Network },
 ];
 
 export default function PartnersPage() {
