@@ -1,7 +1,15 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { BoltIcon } from '@/features/coins/components';
-import { ArrowRight, BarChart3, Megaphone, MessageCircle, Send, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Megaphone,
+  MessageCircle,
+  Send,
+  ShieldCheck,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import '../market.css';
@@ -127,18 +135,23 @@ export default function AdvertisePage() {
         </div>
 
         <section className="advertise-card advertise-wide">
-          <div>
-            <h2>Advertiser analytics are in development.</h2>
-            <p>
-              We&apos;re building an advertisement analytics system so advertisers can understand
-              placement performance with measured impressions, clicks, and campaign reporting once
-              the platform is ready for broader ad operations.
-            </p>
-            <p>
-              We review ad placements manually. Message us with your project, preferred promotion,
-              and target dates, and we&apos;ll confirm the earliest available start time. Same-day
-              starts are not guaranteed.
-            </p>
+          <div className="advertise-wide-copy">
+            <span className="advertise-card-icon analytics">
+              <Activity aria-hidden="true" />
+            </span>
+            <div>
+              <h2>Advertiser analytics are in development.</h2>
+              <p>
+                We&apos;re building measured campaign reporting for future ad operations, so
+                advertisers can understand placement performance through impressions, clicks, and
+                campaign-level results instead of guessing what worked.
+              </p>
+              <p>
+                For now, placements stay hands-on. Message us with your project, preferred
+                promotion, and target dates, and we&apos;ll review the request manually before
+                confirming the earliest available start time. Same-day starts are not guaranteed.
+              </p>
+            </div>
           </div>
           <ol className="approval-list" type="1">
             {approvalSteps.map((step) => (

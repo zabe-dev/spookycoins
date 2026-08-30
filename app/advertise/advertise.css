@@ -136,6 +136,13 @@
   background: linear-gradient(135deg, #ff7700, #f0b90b 60%);
 }
 
+.advertise-card-icon.analytics {
+  margin-bottom: 0;
+  border-color: rgba(203, 255, 74, 0.3);
+  background: rgba(203, 255, 74, 0.08);
+  color: var(--lime);
+}
+
 .advertise-card h2,
 .advertise-policy h2 {
   margin: 0 0 10px;
@@ -281,6 +288,13 @@
   align-items: start;
 }
 
+.advertise-wide-copy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
 .advertise-wide p + p {
   margin-top: 12px;
 }
@@ -331,6 +345,10 @@
   .advertise-grid,
   .advertise-wide,
   .advertise-policy {
+    grid-template-columns: 1fr;
+  }
+
+  .advertise-wide-copy {
     grid-template-columns: 1fr;
   }
 
