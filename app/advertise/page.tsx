@@ -139,7 +139,9 @@ export default function AdvertisePage() {
             </p>
           </div>
           <div>
-            <BarChart3 aria-hidden="true" />
+            <span className="advertise-card-icon">
+              <BarChart3 aria-hidden="true" />
+            </span>
             <h2>Banner ads are paused</h2>
             <p>
               We haven&apos;t turned banner placements on just yet. Once they&apos;re ready,
@@ -148,7 +150,9 @@ export default function AdvertisePage() {
             </p>
           </div>
           <div>
-            <ShieldCheck aria-hidden="true" />
+            <span className="advertise-card-icon">
+              <ShieldCheck aria-hidden="true" />
+            </span>
             <h2>Eligibility rules</h2>
             <p>
               The project must already be submitted/listed on SpookyCoins, must not be suspended,
