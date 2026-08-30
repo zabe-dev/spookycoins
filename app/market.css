@@ -175,12 +175,15 @@
   flex: 1;
 }
 .banner-ad button,
-.wide-banner button {
+.banner-ad > a,
+.wide-banner button,
+.wide-banner > a {
   border: 0;
   background: transparent;
   color: var(--lime);
   font-size: 10px;
   cursor: pointer;
+  text-decoration: none;
 }
 .promoted-section,
 .leaderboard {
@@ -392,6 +395,91 @@
   padding: 0 11px;
   gap: 9px;
 }
+.chain-select {
+  position: relative;
+}
+.chain-select-trigger {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--copy);
+  cursor: pointer;
+}
+.chain-select-trigger b {
+  overflow: hidden;
+  flex: 1;
+  font-size: 10px;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chain-select-trigger img,
+.chain-select-menu img {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+.chain-select-trigger svg {
+  width: 14px;
+  transition: transform 0.18s ease;
+}
+.chain-select-trigger[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.chain-select-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 5px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+}
+.chain-select-menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  padding: 8px;
+  color: var(--copy);
+  cursor: pointer;
+}
+.chain-select-menu button:hover,
+.chain-select-menu button.selected {
+  background: var(--surface2);
+}
+.chain-select-menu button > span {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  color: var(--sub);
+  font-size: 13px;
+}
+.chain-select-menu button b {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+}
+.chain-select-menu button > svg {
+  width: 13px;
+  color: var(--lime);
+}
 .styled-select span {
   font-size: 8px;
   color: var(--sub);
@@ -586,18 +674,18 @@
   background: var(--lime);
   box-shadow: 0 0 10px rgba(203, 255, 74, 0.32);
 }
-.footer {
+.site-footer-inner {
   display: flex;
   align-items: center;
   gap: 22px;
   padding-block: 35px;
 }
-.footer p {
+.site-footer-inner p {
   flex: 1;
   color: var(--sub);
   font-size: 9px;
 }
-.footer > div {
+.site-footer-inner > div {
   display: flex;
   gap: 18px;
   font-size: 9px;
@@ -912,16 +1000,12 @@
   .info-band {
     margin-top: 50px;
   }
-  .footer {
+  .site-footer-inner {
     flex-wrap: wrap;
   }
-  .footer p {
+  .site-footer-inner p {
     flex-basis: 100%;
     order: 3;
-  }
-  .bottom-ad-inner small,
-  .bottom-ad-inner p {
-    display: none;
   }
 }
 .banner-ad {
@@ -978,9 +1062,12 @@
   flex: 1;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
-.bottom-ad-copy strong {
+.bottom-ad-copy-main {
+  display: block;
   font-size: 11px;
+  font-weight: 700;
 }
 .bottom-ad-copy span {
   font-size: 8px;
@@ -1485,12 +1572,10 @@
   }
 }
 
-.bottom-ad-copy-mobile,
-.ad-cta-mobile {
-  display: none;
-}
-
 @media (max-width: 760px) {
+  .market-page.with-bottom-ad {
+    padding-bottom: calc(118px + env(safe-area-inset-bottom));
+  }
   .leaderboard .section-title {
     gap: 14px;
   }
@@ -1521,41 +1606,47 @@
   }
   .market-page .bottom-ad-inner {
     width: calc(100% - 16px);
-    height: 56px;
-    gap: 7px;
-    padding: 0;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    overflow: hidden;
   }
-  .market-page .bottom-ad-inner > small,
-  .bottom-ad-copy span,
-  .bottom-ad-copy-desktop,
-  .ad-cta-desktop {
+  .market-page .bottom-ad-inner > small {
     display: none;
   }
-  .bottom-ad-copy-mobile,
-  .ad-cta-mobile {
-    display: inline;
-  }
   .market-page .bottom-ad-inner > b {
-    flex: none;
+    flex: 0 0 auto;
+    min-width: 0;
     font-size: 10px;
+    line-height: 1.2;
+    white-space: nowrap;
   }
   .bottom-ad-copy {
+    flex: 1 1 auto;
+    display: block;
     min-width: 0;
   }
-  .bottom-ad-copy strong {
-    overflow: hidden;
-    font-size: 9px;
-    text-overflow: ellipsis;
+  .bottom-ad-copy-main {
+    display: block;
+    font-size: 10px;
+    line-height: 1.25;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bottom-ad-copy > span:last-child {
+    display: none;
   }
   .market-page .ad-cta {
-    flex: none;
-    padding: 7px 8px;
-    font-size: 8px;
+    flex: 0 0 auto;
+    font-size: 9px;
     white-space: nowrap;
+    padding: 7px 8px;
   }
   .market-page .ad-close {
-    flex: none;
+    flex: 0 0 auto;
     width: 24px;
     height: 24px;
   }

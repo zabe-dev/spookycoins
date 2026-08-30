@@ -86,7 +86,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                       <small>{email}</small>
                     </span>
                   </div>
-                  <Link href="/account" onClick={closeMenu}>
+                  <Link href="/dashboard" onClick={closeMenu}>
                     <MenuIcon type="account" /> Dashboard
                   </Link>
                   <button className="menu-disabled" disabled>
@@ -146,7 +146,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                           <small>{email}</small>
                         </span>
                       </div>
-                      <Link href="/account" onClick={() => setUserMenuOpen(false)}>
+                      <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}>
                         <MenuIcon type="account" /> Dashboard
                       </Link>
                       <button className="menu-disabled" disabled>

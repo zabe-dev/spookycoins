@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import {
@@ -15,12 +16,14 @@ import {
 import { mockCoinListItems } from '@/features/coins/data/mock-coins';
 import {
   coinCategories,
+  coinChainChoices,
   coinChainOptions,
   type CoinListItem,
   type CoinSortKey,
 } from '@/features/coins/view';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
-import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import './market.css';
 import './scroll-fix.css';
@@ -69,10 +72,20 @@ export default function Home() {
     [viewParamExplicit, setViewParamExplicit] = useState(false),
     [urlReady, setUrlReady] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const chainMenuRef = useRef<HTMLDivElement>(null);
   const hotspotTouchStartRef = useRef<number | null>(null);
   const [categoryEdges, setCategoryEdges] = useState({ left: false, right: true });
+  const [chainMenuOpen, setChainMenuOpen] = useState(false);
+  const selectedChainChoice = coinChainChoices.find((choice) => choice.label === chain);
   const [hotspotsVisible, setHotspotsVisible] = useState(true),
     [hotspotIndex, setHotspotIndex] = useState(0);
+  useEffect(() => {
+    function closeChainMenu(event: PointerEvent) {
+      if (!chainMenuRef.current?.contains(event.target as Node)) setChainMenuOpen(false);
+    }
+    document.addEventListener('pointerdown', closeChainMenu);
+    return () => document.removeEventListener('pointerdown', closeChainMenu);
+  }, []);
   useEffect(() => {
     const applyUrlState = () => {
       const params = new URLSearchParams(window.location.search);
@@ -330,7 +343,7 @@ export default function Home() {
           <b>Reach crypto&apos;s earliest coin hunters.</b>
           <span>Premium inventory · Measured impressions and clicks</span>
         </div>
-        <button>View ad packages ↗</button>
+        <Link href="/advertise">View ad packages ↗</Link>
       </div>
       <section className="container leaderboard" id="leaderboard">
         <div className="section-title">
@@ -373,20 +386,54 @@ export default function Home() {
               placeholder="Search coin, symbol or chain"
             />
           </label>
-          <label className="styled-select">
+          <div className="styled-select chain-select" ref={chainMenuRef}>
             <span>Chain</span>
-            <select
-              value={chain}
-              onChange={(e) => {
-                setChain(e.target.value);
-                setPage(1);
-              }}
+            <button
+              aria-expanded={chainMenuOpen}
+              aria-haspopup="listbox"
+              className="chain-select-trigger"
+              type="button"
+              onClick={() => setChainMenuOpen((open) => !open)}
             >
-              {coinChainOptions.map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </label>
+              {selectedChainChoice?.iconUrl && (
+                <img
+                  alt=""
+                  aria-hidden="true"
+                  height={17}
+                  src={selectedChainChoice.iconUrl}
+                  width={17}
+                />
+              )}
+              <b>{chain}</b>
+              <ChevronDown aria-hidden="true" />
+            </button>
+            {chainMenuOpen && (
+              <div className="chain-select-menu" role="listbox" aria-label="Filter by chain">
+                {coinChainChoices.map((choice) => (
+                  <button
+                    aria-selected={chain === choice.label}
+                    className={chain === choice.label ? 'selected' : ''}
+                    key={choice.label}
+                    role="option"
+                    type="button"
+                    onClick={() => {
+                      setChain(choice.label);
+                      setPage(1);
+                      setChainMenuOpen(false);
+                    }}
+                  >
+                    {choice.iconUrl ? (
+                      <img alt="" aria-hidden="true" height={17} src={choice.iconUrl} width={17} />
+                    ) : (
+                      <span>◎</span>
+                    )}
+                    <b>{choice.label}</b>
+                    {chain === choice.label && <Check aria-hidden="true" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="category-strip">
             <div className="category-scroll" ref={categoryRef}>
               {coinCategories.map((x) => (
@@ -541,23 +588,19 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <SiteFooter id="footer" />
+      <SiteFooter id="footer" variant="home" />
       {adVisible && (
         <aside className="bottom-ad">
           <div className="container bottom-ad-inner">
             <small>AD SPACE</small>
-            <b>YOURCOIN</b>
+            <b>SPOOKY</b>
             <div className="bottom-ad-copy">
-              <strong className="bottom-ad-copy-desktop">
-                Reach crypto&apos;s earliest coin hunters.
-              </strong>
-              <strong className="bottom-ad-copy-mobile">Reach early crypto hunters.</strong>
+              <span className="bottom-ad-copy-main">Reach crypto&apos;s earliest coin hunters.</span>
               <span>Premium inventory · Measured impressions and clicks</span>
             </div>
-            <button className="ad-cta">
-              <span className="ad-cta-desktop">View ad packages ↗</span>
-              <span className="ad-cta-mobile">Ad packages ↗</span>
-            </button>
+            <Link className="ad-cta" href="/advertise">
+              View ad packages ↗
+            </Link>
             <button className="ad-close" onClick={() => setAdVisible(false)}>
               <X aria-hidden="true" />
             </button>

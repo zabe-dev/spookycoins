@@ -139,7 +139,7 @@ export const NETWORKS = {
     'xrpl',
     '/chain-icons/xrpl.png',
   ),
-  other: network('other', 'Other', 'OTHER', [], null, null, null),
+  other: network('other', 'Other', 'Other', [], null, null, null),
 } satisfies Record<NetworkId, NetworkConfig>;
 
 function network(

@@ -1,6 +1,6 @@
 import { db } from '@/lib/db/client';
 import * as schema from '@/lib/db/schema';
-import { betterAuth } from 'better-auth';
+import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import { admin, emailOTP } from 'better-auth/plugins';
@@ -81,6 +81,9 @@ export const auth = betterAuth({
     changeEmail: { enabled: true },
     deleteUser: { enabled: true },
   },
+  hooks: {
+    before: validateSettingsUpdates,
+  },
   socialProviders:
     googleClientId && googleClientSecret
       ? {
@@ -105,6 +108,52 @@ export const auth = betterAuth({
     nextCookies(),
   ],
 });
+
+async function validateSettingsUpdates(ctx: unknown): Promise<void> {
+  const request = ctx as {
+    path?: string;
+    body?: {
+      name?: string;
+      currentPassword?: string;
+      newPassword?: string;
+    };
+    context: {
+      session?: {
+        user?: {
+          name?: string;
+        } | null;
+      } | null;
+    };
+  };
+
+  if (request.path === '/update-user' && typeof request.body?.name === 'string') {
+    const name = request.body.name.trim();
+    const currentName = (request.context.session?.user?.name || '').trim();
+
+    if (name.length < 4) {
+      throw APIError.fromStatus('BAD_REQUEST', {
+        message: 'Name needs at least 4 characters.',
+      });
+    }
+
+    if (name === currentName) {
+      throw APIError.fromStatus('BAD_REQUEST', {
+        message: 'Name is unchanged.',
+      });
+    }
+  }
+
+  if (request.path === '/change-password') {
+    const currentPassword = typeof request.body?.currentPassword === 'string' ? request.body.currentPassword : '';
+    const newPassword = typeof request.body?.newPassword === 'string' ? request.body.newPassword : '';
+
+    if (newPassword && newPassword === currentPassword) {
+      throw APIError.fromStatus('BAD_REQUEST', {
+        message: 'New password must be different from the current password.',
+      });
+    }
+  }
+}
 
 function getAuthRequestDetails(request?: Request) {
   const headers = request?.headers;

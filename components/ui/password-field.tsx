@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 export function PasswordField({
@@ -9,12 +9,18 @@ export function PasswordField({
   autoComplete,
   minLength = 8,
   required = true,
+  value,
+  onChange,
+  disabled,
 }: {
   name: string;
   placeholder?: string;
   autoComplete: string;
   minLength?: number;
   required?: boolean;
+  value?: string;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -27,10 +33,14 @@ export function PasswordField({
         autoComplete={autoComplete}
         minLength={minLength}
         required={required}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
       />
       <button
         className="auth-password-toggle"
         type="button"
+        disabled={disabled}
         onClick={() => setVisible((current) => !current)}
         aria-label={visible ? 'Hide password' : 'Show password'}
         aria-pressed={visible}

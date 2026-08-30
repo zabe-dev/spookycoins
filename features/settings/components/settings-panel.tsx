@@ -2,65 +2,118 @@
 
 import { PasswordField } from '@/components/ui/password-field';
 import { authClient } from '@/lib/auth/client';
-import { X } from 'lucide-react';
+import { CheckCircle2, LoaderCircle, X, XCircle } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
 const deleteConfirmationPhrase = 'delete my account';
 
 export function SettingsPanel({ user }: { user: { name: string; email: string } }) {
-  const [notice, setNotice] = useState('');
+  const [profileNotice, setProfileNotice] = useState<Notice | null>(null);
+  const [passwordNotice, setPasswordNotice] = useState<Notice | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [profileName, setProfileName] = useState(user.name);
+  const [savedProfileName, setSavedProfileName] = useState(user.name.trim());
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletePhrase, setDeletePhrase] = useState('');
   const [deleting, setDeleting] = useState(false);
   const deleteConfirmed = deletePhrase === deleteConfirmationPhrase;
+  const trimmedProfileName = profileName.trim();
+  const profileUnchanged = trimmedProfileName === savedProfileName;
+  const profileInvalid = trimmedProfileName.length < 4 || profileUnchanged;
+  const passwordMismatch = newPassword !== confirmPassword;
+  const passwordUnchanged = newPassword.length > 0 && newPassword === currentPassword;
+  const passwordInvalid =
+    currentPassword.length < 8 ||
+    newPassword.length < 8 ||
+    confirmPassword.length < 8 ||
+    passwordMismatch ||
+    passwordUnchanged;
 
   async function updateProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice('Saving…');
-    const data = new FormData(event.currentTarget);
-    const name = String(data.get('name') || '').trim();
-    const profile = await authClient.updateUser({ name });
-    setNotice(
-      profile.error
-        ? profile.error.message || 'Could not update your name.'
-        : 'Your information was updated.',
-    );
+    if (profileSaving) return;
+    if (profileInvalid) {
+      setProfileNotice({
+        type: 'error',
+        message: profileUnchanged
+          ? 'Name is unchanged.'
+          : 'Name needs at least 4 characters.',
+      });
+      return;
+    }
+    setProfileSaving(true);
+    setProfileNotice(null);
+    try {
+      const profile = await authClient.updateUser({ name: trimmedProfileName });
+      setProfileNotice({
+        type: profile.error ? 'error' : 'success',
+        message:
+          profile.error?.message ||
+          (profile.error ? 'Could not update your name.' : 'Name updated successfully.'),
+      });
+      if (!profile.error) setSavedProfileName(trimmedProfileName);
+    } catch {
+      setProfileNotice({ type: 'error', message: 'Could not update your name. Please try again.' });
+    } finally {
+      setProfileSaving(false);
+    }
   }
 
   async function changePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setNotice('Updating password…');
-    const data = new FormData(event.currentTarget);
-    const currentPassword = String(data.get('currentPassword') || '');
-    const newPassword = String(data.get('newPassword') || '');
-    const confirmPassword = String(data.get('confirmPassword') || '');
-
-    if (newPassword !== confirmPassword) {
-      setNotice('New password and confirm password must match.');
+    if (passwordSaving) return;
+    if (passwordMismatch) {
+      setPasswordNotice({ type: 'error', message: 'New password and confirmation do not match.' });
       return;
     }
-
-    const result = await authClient.changePassword({
-      currentPassword,
-      newPassword,
-      revokeOtherSessions: true,
-    });
-    setNotice(
-      result.error
-        ? result.error.message || 'Could not update your password.'
-        : 'Password updated. Other sessions were signed out.',
-    );
-    if (!result.error) event.currentTarget.reset();
+    if (passwordUnchanged) {
+      setPasswordNotice({
+        type: 'error',
+        message: 'New password must be different from the current password.',
+      });
+      return;
+    }
+    setPasswordNotice(null);
+    setPasswordSaving(true);
+    try {
+      const result = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: true,
+      });
+      setPasswordNotice({
+        type: result.error ? 'error' : 'success',
+        message:
+          result.error?.message ||
+          (result.error
+            ? 'Could not update your password.'
+            : 'Password updated. Other sessions were signed out.'),
+      });
+      if (!result.error) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch {
+      setPasswordNotice({
+        type: 'error',
+        message: 'Could not update your password. Please try again.',
+      });
+    } finally {
+      setPasswordSaving(false);
+    }
   }
 
   async function deleteAccount() {
     if (!deleteConfirmed || deleting) return;
 
     setDeleting(true);
-    setNotice('Deleting account…');
     const result = await authClient.deleteUser({ callbackURL: '/' });
     if (result.error) {
-      setNotice(result.error.message || 'Could not delete your account.');
       setDeleting(false);
       return;
     }
@@ -95,12 +148,6 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
         <p>Manage your profile and password.</p>
       </header>
 
-      {notice && (
-        <div className="settings-notice" role="status">
-          {notice}
-        </div>
-      )}
-
       <div className="settings-grid">
         <section className="settings-card">
           <div className="settings-card-title">
@@ -108,12 +155,20 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
               <small>Profile</small>
               <h2>User information</h2>
             </div>
-            <span>Personal</span>
           </div>
           <form className="settings-form" onSubmit={updateProfile}>
             <label>
               Name
-              <input name="name" defaultValue={user.name} required />
+              <input
+                name="name"
+                minLength={4}
+                required
+                value={profileName}
+                onChange={(event) => {
+                  setProfileName(event.target.value);
+                  setProfileNotice(null);
+                }}
+              />
             </label>
             <label>
               Email address
@@ -126,7 +181,13 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
               />
               <small id="locked-email-help">Email changes are disabled for now.</small>
             </label>
-            <button type="submit">Save changes</button>
+            <div className="settings-form-actions">
+              <button disabled={profileSaving || profileInvalid} type="submit">
+                {profileSaving && <LoaderCircle className="settings-spinner" aria-hidden="true" />}
+                {profileSaving ? 'Saving name…' : 'Save changes'}
+              </button>
+              <FormNotice notice={profileNotice} />
+            </div>
           </form>
         </section>
 
@@ -140,17 +201,47 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
           <form className="settings-form password-form" onSubmit={changePassword}>
             <label>
               Current password
-              <PasswordField name="currentPassword" autoComplete="current-password" />
+              <PasswordField
+                name="currentPassword"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(event) => {
+                  setCurrentPassword(event.target.value);
+                  setPasswordNotice(null);
+                }}
+              />
             </label>
             <label>
               New password
-              <PasswordField name="newPassword" autoComplete="new-password" />
+              <PasswordField
+                name="newPassword"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(event) => {
+                  setNewPassword(event.target.value);
+                  setPasswordNotice(null);
+                }}
+              />
             </label>
             <label>
               Confirm new password
-              <PasswordField name="confirmPassword" autoComplete="new-password" />
+              <PasswordField
+                name="confirmPassword"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                  setPasswordNotice(null);
+                }}
+              />
             </label>
-            <button type="submit">Update password</button>
+            <div className="settings-form-actions">
+              <button disabled={passwordSaving || passwordInvalid} type="submit">
+                {passwordSaving && <LoaderCircle className="settings-spinner" aria-hidden="true" />}
+                {passwordSaving ? 'Updating password…' : 'Update password'}
+              </button>
+              <FormNotice notice={passwordNotice} />
+            </div>
           </form>
         </section>
       </div>
@@ -232,5 +323,21 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
         </div>
       )}
     </section>
+  );
+}
+
+type Notice = { type: 'success' | 'error'; message: string };
+
+function FormNotice({ notice }: { notice: Notice | null }) {
+  if (!notice) return null;
+  return (
+    <p className={`settings-form-notice ${notice.type}`} role="status" aria-live="polite">
+      {notice.type === 'success' ? (
+        <CheckCircle2 aria-hidden="true" />
+      ) : (
+        <XCircle aria-hidden="true" />
+      )}
+      {notice.message}
+    </p>
   );
 }

@@ -10,14 +10,14 @@ import { SubmitProjectAction } from './submit-project-action';
 export const metadata: Metadata = {
   title: 'Advertise Crypto Projects',
   description:
-    'Advertise on SpookyCoins with Promoted Coin slots and Boost packages for listed crypto projects. Banner ad placements are paused for now.',
+    'Advertise on SpookyCoins with promoted coin slots and boost packages for listed crypto projects. Banner ad placements are paused for now.',
   alternates: {
     canonical: '/advertise',
   },
   openGraph: {
     title: 'Advertise Crypto Projects on SpookyCoins',
     description:
-      'Promote listed crypto projects with Promoted Coin placements, Boost packages, and Golden Ticker visibility.',
+      'Promote listed crypto projects with promoted coin placements, boost packages, and golden ticker visibility.',
     url: '/advertise',
   },
 };
@@ -39,7 +39,7 @@ const boostRates = [
     price: '$799',
     multiplier: '×5',
     duration: '7 days',
-    extra: '+ Golden Ticker',
+    extra: '+ Golden ticker',
   },
 ];
 
@@ -62,8 +62,8 @@ export default function AdvertisePage() {
           </p>
           <h1>Reach crypto’s earliest project hunters.</h1>
           <p>
-            Right now, the best way to get your project noticed on SpookyCoins is through Promoted
-            Coin slots and Boosts. Banner ads are on their way too, we just need a little more time
+            Right now, the best way to get your project noticed on SpookyCoins is through promoted
+            coin slots and boosts. Banner ads are on their way too, we just need a little more time
             before they&apos;re ready for you.
           </p>
           <div className="advertise-actions">
@@ -80,9 +80,9 @@ export default function AdvertisePage() {
             <span className="advertise-card-icon">
               <Megaphone aria-hidden="true" />
             </span>
-            <h2>Promoted Coins</h2>
+            <h2>Promoted coins</h2>
             <p>
-              Promoted Coin placement gives approved projects premium table visibility for the dates
+              Promoted coin placement gives approved projects premium table visibility for the dates
               purchased. This is advertising inventory, not a safety endorsement.
             </p>
             <div className="advertise-table">
@@ -126,14 +126,14 @@ export default function AdvertisePage() {
               <BoltIcon aria-hidden="true" />
             </div>
             <div className="golden-ticker-header">
-              <h2>Golden Ticker</h2>
+              <h2>Golden ticker</h2>
               <span className="boost-badge boost-500">
                 <BoltIcon aria-hidden="true" />
                 500×
               </span>
             </div>
             <p>
-              Give your project a premium Golden Ticker, a glowing orange/gold name treatment paired
+              Give your project a premium golden ticker, a glowing orange/gold name treatment paired
               with a standout badge that makes your coin impossible to miss while the boost is
               active.
             </p>

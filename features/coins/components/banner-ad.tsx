@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export function BannerAd() {
   return (
     <div className="banner-ad">
@@ -8,7 +10,7 @@ export function BannerAd() {
         <b>Reach crypto&apos;s earliest coin hunters.</b>
         <span>Premium inventory · Measured impressions and clicks</span>
       </div>
-      <button>View ad packages ↗</button>
+      <Link href="/advertise">View ad packages ↗</Link>
     </div>
   );
 }

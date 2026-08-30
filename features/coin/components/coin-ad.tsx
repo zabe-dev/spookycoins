@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export function CoinAd() {
   return (
     <div className="container coin-ad">
@@ -6,7 +8,7 @@ export function CoinAd() {
         <b>Reach crypto&apos;s earliest coin hunters.</b> Premium inventory · Measured impressions
         and clicks
       </span>
-      <button>View ad packages ↗</button>
+      <Link href="/advertise">View ad packages ↗</Link>
     </div>
   );
 }

@@ -524,11 +524,13 @@
   color: var(--copy);
   font-size: 11px;
 }
-.coin-ad button {
+.coin-ad button,
+.coin-ad a {
   border: 0;
   background: transparent;
   color: var(--lime);
   font-size: 10px;
+  text-decoration: none;
 }
 .coin-layout {
   display: grid;
@@ -1033,7 +1035,8 @@
     display: block;
     line-height: 1.6;
   }
-  .coin-ad button {
+  .coin-ad button,
+  .coin-ad a {
     padding: 0;
   }
   .chart-head {

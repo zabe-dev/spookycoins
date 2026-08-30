@@ -55,8 +55,21 @@ export const coinCategories: Array<'All' | CoinCategory> = [
 export const coinChainOptions = [
   'All chains',
   ...Object.values(NETWORKS)
-    .filter((network) => network.enabled && network.id !== 'other')
+    .filter((network) => network.enabled)
     .map((network) => network.shortName),
+];
+
+const otherChainIconUrl =
+  'https://api.iconify.design/mdi:help-circle-outline.svg?color=%23a8b0bd';
+
+export const coinChainChoices = [
+  { label: 'All chains', iconUrl: null },
+  ...Object.values(NETWORKS)
+    .filter((network) => network.enabled)
+    .map((network) => ({
+      label: network.shortName,
+      iconUrl: network.id === 'other' ? otherChainIconUrl : network.iconUrl,
+    })),
 ];
 
 export function toCoinListItem(coin: Coin, index: number): CoinListItem {
