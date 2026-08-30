@@ -46,11 +46,11 @@ const boostRates = [
 ];
 
 const approvalSteps = [
-  'Choose the project and promotion type.',
-  'Contact @SpookyCoinsSupport on Telegram.',
-  'We review ad placements manually.',
-  'Payment/order is confirmed.',
-  'Approved placement goes live on the next available schedule.',
+  'Choose your project and promotion type.',
+  'Message @SpookyCoinsSupport on Telegram.',
+  'We manually review the placement request.',
+  'Confirm the payment/order details.',
+  'Approved promotions go live on the next available schedule.',
 ];
 
 export default function AdvertisePage() {

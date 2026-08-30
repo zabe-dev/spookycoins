@@ -285,7 +285,7 @@
   display: grid;
   grid-template-columns: 1fr minmax(260px, 0.8fr);
   gap: 24px;
-  align-items: start;
+  align-items: center;
 }
 
 .advertise-wide-copy {
@@ -303,6 +303,7 @@
   list-style: decimal;
   display: flex;
   flex-direction: column;
+  align-self: center;
   gap: 12px; /* space between items */
   margin: 0;
   padding-left: 18px;
@@ -350,6 +351,10 @@
 
   .advertise-wide-copy {
     grid-template-columns: 1fr;
+  }
+
+  .approval-list {
+    align-self: start;
   }
 
   .advertise-boosts {
