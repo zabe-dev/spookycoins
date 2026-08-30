@@ -207,8 +207,21 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const name = getNameFromEmail(email);
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
-        closeModal();
-        router.push('/settings');
+        try {
+          await authClient.signOut();
+        } catch {
+          // Signup should leave the user signed out so they can log in intentionally.
+        }
+        setMode('login');
+        setStep('credentials');
+        setVerificationEmail('');
+        setResetCode('');
+        setCodeDigits(emptyCode);
+        setFeedback({
+          tone: 'success',
+          title: 'Account created',
+          message: 'Your account was created successfully. Log in to continue.',
+        });
         router.refresh();
         return;
       }

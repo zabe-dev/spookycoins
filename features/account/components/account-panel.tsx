@@ -22,8 +22,8 @@ export function AccountPanel({
   const [notice, setNotice] = useState('');
 
   return (
-    <section className="container settings-shell">
-      <header className="settings-heading">
+    <section className="container settings-shell account-shell">
+      <header className="account-heading">
         <p className="eyebrow">
           <span>●</span> Account
         </p>
@@ -35,7 +35,7 @@ export function AccountPanel({
       </header>
 
       {notice && (
-        <div className="settings-notice" role="status">
+        <div className="settings-notice account-notice" role="status">
           {notice}
         </div>
       )}

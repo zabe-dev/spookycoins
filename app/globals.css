@@ -1899,14 +1899,16 @@ body.modal-open {
   width: min(760px, 100%);
   margin-inline: auto;
 }
-.settings-heading h1 {
+.settings-heading h1,
+.account-heading h1 {
   margin: 12px 0 8px;
   font:
     760 clamp(42px, 6vw, 68px) var(--font-space-grotesk),
     sans-serif;
   letter-spacing: -0.06em;
 }
-.settings-heading > p:last-child {
+.settings-heading > p:last-child,
+.account-heading > p:last-child {
   margin: 0;
   color: #89939a;
   font-size: 13px;
@@ -1919,6 +1921,9 @@ body.modal-open {
   padding: 12px 14px;
   color: #dcedb4;
   font-size: 12px;
+}
+.account-notice {
+  width: auto;
 }
 .settings-grid {
   display: grid;
