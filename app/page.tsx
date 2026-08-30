@@ -501,41 +501,42 @@ export default function Home() {
         <div className="container info-rows">
           <div>
             <small>WHAT WE DO</small>
-            <b>Crypto project discovery, without the noise.</b>
+            <b>Find early crypto projects before the crowd does.</b>
             <p>
-              SpookyCoins helps early hunters browse newly submitted tokens, presales, promoted
-              projects, and weekly community-ranked coins in one focused place.
+              SpookyCoins gives coin hunters a cleaner way to discover fresh launches, live
+              presales, and promoted projects competing for attention each week.
             </p>
             <ul>
-              <li>Launched projects and presales</li>
-              <li>Weekly vote-based rankings</li>
-              <li>Watchlist-friendly discovery</li>
+              <li>Browse new launches and presales</li>
+              <li>Vote for projects you believe in</li>
+              <li>Save coins you want to follow</li>
             </ul>
           </div>
           <div>
             <small>HOW WE DO IT</small>
             <b>Community signals first, paid visibility clearly marked.</b>
             <p>
-              Rankings are built around weekly votes, watchlist interest, project freshness, and
-              transparent promotion labels so users can tell organic signals from paid placement.
+              Weekly votes, watchlist interest, and project freshness shape the discovery flow. Paid
+              boosts and promoted placements are shown clearly, so attention stays easy to
+              understand.
             </p>
             <ul>
               <li>Votes reset every week</li>
-              <li>Boosts multiply ranking power</li>
-              <li>Promoted coins stay separated</li>
+              <li>Boosts lift ranking visibility</li>
+              <li>Promoted coins are labeled upfront</li>
             </ul>
           </div>
           <div>
             <small>BENEFITS</small>
-            <b>Useful for hunters, teams, and advertisers.</b>
+            <b>More eyes for projects, faster scanning for hunters.</b>
             <p>
-              Users get a cleaner way to compare early projects, while project teams get simple
-              paths to submit, promote, and build attention before bigger discovery channels notice.
+              Project teams can put their coin in front of early crypto audiences, while hunters get
+              the context they need to compare opportunities quickly.
             </p>
             <ul>
               <li>Fast scanning on desktop and mobile</li>
-              <li>Clear project and chain context</li>
-              <li>Promotion options built into the flow</li>
+              <li>Clear chain, price, and vote context</li>
+              <li>Simple promotion paths for listed coins</li>
             </ul>
           </div>
         </div>
