@@ -1,5 +1,6 @@
 'use client';
 
+import { Check, X } from 'lucide-react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 export function ChangeRequestModal({
@@ -48,11 +49,13 @@ export function ChangeRequestModal({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button className="change-modal-close" onClick={close} aria-label="Close request form">
-          ×
+          <X aria-hidden="true" />
         </button>
         {submitted ? (
           <div className="change-request-success">
-            <span>✓</span>
+            <span>
+              <Check aria-hidden="true" />
+            </span>
             <small>REQUEST RECEIVED</small>
             <h2>Thanks for helping us improve the listing.</h2>
             <p>We&apos;ll review the requested changes before updating {coinName}.</p>

@@ -3,6 +3,7 @@
 import { Brand } from '@/components/ui/brand';
 import { PasswordField } from '@/components/ui/password-field';
 import { authClient } from '@/lib/auth/client';
+import { Check, Info, TriangleAlert, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
   useEffect,
@@ -388,7 +389,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         onMouseDown={stopPanelClick}
       >
         <button className="auth-close" onClick={closeModal} aria-label="Close authentication modal">
-          ×
+          <X aria-hidden="true" />
         </button>
         <Brand />
         <div className="auth-heading">
@@ -558,7 +559,13 @@ function AuthFeedbackMessage({ feedback }: { feedback: NonNullable<AuthFeedback>
       role={feedback.tone === 'error' ? 'alert' : 'status'}
     >
       <span className="auth-message-icon" aria-hidden="true">
-        {feedback.tone === 'error' ? '!' : feedback.tone === 'success' ? '✓' : 'i'}
+        {feedback.tone === 'error' ? (
+          <TriangleAlert />
+        ) : feedback.tone === 'success' ? (
+          <Check />
+        ) : (
+          <Info />
+        )}
       </span>
       <span>
         <strong>{feedback.title}</strong>

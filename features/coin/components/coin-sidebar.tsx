@@ -2,6 +2,7 @@
 
 import { VoteButton } from '@/components/ui/action-buttons';
 import { BoltIcon } from '@/features/coins/components';
+import { Pencil } from 'lucide-react';
 import type { CoinDetailView } from '../types';
 import { Info } from './detail-card';
 
@@ -64,9 +65,7 @@ export function CoinSidebar({
       </section>
       <section className="detail-card request-change-card">
         <div className="request-change-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M4 20h4l11-11-4-4L4 16v4Zm9-13 4 4M14 5l2-2 4 4-2 2" />
-          </svg>
+          <Pencil />
         </div>
         <div>
           <h3>Something incorrect?</h3>

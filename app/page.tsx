@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import {
   BannerAd as Ad,
   CoinCells as Cells,
@@ -363,7 +364,7 @@ export default function Home() {
         </div>
         <div className="filter-row">
           <label className="search-box">
-            <span>⌕</span>
+            <Search aria-hidden="true" />
             <input
               value={search}
               onChange={(e) => {
@@ -409,9 +410,7 @@ export default function Home() {
                 onClick={() => categoryRef.current?.scrollBy({ left: -240, behavior: 'smooth' })}
                 aria-label="Scroll categories left"
               >
-                <svg viewBox="0 0 20 20">
-                  <path d="m13 4-6 6 6 6" />
-                </svg>
+                <ChevronLeft aria-hidden="true" />
               </button>
             )}
             {categoryEdges.right && (
@@ -421,9 +420,7 @@ export default function Home() {
                 onClick={() => categoryRef.current?.scrollBy({ left: 240, behavior: 'smooth' })}
                 aria-label="Scroll categories right"
               >
-                <svg viewBox="0 0 20 20">
-                  <path d="m7 4 6 6-6 6" />
-                </svg>
+                <ChevronRight aria-hidden="true" />
               </button>
             )}
           </div>
@@ -464,7 +461,15 @@ export default function Home() {
                         onClick={() => vote(c.symbol)}
                       >
                         <LineBurst />
-                        <span className="vote-label">{has ? 'Voted ✓' : 'Vote +1'}</span>
+                        <span className="vote-label">
+                          {has ? (
+                            <>
+                              Voted <Check aria-hidden="true" />
+                            </>
+                          ) : (
+                            'Vote +1'
+                          )}
+                        </span>
                       </button>
                     </td>
                   </tr>
@@ -480,7 +485,7 @@ export default function Home() {
           </span>
           <div>
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-              ←
+              <ChevronLeft aria-hidden="true" />
             </button>
             {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
               <button key={n} className={page === n ? 'active' : ''} onClick={() => setPage(n)}>
@@ -488,7 +493,7 @@ export default function Home() {
               </button>
             ))}
             <button disabled={page === pages} onClick={() => setPage((p) => p + 1)}>
-              →
+              <ChevronRight aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -527,7 +532,7 @@ export default function Home() {
               <span className="ad-cta-mobile">Ad packages ↗</span>
             </button>
             <button className="ad-close" onClick={() => setAdVisible(false)}>
-              ×
+              <X aria-hidden="true" />
             </button>
           </div>
         </aside>

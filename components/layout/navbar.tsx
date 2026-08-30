@@ -2,6 +2,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import {
+  ChevronDown,
+  Compass,
+  Handshake,
+  LogOut,
+  Megaphone,
+  Package,
+  Plus,
+  Settings,
+  Shield,
+  Star,
+  UserRound,
+  Zap,
+} from 'lucide-react';
 import { authClient } from '@/lib/auth/client';
 import { Brand } from '@/components/ui/brand';
 import { AuthModal } from '@/features/auth/components/auth-modal';
@@ -90,7 +104,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             {isSignedIn ? (
               <>
                 <Link className="submit-coin-btn" href="/submit">
-                  ＋ Submit coin
+                  <Plus aria-hidden="true" /> Submit coin
                 </Link>
                 <div
                   className="user-menu-wrap"
@@ -183,26 +197,11 @@ function getAccountLabel(name?: string | null, email?: string) {
 }
 
 function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        d="M20 21a8 8 0 0 0-16 0m8-9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z"
-      />
-    </svg>
-  );
+  return <UserRound aria-hidden="true" />;
 }
 
 function ChevronDownIcon() {
-  return (
-    <svg className="user-avatar-cue" viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M4.1 6.2a.8.8 0 0 1 1.1 0L8 8.9l2.8-2.7a.8.8 0 1 1 1.1 1.1L8.6 10.5a.9.9 0 0 1-1.2 0L4.1 7.3a.8.8 0 0 1 0-1.1Z" />
-    </svg>
-  );
+  return <ChevronDown className="user-avatar-cue" aria-hidden="true" />;
 }
 
 function MenuIcon({
@@ -219,28 +218,18 @@ function MenuIcon({
     | 'admin'
     | 'logout';
 }) {
-  const paths = {
-    discover: 'M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0Zm8-4 2.2 4.2L10 14.4 12 8Z',
-    promoted: 'M13 2 4 14h7l-1 8 10-13h-7l1-7Z',
-    partners: 'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8 10v-1a8 8 0 0 0-16 0v1m18-10a3 3 0 1 0 0-6',
-    advertise: 'M4 7h3l9-3v16l-9-3H4V7Zm0 0v10m13-7 3 2-3 2',
-    watchlist: 'm12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.8 6.4 20.8 7.5 14 3 9.6l6.2-.9L12 3Z',
-    orders: 'M6 3h12l1 4H5l1-4Zm-1 4h14l-1 14H6L5 7Zm4 4h6m-6 4h5',
-    settings: 'M5 7h14M5 17h14M8 7a2 2 0 1 0 4 0 2 2 0 0 0-4 0Zm5 10a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z',
-    admin: 'M12 3 4 6v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-3Zm0 5v7m-3-4h6',
-    logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9',
+  const icons = {
+    discover: Compass,
+    promoted: Zap,
+    partners: Handshake,
+    advertise: Megaphone,
+    watchlist: Star,
+    orders: Package,
+    settings: Settings,
+    admin: Shield,
+    logout: LogOut,
   };
+  const Icon = icons[type];
 
-  return (
-    <svg className="menu-item-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d={paths[type]}
-        fill={type === 'promoted' || type === 'discover' ? 'currentColor' : 'none'}
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
+  return <Icon className="menu-item-icon" aria-hidden="true" />;
 }

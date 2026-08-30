@@ -2,6 +2,7 @@
 
 import { PasswordField } from '@/components/ui/password-field';
 import { authClient } from '@/lib/auth/client';
+import { X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
 const deleteConfirmationPhrase = 'delete my account';
@@ -180,7 +181,7 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
               type="button"
               onClick={closeDeleteModal}
             >
-              ×
+              <X aria-hidden="true" />
             </button>
             <p className="eyebrow">
               <span>●</span> Danger zone

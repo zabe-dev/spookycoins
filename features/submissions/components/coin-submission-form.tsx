@@ -11,6 +11,7 @@ import {
   submissionTrustSchema,
   type CoinSubmissionValues,
 } from '@/features/submissions/schemas/coin-submission';
+import { Check } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import { z } from 'zod';
 
@@ -121,7 +122,9 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   if (submitted) {
     return (
       <section className="submission-card submission-success">
-        <span className="submission-success-icon">✓</span>
+        <span className="submission-success-icon">
+          <Check aria-hidden="true" />
+        </span>
         <p className="eyebrow">
           <span>●</span> Submission drafted
         </p>
