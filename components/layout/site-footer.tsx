@@ -1,3 +1,5 @@
+'use client';
+
 import { Brand } from '@/components/ui/brand';
 import Link from 'next/link';
 
