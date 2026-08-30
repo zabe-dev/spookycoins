@@ -264,7 +264,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
     setSubmitting(false);
 
     if (!response.ok) {
-      setErrors({ form: body.error || 'Could not submit your project right now.' });
+      setErrors({ form: body.message || 'Could not submit your project right now.' });
       return;
     }
 

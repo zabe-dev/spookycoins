@@ -101,7 +101,7 @@ function SubmissionRow({
     onNotice(
       response.ok
         ? `${action === 'edit' ? 'Edit' : 'Deletion'} request sent for review.`
-        : body.error || 'Could not send the request.',
+        : body.message || 'Could not send the request.',
     );
     if (response.ok) setEditing(false);
   }

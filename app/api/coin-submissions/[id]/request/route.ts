@@ -1,9 +1,9 @@
 import { auth } from '@/lib/auth/server';
+import { apiError, apiSuccess } from '@/lib/api/responses';
 import { db } from '@/lib/db/client';
 import { coinSubmissions } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const requestSchema = z
@@ -17,13 +17,10 @@ const requestSchema = z
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+  if (!session) return apiError('AUTH_REQUIRED', 'Sign in required.', 401);
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success)
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || 'Invalid request.' },
-      { status: 400 },
-    );
+    return apiError('INVALID_REQUEST', parsed.error.issues[0]?.message || 'Invalid request.', 400);
 
   const { id } = await context.params;
   const [owned] = await db
@@ -31,7 +28,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .from(coinSubmissions)
     .where(and(eq(coinSubmissions.id, id), eq(coinSubmissions.requesterEmail, session.user.email)))
     .limit(1);
-  if (!owned) return NextResponse.json({ error: 'Submission not found.' }, { status: 404 });
+  if (!owned) return apiError('SUBMISSION_NOT_FOUND', 'Submission not found.', 404);
 
   await db.insert(coinSubmissions).values({
     coinId: owned.coinId,
@@ -44,5 +41,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       requestedChanges: parsed.data.details || 'Delete this coin listing.',
     },
   });
-  return NextResponse.json({ ok: true });
+  return apiSuccess({ id: owned.id }, 'Request sent for review.');
 }

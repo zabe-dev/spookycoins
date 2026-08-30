@@ -10,8 +10,8 @@ import {
   coinSubmissionPayloadSchema,
   type CoinSubmissionPayload,
 } from '@/features/submissions/schemas/coin-submission';
+import { apiError, apiSuccess } from '@/lib/api/responses';
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
 import { uploadSubmissionLogo } from '@/lib/storage/s3';
 
 const maxSubmissionBodyBytes = 3_200_000;
@@ -22,24 +22,25 @@ const submissionAttempts = new Map<string, number[]>();
 export async function POST(request: Request) {
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
-  if (!session) return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+  if (!session) return apiError('AUTH_REQUIRED', 'Sign in required.', 401);
 
   const contentLength = Number(requestHeaders.get('content-length') || 0);
   if (contentLength > maxSubmissionBodyBytes) {
-    return NextResponse.json({ error: 'Submission is too large.' }, { status: 413 });
+    return apiError('SUBMISSION_TOO_LARGE', 'Submission is too large.', 413);
   }
 
   const requesterKey = buildRequesterKey(session.user.id, requestHeaders);
   if (isRateLimited(requesterKey)) {
-    return NextResponse.json(
-      { error: 'Too many submission attempts. Please try again in a minute.' },
-      { status: 429 },
+    return apiError(
+      'RATE_LIMITED',
+      'Too many submission attempts. Please try again in a minute.',
+      429,
     );
   }
 
   const rawBody = await request.text().catch(() => '');
   if (byteLength(rawBody) > maxSubmissionBodyBytes) {
-    return NextResponse.json({ error: 'Submission is too large.' }, { status: 413 });
+    return apiError('SUBMISSION_TOO_LARGE', 'Submission is too large.', 413);
   }
 
   const body = parseJson(rawBody);
@@ -48,9 +49,10 @@ export async function POST(request: Request) {
     email: session.user.email,
   });
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || 'Invalid submission.' },
-      { status: 400 },
+    return apiError(
+      'INVALID_SUBMISSION',
+      parsed.error.issues[0]?.message || 'Invalid submission.',
+      400,
     );
   }
 
@@ -59,15 +61,16 @@ export async function POST(request: Request) {
 
   const turnstile = await verifyTurnstile(payload.turnstileToken || '', requestHeaders);
   if (!turnstile.ok) {
-    return NextResponse.json({ error: turnstile.error }, { status: 400 });
+    return apiError(
+      'TURNSTILE_FAILED',
+      turnstile.error || 'Bot protection verification failed.',
+      400,
+    );
   }
 
   const uploadedLogo = await uploadSubmissionLogo(payload.logo).catch(() => null);
   if (!uploadedLogo) {
-    return NextResponse.json(
-      { error: 'Could not upload the logo. Please try again.' },
-      { status: 502 },
-    );
+    return apiError('LOGO_UPLOAD_FAILED', 'Could not upload the logo. Please try again.', 502);
   }
 
   const createdId = await db.transaction(async (tx) => {
@@ -119,7 +122,7 @@ export async function POST(request: Request) {
     return submission.id;
   });
 
-  return NextResponse.json({ ok: true, id: createdId });
+  return apiSuccess({ id: createdId }, 'Project submitted for review.');
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
