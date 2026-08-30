@@ -1,5 +1,5 @@
-import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
+import { SiteHeader } from '@/components/layout/site-header';
 import { BoltIcon } from '@/features/coins/components';
 import {
   Activity,
@@ -120,7 +120,7 @@ export default function AdvertisePage() {
             </div>
             <div className="golden-ticker-preview" aria-label="Golden Ticker example">
               <span className="coin-dot">S</span>
-              <strong className="gold-name gold-name-animated">SpookyMoon</strong>
+              <strong className="gold-name gold-name-animated">SPOOKY</strong>
               <small>$SPKY</small>
               <span className="boost-badge boost-500">
                 <BoltIcon />

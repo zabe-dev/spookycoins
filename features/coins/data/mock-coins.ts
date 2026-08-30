@@ -1,5 +1,5 @@
-import type { BoostMultiplier, Coin, CoinCategory, NetworkId } from '../types';
 import { validateCoin } from '../schemas/validation';
+import type { BoostMultiplier, Coin, CoinCategory, NetworkId } from '../types';
 import { toCoinListItem } from '../view';
 
 export const MOCK_DATASET_POPULATED_AT = '2026-08-28T00:00:00.000Z';
@@ -32,7 +32,7 @@ type MockCoinInput = {
 const mockProjects: MockCoinInput[] = [
   {
     id: 1000,
-    name: 'Spooky',
+    name: 'SPOOKY',
     symbol: 'SPKY',
     network: 'solana',
     category: 'Memecoins',
