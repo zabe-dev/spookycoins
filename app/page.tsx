@@ -29,13 +29,13 @@ import './market.css';
 import './scroll-fix.css';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
 
-type LeaderboardView = 'Launched coins' | 'Most watched' | 'Presales' | 'Recently launched';
+type LeaderboardView = 'Launched coins' | 'Most watched' | 'Presales' | 'Recently added';
 
 const viewParams: Record<LeaderboardView, string> = {
   'Launched coins': 'launched',
   'Most watched': 'watched',
   Presales: 'presales',
-  'Recently launched': 'recent',
+  'Recently added': 'recent',
 };
 const paramsToView = Object.fromEntries(
   Object.entries(viewParams).map(([label, value]) => [value, label]),
@@ -196,7 +196,7 @@ export default function Home() {
             Number(watchlist.includes(b.symbol)) -
             (a.watchCount + Number(watchlist.includes(a.symbol))) || b.trend - a.trend,
       );
-    if (view === 'Recently launched')
+    if (view === 'Recently added')
       return [...list].sort((a, b) => parseInt(a.age) - parseInt(b.age));
     return [...list].sort((a, b) => {
       const av = sort.key === 'boost' ? a.boost || 0 : a[sort.key],
@@ -283,7 +283,7 @@ export default function Home() {
             >
               <Discovery
                 icon="new"
-                title="Recently launched"
+                title="Recently added"
                 sub="Fresh community listings"
                 coins={hotspotCoins.recent}
                 viewMoreHref="/?coins=recent#leaderboard"
@@ -359,7 +359,7 @@ export default function Home() {
         </div>
         <div className="leader-tabs">
           {(
-            ['Launched coins', 'Presales', 'Most watched', 'Recently launched'] as LeaderboardView[]
+            ['Launched coins', 'Presales', 'Most watched', 'Recently added'] as LeaderboardView[]
           ).map((x) => (
             <button
               key={x}
@@ -595,7 +595,9 @@ export default function Home() {
             <small>AD SPACE</small>
             <b>SPOOKY</b>
             <div className="bottom-ad-copy">
-              <span className="bottom-ad-copy-main">Reach crypto&apos;s earliest coin hunters.</span>
+              <span className="bottom-ad-copy-main">
+                Reach crypto&apos;s earliest coin hunters.
+              </span>
               <span>Premium inventory · Measured impressions and clicks</span>
             </div>
             <Link className="ad-cta" href="/advertise">

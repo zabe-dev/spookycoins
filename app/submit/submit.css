@@ -620,17 +620,20 @@
   color: currentColor;
 }
 
+.submission-dropzone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--sub);
+  font-size: 9px;
+  font-weight: 400;
+}
+
 .submission-dropzone strong {
   display: block;
   margin-bottom: 4px;
   color: #f2f4f5;
   font-size: 12px;
-}
-
-.submission-dropzone small {
-  color: var(--sub);
-  font-size: 9px;
-  font-weight: 400;
 }
 
 .submission-logo-actions {

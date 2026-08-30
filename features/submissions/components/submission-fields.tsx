@@ -1,6 +1,13 @@
 'use client';
 
 import { NETWORKS } from '@/features/coins/networks';
+import type { ReviewSection } from '@/features/submissions/lib/review-sections';
+import {
+  submissionNetworks,
+  type CoinSubmissionValues,
+  type SubmissionCategory,
+  type SubmissionNetwork,
+} from '@/features/submissions/schemas/coin-submission';
 import { Icon } from '@iconify/react';
 import {
   BrainCircuit,
@@ -11,9 +18,9 @@ import {
   Gamepad2,
   Image,
   Landmark,
-  SmilePlus,
   Rocket,
   ShieldCheck,
+  SmilePlus,
   Trophy,
   Upload,
   Users,
@@ -22,13 +29,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import {
-  submissionNetworks,
-  type CoinSubmissionValues,
-  type SubmissionCategory,
-  type SubmissionNetwork,
-} from '@/features/submissions/schemas/coin-submission';
-import type { ReviewSection } from '@/features/submissions/lib/review-sections';
 
 const categoryButtons = [
   { value: 'AI', label: 'Artificial Intelligence', icon: BrainCircuit },
@@ -145,9 +145,11 @@ export function LogoField({
         ) : (
           <>
             <Upload aria-hidden="true" />
-            <div>
+            <div className="submission-dropzone-text">
               <strong>Upload logo</strong>
               <small>Drop a file or browse</small>
+              <small>PNG, JPG, JPEG, or WEBP</small>
+              <small>100px × 100px</small>
             </div>
           </>
         )}
@@ -162,7 +164,6 @@ export function LogoField({
           }}
         />
       </div>
-      <small className="submission-logo-note">PNG, JPG, JPEG, or WEBP · Minimum 100 × 100</small>
       {(error || draftError) && (
         <small className="submission-inline-error">{error || draftError}</small>
       )}

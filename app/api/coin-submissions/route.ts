@@ -12,6 +12,7 @@ import {
 } from '@/features/submissions/schemas/coin-submission';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { uploadSubmissionLogo } from '@/lib/storage/s3';
 
 const maxSubmissionBodyBytes = 3_200_000;
 const rateLimitWindowMs = 60_000;
@@ -36,7 +37,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json().catch(() => null);
+  const rawBody = await request.text().catch(() => '');
+  if (byteLength(rawBody) > maxSubmissionBodyBytes) {
+    return NextResponse.json({ error: 'Submission is too large.' }, { status: 413 });
+  }
+
+  const body = parseJson(rawBody);
   const parsed = coinSubmissionPayloadSchema.safeParse({
     ...(isRecord(body) ? body : {}),
     email: session.user.email,
@@ -56,6 +62,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: turnstile.error }, { status: 400 });
   }
 
+  const uploadedLogo = await uploadSubmissionLogo(payload.logo).catch(() => null);
+  if (!uploadedLogo) {
+    return NextResponse.json(
+      { error: 'Could not upload the logo. Please try again.' },
+      { status: 502 },
+    );
+  }
+
   const createdId = await db.transaction(async (tx) => {
     const [submission] = await tx
       .insert(coinSubmissions)
@@ -65,7 +79,7 @@ export async function POST(request: Request) {
         requesterTelegram: payload.telegramContact,
         submissionType: 'new-coin',
         status: 'pending',
-        coinData: buildSubmissionData(payload, contactEmail),
+        coinData: buildSubmissionData(payload, contactEmail, uploadedLogo),
       })
       .returning({ id: coinSubmissions.id });
 
@@ -110,6 +124,18 @@ export async function POST(request: Request) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseJson(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function byteLength(value: string) {
+  return new TextEncoder().encode(value).length;
 }
 
 function buildRequesterKey(userId: string, requestHeaders: Headers) {
@@ -160,9 +186,21 @@ async function verifyTurnstile(token: string, requestHeaders: Headers) {
   }
 }
 
-function buildSubmissionData(payload: CoinSubmissionPayload, contactEmail: string) {
+function buildSubmissionData(
+  payload: CoinSubmissionPayload,
+  contactEmail: string,
+  uploadedLogo: { key: string; url: string },
+) {
   return {
-    logo: payload.logo,
+    logo: {
+      name: payload.logo.name,
+      mimeType: payload.logo.mimeType,
+      width: payload.logo.width,
+      height: payload.logo.height,
+      key: uploadedLogo.key,
+      url: uploadedLogo.url,
+    },
+    logoUrl: uploadedLogo.url,
     name: payload.name,
     symbol: payload.symbol,
     description: payload.description,
