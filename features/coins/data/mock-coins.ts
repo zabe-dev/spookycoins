@@ -4,6 +4,9 @@ import { toCoinListItem } from '../view';
 
 export const MOCK_DATASET_POPULATED_AT = '2026-08-28T00:00:00.000Z';
 
+// Flip this to true to simulate an empty leaderboard (no mock coins at all).
+const USE_EMPTY_DATASET = true;
+
 const boostWindow = {
   startsAt: '2026-08-24T00:00:00.000Z',
   endsAt: '2026-08-31T00:00:00.000Z',
@@ -29,7 +32,7 @@ type MockCoinInput = {
   promoted?: boolean;
 };
 
-const mockProjects: MockCoinInput[] = [
+const populatedProjects: MockCoinInput[] = [
   {
     id: 1000,
     name: 'SPOOKY',
@@ -304,6 +307,8 @@ const mockProjects: MockCoinInput[] = [
   },
 ];
 
+const mockProjects: MockCoinInput[] = USE_EMPTY_DATASET ? [] : populatedProjects;
+
 export const mockCoins = mockProjects.map(toMockCoin) satisfies Coin[];
 export const INITIAL_DATASET_POPULATED_AT = MOCK_DATASET_POPULATED_AT;
 export const mockCoinListItems = mockCoins.map(toCoinListItem);
@@ -315,9 +320,14 @@ const invalid = mockCoins.flatMap((coin) =>
 );
 
 if (new Set(ids).size !== ids.length) throw new Error('Mock coin IDs must be unique.');
-if (promoted.length !== 1 || promoted[0].externalId !== 'spookycoins-promoted-demo') {
-  throw new Error('Mock dataset must contain exactly one dummy promoted coin.');
+
+// Skip the "exactly one promoted coin" check entirely when testing an empty dataset.
+if (!USE_EMPTY_DATASET) {
+  if (promoted.length !== 1 || promoted[0].externalId !== 'spookycoins-promoted-demo') {
+    throw new Error('Mock dataset must contain exactly one dummy promoted coin.');
+  }
 }
+
 if (invalid.length) throw new Error(`Invalid mock dataset:\n${invalid.join('\n')}`);
 
 function toMockCoin(project: MockCoinInput): Coin {
