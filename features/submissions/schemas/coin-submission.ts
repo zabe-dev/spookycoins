@@ -66,7 +66,7 @@ const dateText = z
   .trim()
   .optional()
   .or(z.literal(''))
-  .transform((value) => value || '')
+  .transform((value) => normalizeDateInput(value || ''))
   .refine((value) => !value || isValidDate(value), 'Use a valid date.');
 const timeText = z
   .string()
@@ -356,6 +356,24 @@ function isValidDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+function normalizeDateInput(value: string) {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) return trimmedValue;
+
+  const slashDate = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!slashDate) return trimmedValue;
+
+  const month = Number(slashDate[1]);
+  const day = Number(slashDate[2]);
+  const year = Number(slashDate[3]);
+  const normalized = `${year.toString().padStart(4, '0')}-${month
+    .toString()
+    .padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+  return isValidDate(normalized) ? normalized : trimmedValue;
 }
 
 function toUtcIso(date: string, time: string) {

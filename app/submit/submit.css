@@ -998,23 +998,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   border: 0;
-  min-height: 46px;
+  min-height: 36px;
   border-radius: 8px;
-  padding: 14px 18px;
-  font:
-    780 11px/1 var(--font-space-grotesk),
-    sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  background: var(--lime);
+  padding: 10px 14px;
+  color: #10130c;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
   cursor: pointer;
   transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    background 0.16s ease,
-    box-shadow 0.16s ease,
-    color 0.16s ease;
+    opacity 0.16s ease,
+    background 0.16s ease;
 }
 
 .submission-flow .submission-primary,
@@ -1022,38 +1021,35 @@
 .submission-success .submission-primary {
   border: 0;
   background: var(--lime);
-  color: #080b0b;
-  box-shadow: 0 0 40px rgba(203, 255, 74, 0.12);
+  color: #10130c;
+  box-shadow: none;
 }
 
 .submission-flow .submission-secondary,
 .submission-modal .submission-secondary,
 .submission-success .submission-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
-  color: #cbd0d3;
+  border: 0;
+  background: var(--lime);
+  color: #10130c;
 }
 
-.submission-flow .submission-primary:hover,
-.submission-flow .submission-secondary:hover,
-.submission-modal .submission-primary:hover,
-.submission-modal .submission-secondary:hover,
-.submission-success .submission-primary:hover,
-.submission-success .submission-secondary:hover {
-  transform: translateY(-1px);
+.submission-flow .submission-primary:hover:not(:disabled),
+.submission-flow .submission-secondary:hover:not(:disabled),
+.submission-modal .submission-primary:hover:not(:disabled),
+.submission-modal .submission-secondary:hover:not(:disabled),
+.submission-success .submission-primary:hover:not(:disabled),
+.submission-success .submission-secondary:hover:not(:disabled) {
+  background: #d9ff64;
 }
 
-.submission-flow .submission-primary:hover,
-.submission-modal .submission-primary:hover,
-.submission-success .submission-primary:hover {
-  box-shadow: 0 0 46px rgba(203, 255, 74, 0.18);
-}
-
-.submission-flow .submission-secondary:hover,
-.submission-modal .submission-secondary:hover,
-.submission-success .submission-secondary:hover {
-  border-color: rgba(203, 255, 74, 0.36);
-  color: var(--lime);
+.submission-flow .submission-primary:disabled,
+.submission-flow .submission-secondary:disabled,
+.submission-modal .submission-primary:disabled,
+.submission-modal .submission-secondary:disabled,
+.submission-success .submission-primary:disabled,
+.submission-success .submission-secondary:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
 }
 
 .submission-actions {
