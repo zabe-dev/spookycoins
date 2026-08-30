@@ -170,6 +170,10 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist, Orders, Settings, and Logout.
 - [x] Desktop signed-in navigation uses an account-style dropdown with Watchlist, Orders, Settings, and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
+- [x] `/account` is the signed-in Watchlist/account area and also displays the user's submitted coins.
+- [x] `/settings` is only for profile/security settings; submitted coins were moved out of Settings.
+- [x] Settings shows the user's email address as read-only because email changes are disabled for now.
+- [x] The old Sign-in methods section was removed from Settings.
 - [x] Logout sends the user to the homepage with a full page reload.
 - [x] Simple protected signed-user and admin-only test pages exist with loading/skeleton states.
 - [x] Auth feedback is handled inside the modal with styled inline messages, loading states, and sanitized descriptive copy that avoids sensitive/debug details.
