@@ -25,6 +25,13 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
     const data = new FormData(event.currentTarget);
     const currentPassword = String(data.get('currentPassword') || '');
     const newPassword = String(data.get('newPassword') || '');
+    const confirmPassword = String(data.get('confirmPassword') || '');
+
+    if (newPassword !== confirmPassword) {
+      setNotice('New password and confirm password must match.');
+      return;
+    }
+
     const result = await authClient.changePassword({
       currentPassword,
       newPassword,
@@ -105,6 +112,10 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
             <label>
               New password
               <input name="newPassword" type="password" minLength={8} required />
+            </label>
+            <label>
+              Confirm new password
+              <input name="confirmPassword" type="password" minLength={8} required />
             </label>
             <button type="submit">Update password</button>
           </form>

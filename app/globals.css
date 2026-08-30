@@ -1917,7 +1917,7 @@ body.modal-open {
 }
 .settings-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 760px);
   gap: 16px;
   margin-top: 30px;
 }
@@ -2028,9 +2028,7 @@ body.modal-open {
   color: var(--lime);
 }
 .password-form {
-  margin-top: 17px;
-  border-top: 1px solid #252c31;
-  padding-top: 18px;
+  margin-top: 0;
 }
 .submissions-card {
   margin-top: 16px;
