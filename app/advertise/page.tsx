@@ -108,6 +108,15 @@ export default function AdvertisePage() {
                 </div>
               ))}
             </div>
+            <div className="golden-ticker-preview" aria-label="Golden Ticker example">
+              <span className="coin-dot">S</span>
+              <strong className="gold-name gold-name-animated">SpookyMoon</strong>
+              <small>$SPKY</small>
+              <span className="boost-badge boost-500">
+                <BoltIcon />
+                500×
+              </span>
+            </div>
           </section>
         </div>
 
@@ -147,8 +156,9 @@ export default function AdvertisePage() {
           <div>
             <h2>Golden Ticker</h2>
             <p>
-              The 500× boost includes Golden Ticker styling: an orange/gold animated coin-name
-              treatment and premium 500× badge styling while the boost is active.
+              Give your project a premium Golden Ticker: a glowing orange/gold name treatment and a
+              standout 500× badge that helps your coin feel impossible to miss while the boost is
+              active.
             </p>
           </div>
         </section>

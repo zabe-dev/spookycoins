@@ -274,7 +274,7 @@ Boost pricing:
 - Boosts never change stored raw-vote counts.
 - Only one active boost may apply to a project at a time.
 - Boosts do not stack; if a project already has an active boost, additional boosts for that project are disabled until the current boost expires.
-- The 500× tier includes Golden Ticker styling: animated orange/gold project-name treatment and premium 500× badge styling while active.
+- The 500× tier includes Golden Ticker styling: sales copy should frame it as giving the project premium orange/gold name treatment and standout 500× badge visibility while active.
 - Boost checkout can be automated if eligibility checks pass: the project must already exist on SpookyCoins, must not be suspended, must not be rejected/flagged, and must not already have an active boost.
 
 ## Review and activation — current commercial decision
@@ -447,8 +447,16 @@ Advertise page:
 - [x] Explain that the MVP sells only Promoted Coin slots and Boosts.
 - [x] Clearly state that banner ad placements are visible as prototype placeholders but are not available for purchase yet.
 - [x] Include Promoted Coin slot pricing, boost package pricing, Golden Ticker details, review/activation flow, and manual approval disclaimers.
+- [x] Boost packages section includes a visual Golden Ticker/badge example.
 - [x] Direct promotion scheduling and banner-ad inquiries to **SpookyCoinsSupport** on Telegram.
 - [x] Navbar Advertise now routes to `/advertise`.
+
+Partners page:
+
+- [x] Create `/partners` as a simple partner-interest page.
+- [x] Explain that SpookyCoins is looking for ecosystem, launch, security, data, media, and community partners.
+- [x] Direct interested partners to **@CoinSpookySupport** on Telegram.
+- [x] Navbar Partners now routes to `/partners`.
 - [ ] Explain that Boosts and Promoted Coin slots are intended to become automated self-serve products once checkout and eligibility checks are built.
 - [ ] Update navbar Advertise link to `/advertise`.
 

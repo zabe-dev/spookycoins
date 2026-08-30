@@ -45,7 +45,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
             <Link href="/#promoted" onClick={closeMenu}>
               <MenuIcon type="promoted" /> Promoted
             </Link>
-            <Link href="/#partners" onClick={closeMenu}>
+            <Link href="/partners" onClick={closeMenu}>
               <MenuIcon type="partners" /> Partners
             </Link>
             <Link href="/advertise" onClick={closeMenu}>

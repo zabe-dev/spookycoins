@@ -210,6 +210,47 @@
   font-weight: 900;
 }
 
+.golden-ticker-preview {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  border: 1px solid rgba(240, 185, 11, 0.24);
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, rgba(240, 185, 11, 0.08), rgba(255, 119, 0, 0.04)),
+    rgba(255, 255, 255, 0.02);
+  padding: 12px;
+}
+
+.golden-ticker-preview .coin-dot {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff7700, #f0b90b);
+  color: #100b04;
+  font-weight: 900;
+}
+
+.golden-ticker-preview strong {
+  font:
+    800 18px var(--font-space-grotesk),
+    sans-serif;
+}
+
+.golden-ticker-preview small {
+  color: var(--sub);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.golden-ticker-preview .boost-badge {
+  margin-left: auto;
+}
+
 .advertise-wide {
   display: grid;
   grid-template-columns: 1fr minmax(260px, 0.8fr);
