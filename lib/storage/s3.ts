@@ -1,4 +1,5 @@
-import { createHmac, createHash, randomUUID } from 'crypto';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { randomUUID } from 'crypto';
 
 type StoredObject = {
   key: string;
@@ -31,44 +32,15 @@ export async function uploadSubmissionLogo(logo: {
   const body = dataUrlToBuffer(logo.dataUrl, logo.mimeType);
   const extension = extensionForMime(logo.mimeType);
   const key = `submissions/logos/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.${extension}`;
-  const url = objectUrl(storage.endpoint, storage.bucket, key);
-  const payloadHash = sha256Hex(body);
-  const now = new Date();
-  const amzDate = isoDate(now);
-  const shortDate = amzDate.slice(0, 8);
-  const headers = {
-    host: url.host,
-    'content-type': logo.mimeType,
-    'x-amz-content-sha256': payloadHash,
-    'x-amz-date': amzDate,
-  };
-  const authorization = signRequest({
-    accessKeyId: storage.accessKeyId,
-    secretAccessKey: storage.secretAccessKey,
-    region: storage.region,
-    method: 'PUT',
-    pathname: url.pathname,
-    query: url.searchParams.toString(),
-    headers,
-    payloadHash,
-    shortDate,
-  });
 
-  const response = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      ...headers,
-      authorization,
-    },
-    body,
-  });
-
-  if (!response.ok) {
-    const message = await response.text().catch(() => '');
-    throw new Error(
-      `Logo upload failed with status ${response.status}${message ? `: ${message.slice(0, 240)}` : ''}`,
-    );
-  }
+  await storage.client.send(
+    new PutObjectCommand({
+      Bucket: storage.bucket,
+      Key: key,
+      Body: body,
+      ContentType: logo.mimeType,
+    }),
+  );
 
   return {
     key,
@@ -78,13 +50,11 @@ export async function uploadSubmissionLogo(logo: {
 
 function getS3Config() {
   const endpoint = process.env.AWS_ENDPOINT_URL_S3 || process.env.S3_ENDPOINT_URL;
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
   const region = process.env.AWS_REGION || 'us-east-1';
   const bucket = firstEnvValue(bucketEnvKeys);
   const publicBaseUrl = firstEnvValue(publicUrlEnvKeys);
 
-  if (!endpoint || !accessKeyId || !secretAccessKey) {
+  if (!endpoint || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
     throw new Error('S3 storage is not configured.');
   }
   if (!bucket) {
@@ -93,11 +63,17 @@ function getS3Config() {
 
   return {
     endpoint: trimTrailingSlash(endpoint),
-    accessKeyId,
-    secretAccessKey,
-    region,
     bucket,
     publicBaseUrl: publicBaseUrl ? trimTrailingSlash(publicBaseUrl) : '',
+    client: new S3Client({
+      endpoint,
+      region,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    }),
   };
 }
 
@@ -107,91 +83,10 @@ function dataUrlToBuffer(dataUrl: string, mimeType: string) {
   return Buffer.from(dataUrl.slice(prefix.length), 'base64');
 }
 
-function objectUrl(endpoint: string, bucket: string, key: string) {
-  const base = new URL(`${trimTrailingSlash(endpoint)}/`);
-  const pathname = joinPath(base.pathname, bucket, key);
-  base.pathname = pathname;
-  return base;
-}
-
 function publicObjectUrl(baseUrl: string, bucket: string, key: string) {
-  return objectUrl(baseUrl, bucket, key).toString();
-}
-
-function signRequest({
-  accessKeyId,
-  secretAccessKey,
-  region,
-  method,
-  pathname,
-  query,
-  headers,
-  payloadHash,
-  shortDate,
-}: {
-  accessKeyId: string;
-  secretAccessKey: string;
-  region: string;
-  method: string;
-  pathname: string;
-  query: string;
-  headers: Record<string, string>;
-  payloadHash: string;
-  shortDate: string;
-}) {
-  const signedHeaders = Object.keys(headers).sort().join(';');
-  const canonicalHeaders = Object.keys(headers)
-    .sort()
-    .map((key) => `${key}:${headers[key].trim()}\n`)
-    .join('');
-  const scope = `${shortDate}/${region}/s3/aws4_request`;
-  const canonicalRequest = [
-    method,
-    encodePath(pathname),
-    query,
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash,
-  ].join('\n');
-  const stringToSign = [
-    'AWS4-HMAC-SHA256',
-    headers['x-amz-date'],
-    scope,
-    sha256Hex(canonicalRequest),
-  ].join('\n');
-  const signature = hmacHex(signingKey(secretAccessKey, shortDate, region), stringToSign);
-
-  return `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-}
-
-function signingKey(secretAccessKey: string, shortDate: string, region: string) {
-  const dateKey = hmac(Buffer.from(`AWS4${secretAccessKey}`, 'utf8'), shortDate);
-  const dateRegionKey = hmac(dateKey, region);
-  const dateRegionServiceKey = hmac(dateRegionKey, 's3');
-  return hmac(dateRegionServiceKey, 'aws4_request');
-}
-
-function hmac(key: Buffer, value: string) {
-  return createHmac('sha256', key).update(value).digest();
-}
-
-function hmacHex(key: Buffer, value: string) {
-  return createHmac('sha256', key).update(value).digest('hex');
-}
-
-function sha256Hex(value: string | Buffer) {
-  return createHash('sha256').update(value).digest('hex');
-}
-
-function isoDate(date: Date) {
-  return date.toISOString().replace(/[:-]|\.\d{3}/g, '');
-}
-
-function encodePath(pathname: string) {
-  return pathname
-    .split('/')
-    .map((part) => encodeURIComponent(decodeURIComponent(part)))
-    .join('/');
+  const url = new URL(`${trimTrailingSlash(baseUrl)}/`);
+  url.pathname = joinPath(url.pathname, bucket, key);
+  return url.toString();
 }
 
 function joinPath(...parts: string[]) {

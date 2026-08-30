@@ -55,9 +55,20 @@ export default async function DashboardPage() {
 function readCoinData(value: unknown) {
   if (!value || typeof value !== 'object') return {};
   const record = value as Record<string, unknown>;
+  const basic = isRecord(record.basic) ? record.basic : null;
+  const market = isRecord(record.market) ? record.market : null;
+
   return {
-    name: typeof record.name === 'string' ? record.name : undefined,
-    symbol: typeof record.symbol === 'string' ? record.symbol : undefined,
-    chain: typeof record.chain === 'string' ? record.chain : undefined,
+    name: readString(basic?.name) || readString(record.name),
+    symbol: readString(basic?.symbol) || readString(record.symbol),
+    chain: readString(market?.primaryChain) || readString(record.chain),
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : undefined;
 }

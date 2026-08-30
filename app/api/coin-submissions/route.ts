@@ -194,33 +194,49 @@ function buildSubmissionData(
   contactEmail: string,
   uploadedLogo: { key: string; url: string },
 ) {
-  return {
-    logo: {
-      name: payload.logo.name,
-      mimeType: payload.logo.mimeType,
-      width: payload.logo.width,
-      height: payload.logo.height,
-      key: uploadedLogo.key,
-      url: uploadedLogo.url,
-    },
-    logoUrl: uploadedLogo.url,
-    name: payload.name,
-    symbol: payload.symbol,
-    description: payload.description,
-    categories: payload.categories,
-    isPresale: payload.isPresale,
-    chain: payload.contracts[0]?.chain || '',
+  const primaryContract = payload.contracts[0];
+  const links = {
     website: payload.website,
     telegram: payload.telegram,
     x: payload.x,
     discord: payload.discord,
     github: payload.github,
     whitepaper: payload.whitepaper,
-    contracts: payload.contracts,
-    launchDate: payload.launchDate,
-    chart: payload.chart,
-    dex: payload.dex,
-    presale: payload.presale,
+  };
+  const market = payload.isPresale
+    ? {
+        type: 'presale',
+        primaryChain: primaryContract?.chain || '',
+        contracts: payload.contracts,
+        presale: payload.presale,
+      }
+    : {
+        type: 'launched',
+        primaryChain: primaryContract?.chain || '',
+        contracts: payload.contracts,
+        launchDate: payload.launchDate,
+        chart: payload.chart,
+        dex: payload.dex,
+      };
+
+  return {
+    basic: {
+      name: payload.name,
+      symbol: payload.symbol,
+      description: payload.description,
+      categories: payload.categories,
+      isPresale: payload.isPresale,
+      logo: {
+        fileName: payload.logo.name,
+        mimeType: payload.logo.mimeType,
+        width: payload.logo.width,
+        height: payload.logo.height,
+        key: uploadedLogo.key,
+        url: uploadedLogo.url,
+      },
+    },
+    links,
+    market,
     security: {
       kycUrl: payload.kycUrl,
       auditUrl: payload.auditUrl,
@@ -228,7 +244,6 @@ function buildSubmissionData(
     contact: {
       email: contactEmail,
       telegram: payload.telegramContact,
-      agreedToTerms: payload.agreedToTerms,
     },
   };
 }
