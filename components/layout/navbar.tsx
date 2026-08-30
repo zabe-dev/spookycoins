@@ -1,29 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { Brand } from '@/components/ui/brand';
+import { AuthModal } from '@/features/auth/components/auth-modal';
+import { authClient } from '@/lib/auth/client';
 import {
   BadgeDollarSign,
   ChevronDown,
+  CircleUserRound,
   Compass,
   Handshake,
   LogOut,
   Package,
   Plus,
-  CircleUserRound,
   Settings,
   Shield,
   UserRound,
   Zap,
 } from 'lucide-react';
-import { authClient } from '@/lib/auth/client';
-import { Brand } from '@/components/ui/brand';
-import { AuthModal } from '@/features/auth/components/auth-modal';
+import Link from 'next/link';
+import { useState } from 'react';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const { data: session } = authClient.useSession();
   const closeMenu = () => setMenuOpen(false);
   const isSignedIn = Boolean(session?.user);
@@ -39,12 +40,22 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   async function logout() {
     setUserMenuOpen(false);
     closeMenu();
+    setLoggingOut(true);
     await authClient.signOut();
     window.location.replace('/');
   }
 
   return (
     <>
+      {loggingOut && (
+        <div className="loading-wrap">
+          <div className="dots" aria-label="Logging out">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
       <div className="nav-band">
         <div className="container navbar">
           <Brand />

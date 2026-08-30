@@ -1,7 +1,5 @@
 'use client';
 
-import { SiteFooter } from '@/components/layout/site-footer';
-import { SiteHeader } from '@/components/layout/site-header';
 import { Home, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -27,8 +25,7 @@ export function SystemStatePage({
 }: SystemStatePageProps) {
   return (
     <main className="market-page">
-      <SiteHeader active="none" />
-      <section className="container system-state-shell">
+      <section className="container-fallback system-state-shell">
         <div className="system-state-card">
           <div className="system-state-icon">{icon}</div>
           <p className="eyebrow">
@@ -50,7 +47,6 @@ export function SystemStatePage({
           </div>
         </div>
       </section>
-      <SiteFooter />
     </main>
   );
 }

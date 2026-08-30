@@ -6,8 +6,8 @@ import { authClient } from '@/lib/auth/client';
 import { Check, Info, TriangleAlert, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
-  useEffect,
   useCallback,
+  useEffect,
   useRef,
   useState,
   type ClipboardEvent,
@@ -197,22 +197,19 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       if (mode === 'login') {
         const { error } = await authClient.signIn.email({ email, password });
         if (!error) {
-          closeModal();
           router.push('/settings');
-          router.refresh();
-          return;
+          return; // don't closeModal(), don't reset loading — let dots stay up until nav takes over
         }
         throw new Error(error.message || 'Login failed.');
       }
 
+      // signup path — unchanged, still needs finally to reset loading since no navigation happens
       const name = getNameFromEmail(email);
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
         try {
           await authClient.signOut();
-        } catch {
-          // Signup should leave the user signed out so they can log in intentionally.
-        }
+        } catch {}
         setMode('login');
         setStep('credentials');
         setVerificationEmail('');
@@ -224,17 +221,17 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           message: 'Your account was created successfully. Log in to continue.',
         });
         router.refresh();
+        setLoading(false);
         return;
       }
       throw new Error(error.message || 'Signup failed.');
     } catch (caught) {
+      setLoading(false);
       setFeedback({
         tone: 'error',
         title: mode === 'login' ? 'Could not log in' : 'Could not create account',
         message: getAuthError(caught, mode === 'login' ? 'login' : 'signup'),
       });
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -368,7 +365,15 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         : 'Create your account';
 
   const submitLabel = loading
-    ? 'Working…'
+    ? step === 'reset-code'
+      ? 'Verifying…'
+      : step === 'new-password'
+        ? 'Updating…'
+        : mode === 'reset'
+          ? 'Sending code…'
+          : mode === 'login'
+            ? 'Logging in…'
+            : 'Creating account…'
     : step === 'reset-code'
       ? 'Verify reset code'
       : step === 'new-password'
