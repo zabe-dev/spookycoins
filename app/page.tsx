@@ -6,7 +6,6 @@ import {
   CoinCells as Cells,
   CoinTable as SimpleTable,
   DiscoveryCard as Discovery,
-  InfoRow as Info,
   LineBurst,
   SectionTitle as Title,
   SortHeader as SH,
@@ -500,18 +499,45 @@ export default function Home() {
       </section>
       <section className="info-band">
         <div className="container info-rows">
-          <Info
-            title="Weekly rankings"
-            text="Leaderboards reset every Monday at 00:00 UTC while lifetime totals remain."
-          />
-          <Info
-            title="Transparent promotion"
-            text="Paid placements and boosts are clearly labeled for understandable discovery."
-          />
-          <Info
-            title="Built for discovery"
-            text="Market data, community signals and coin information in one focused interface."
-          />
+          <div>
+            <small>WHAT WE DO</small>
+            <b>Crypto project discovery, without the noise.</b>
+            <p>
+              SpookyCoins helps early hunters browse newly submitted tokens, presales, promoted
+              projects, and weekly community-ranked coins in one focused place.
+            </p>
+            <ul>
+              <li>Launched projects and presales</li>
+              <li>Weekly vote-based rankings</li>
+              <li>Watchlist-friendly discovery</li>
+            </ul>
+          </div>
+          <div>
+            <small>HOW WE DO IT</small>
+            <b>Community signals first, paid visibility clearly marked.</b>
+            <p>
+              Rankings are built around weekly votes, watchlist interest, project freshness, and
+              transparent promotion labels so users can tell organic signals from paid placement.
+            </p>
+            <ul>
+              <li>Votes reset every week</li>
+              <li>Boosts multiply ranking power</li>
+              <li>Promoted coins stay separated</li>
+            </ul>
+          </div>
+          <div>
+            <small>BENEFITS</small>
+            <b>Useful for hunters, teams, and advertisers.</b>
+            <p>
+              Users get a cleaner way to compare early projects, while project teams get simple
+              paths to submit, promote, and build attention before bigger discovery channels notice.
+            </p>
+            <ul>
+              <li>Fast scanning on desktop and mobile</li>
+              <li>Clear project and chain context</li>
+              <li>Promotion options built into the flow</li>
+            </ul>
+          </div>
         </div>
       </section>
       <SiteFooter id="footer" />
