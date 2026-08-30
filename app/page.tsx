@@ -26,12 +26,10 @@ import './market.css';
 import './scroll-fix.css';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
 
-type LeaderboardView =
-  'Launched coins' | 'Trending' | 'Most watched' | 'Presales' | 'Recently added';
+type LeaderboardView = 'Launched coins' | 'Most watched' | 'Presales' | 'Recently added';
 
 const viewParams: Record<LeaderboardView, string> = {
   'Launched coins': 'launched',
-  Trending: 'trending',
   'Most watched': 'watched',
   Presales: 'presales',
   'Recently added': 'recent',
@@ -67,6 +65,7 @@ export default function Home() {
     [watchlist, setWatchlist] = useState<string[]>([]),
     [watchAnimating, setWatchAnimating] = useState<string | null>(null),
     [adVisible, setAdVisible] = useState(true),
+    [hotspotRefresh, setHotspotRefresh] = useState(0),
     [viewParamExplicit, setViewParamExplicit] = useState(false),
     [urlReady, setUrlReady] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
@@ -144,6 +143,29 @@ export default function Home() {
     const timer = window.setInterval(() => setHotspotIndex((i) => (i + 1) % 3), 4200);
     return () => window.clearInterval(timer);
   }, [hotspotsVisible]);
+  useEffect(() => {
+    if (!hotspotsVisible) return;
+    const timer = window.setInterval(() => setHotspotRefresh((tick) => tick + 1), 30_000);
+    return () => window.clearInterval(timer);
+  }, [hotspotsVisible]);
+  const hotspotCoins = (() => {
+    void hotspotRefresh;
+    const withLocalVotes = marketCoins
+      .filter((coin) => !coin.promoted)
+      .map((coin) => ({
+        ...coin,
+        votes: coin.votes + Number(voted.includes(coin.symbol)),
+        watchCount: coin.watchCount + Number(watchlist.includes(coin.symbol)),
+      }));
+    const rankByVotes = (list: CoinListItem[]) =>
+      [...list].sort((a, b) => b.votes - a.votes || a.rank - b.rank).slice(0, 5);
+
+    return {
+      recent: rankByVotes([...withLocalVotes].sort((a, b) => parseInt(a.age) - parseInt(b.age))),
+      presales: rankByVotes(withLocalVotes.filter((coin) => coin.lifecycle === 'presale')),
+      watched: rankByVotes([...withLocalVotes].sort((a, b) => b.watchCount - a.watchCount)),
+    };
+  })();
   const filtered = useMemo(() => {
     const list = marketCoins.filter(
       (c) =>
@@ -154,7 +176,6 @@ export default function Home() {
         (!search ||
           `${c.name} ${c.symbol} ${c.chain}`.toLowerCase().includes(search.toLowerCase())),
     );
-    if (view === 'Trending') return [...list].sort((a, b) => b.trend - a.trend);
     if (view === 'Most watched')
       return [...list].sort(
         (a, b) =>
@@ -251,30 +272,21 @@ export default function Home() {
                 icon="new"
                 title="Recently added"
                 sub="Fresh community listings"
-                coins={marketCoins
-                  .filter((coin) => !coin.promoted)
-                  .slice(-5)
-                  .reverse()}
+                coins={hotspotCoins.recent}
                 viewMoreHref="/?coins=recent#leaderboard"
               />
               <Discovery
-                icon="trend"
-                title="Trending now"
-                sub="Fastest-rising signals"
-                coins={marketCoins
-                  .filter((coin) => !coin.promoted)
-                  .sort((a, b) => b.trend - a.trend)
-                  .slice(0, 5)}
-                viewMoreHref="/?coins=trending#leaderboard"
+                icon="presale"
+                title="Presales"
+                sub="Upcoming and live launches"
+                coins={hotspotCoins.presales}
+                viewMoreHref="/?coins=presales#leaderboard"
               />
               <Discovery
                 icon="watch"
                 title="Most watched"
                 sub="Saved to portfolios"
-                coins={marketCoins
-                  .filter((coin) => !coin.promoted)
-                  .sort((a, b) => b.watchCount - a.watchCount || b.trend - a.trend)
-                  .slice(0, 5)}
+                coins={hotspotCoins.watched}
                 viewMoreHref="/?coins=watched#leaderboard"
               />
             </div>
@@ -333,13 +345,7 @@ export default function Home() {
         </div>
         <div className="leader-tabs">
           {(
-            [
-              'Launched coins',
-              'Trending',
-              'Most watched',
-              'Presales',
-              'Recently added',
-            ] as LeaderboardView[]
+            ['Launched coins', 'Most watched', 'Presales', 'Recently added'] as LeaderboardView[]
           ).map((x) => (
             <button
               key={x}

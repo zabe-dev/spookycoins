@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
 import Link from 'next/link';
-import type { CoinListItem as Coin } from '@/features/coins/view';
+import { formatVotes, type CoinListItem as Coin } from '@/features/coins/view';
 import { DiscoveryIcon } from './icons';
 
 export function DiscoveryCard({
@@ -12,7 +12,7 @@ export function DiscoveryCard({
   coins,
   viewMoreHref,
 }: {
-  icon: 'new' | 'trend' | 'watch';
+  icon: 'new' | 'presale' | 'watch';
   title: string;
   sub: string;
   coins: Coin[];
@@ -42,10 +42,7 @@ export function DiscoveryCard({
               {coin.symbol} · {coin.chain}
             </small>
           </span>
-          <em className={coin.change >= 0 ? 'positive' : 'negative'}>
-            {coin.change >= 0 ? '+' : ''}
-            {coin.change}%
-          </em>
+          <em>{formatVotes(coin.votes)} votes</em>
         </Link>
       ))}
     </article>

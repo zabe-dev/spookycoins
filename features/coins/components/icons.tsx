@@ -11,7 +11,7 @@ export function BoltIcon() {
   );
 }
 
-export function DiscoveryIcon({ type }: { type: 'new' | 'trend' | 'watch' }) {
+export function DiscoveryIcon({ type }: { type: 'new' | 'presale' | 'watch' }) {
   if (type === 'new') {
     return (
       <svg className="discovery-icon new-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -21,11 +21,13 @@ export function DiscoveryIcon({ type }: { type: 'new' | 'trend' | 'watch' }) {
     );
   }
 
-  if (type === 'trend') {
+  if (type === 'presale') {
     return (
       <svg className="discovery-icon trend-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 17 9 12l4 3 7-9" />
-        <path d="M15 6h5v5" />
+        <path d="M7 20V9.5a5 5 0 0 1 10 0V20" />
+        <path d="M5 20h14" />
+        <path d="M9 13h6" />
+        <path d="M12 4V2" />
       </svg>
     );
   }
