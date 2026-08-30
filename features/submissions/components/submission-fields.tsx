@@ -11,6 +11,8 @@ import {
 import { Icon } from '@iconify/react';
 import {
   BrainCircuit,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
   CircleHelp,
   Dice6,
@@ -317,16 +319,180 @@ export function DateInput({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLSpanElement>(null);
+  const selectedDate = parseSubmissionDate(value);
+  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(selectedDate || fallbackDate));
+  const calendarDays = getCalendarDays(visibleMonth);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function closeCalendar(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+
+    document.addEventListener('mousedown', closeCalendar);
+    return () => document.removeEventListener('mousedown', closeCalendar);
+  }, [open]);
+
+  function openCalendar() {
+    if (selectedDate) setVisibleMonth(startOfMonth(selectedDate));
+    setOpen(true);
+  }
+
   return (
-    <span className="submission-date-input">
+    <span className="submission-date-input" ref={rootRef}>
       <input
-        type="date"
-        value={value}
-        onClick={(event) => event.currentTarget.showPicker?.()}
+        type="text"
+        inputMode="numeric"
+        value={formatDateForField(value)}
+        placeholder="01/13/2009"
+        onFocus={openCalendar}
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setOpen(false);
+        }}
       />
-      <Icon icon="lucide:calendar-days" aria-hidden="true" />
+      <button
+        type="button"
+        aria-label="Open calendar"
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+            return;
+          }
+          openCalendar();
+        }}
+      >
+        <Icon icon="lucide:calendar-days" aria-hidden="true" />
+      </button>
+      {open && (
+        <span className="submission-calendar" role="dialog" aria-label="Choose date">
+          <span className="submission-calendar-head">
+            <button
+              type="button"
+              aria-label="Previous month"
+              onClick={() => setVisibleMonth(addMonths(visibleMonth, -1))}
+            >
+              <ChevronLeft aria-hidden="true" />
+            </button>
+            <strong>
+              {visibleMonth.toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric',
+                timeZone: 'UTC',
+              })}
+            </strong>
+            <button
+              type="button"
+              aria-label="Next month"
+              onClick={() => setVisibleMonth(addMonths(visibleMonth, 1))}
+            >
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </span>
+          <span className="submission-calendar-weekdays" aria-hidden="true">
+            {weekdays.map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </span>
+          <span className="submission-calendar-grid">
+            {calendarDays.map((day) => {
+              const selected = selectedDate ? isSameUtcDay(day.date, selectedDate) : false;
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  className={`${!day.inMonth ? 'muted' : ''} ${selected ? 'selected' : ''}`}
+                  aria-pressed={selected}
+                  onClick={() => {
+                    onChange(formatDateForField(day.date));
+                    setVisibleMonth(startOfMonth(day.date));
+                    setOpen(false);
+                  }}
+                >
+                  {day.date.getUTCDate()}
+                </button>
+              );
+            })}
+          </span>
+        </span>
+      )}
     </span>
+  );
+}
+
+const fallbackDate = new Date(Date.UTC(2009, 0, 13));
+const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+function parseSubmissionDate(value: string) {
+  const trimmedValue = value.trim();
+  const isoDate = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const slashDate = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+  if (isoDate) {
+    return buildUtcDate(Number(isoDate[1]), Number(isoDate[2]), Number(isoDate[3]));
+  }
+
+  if (slashDate) {
+    return buildUtcDate(Number(slashDate[3]), Number(slashDate[1]), Number(slashDate[2]));
+  }
+
+  return null;
+}
+
+function buildUtcDate(year: number, month: number, day: number) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const valid =
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day;
+
+  return valid ? date : null;
+}
+
+function formatDateForField(value: string | Date) {
+  const date = value instanceof Date ? value : parseSubmissionDate(value);
+  if (!date) return typeof value === 'string' ? value : '';
+
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  return `${month}/${day}/${year}`;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+function addMonths(date: Date, offset: number) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + offset, 1));
+}
+
+function getCalendarDays(month: Date) {
+  const firstDay = startOfMonth(month);
+  const startOffset = firstDay.getUTCDay();
+  const calendarStart = new Date(firstDay);
+  calendarStart.setUTCDate(firstDay.getUTCDate() - startOffset);
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(calendarStart);
+    date.setUTCDate(calendarStart.getUTCDate() + index);
+
+    return {
+      date,
+      key: date.toISOString(),
+      inMonth: date.getUTCMonth() === month.getUTCMonth(),
+    };
+  });
+}
+
+function isSameUtcDay(first: Date, second: Date) {
+  return (
+    first.getUTCFullYear() === second.getUTCFullYear() &&
+    first.getUTCMonth() === second.getUTCMonth() &&
+    first.getUTCDate() === second.getUTCDate()
   );
 }
 

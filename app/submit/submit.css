@@ -231,19 +231,128 @@
   padding-right: 54px;
 }
 
-.submission-date-input > svg {
+.submission-date-input > button {
   position: absolute;
   top: 50%;
   right: 18px;
-  width: 17px;
-  height: 17px;
-  transform: translateY(-50%);
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
   color: #9ea8ae;
-  pointer-events: none;
+  cursor: pointer;
+  transform: translateY(-50%);
 }
 
-.submission-date-input input::-webkit-calendar-picker-indicator {
-  opacity: 0;
+.submission-date-input > button:hover {
+  background: rgba(203, 255, 74, 0.08);
+  color: var(--lime);
+}
+
+.submission-date-input > button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.submission-calendar {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 30;
+  display: grid;
+  width: min(300px, calc(100vw - 48px));
+  gap: 12px;
+  border: 1px solid rgba(203, 255, 74, 0.18);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(203, 255, 74, 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(20, 25, 28, 0.98), rgba(8, 11, 13, 0.99));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  padding: 14px;
+}
+
+.submission-calendar-head {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+}
+
+.submission-calendar-head strong {
+  color: #f2f4f5;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.submission-calendar-head button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #c9d1d5;
+  cursor: pointer;
+}
+
+.submission-calendar-head button:hover {
+  border-color: rgba(203, 255, 74, 0.28);
+  color: var(--lime);
+}
+
+.submission-calendar-head svg {
+  width: 16px;
+  height: 16px;
+}
+
+.submission-calendar-weekdays,
+.submission-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.submission-calendar-weekdays span {
+  color: #747f86;
+  font-size: 9px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.submission-calendar-grid button {
+  display: grid;
+  aspect-ratio: 1 / 1;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  color: #d8dee1;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.submission-calendar-grid button:hover {
+  border-color: rgba(203, 255, 74, 0.3);
+  background: rgba(203, 255, 74, 0.07);
+  color: #f5f8f2;
+}
+
+.submission-calendar-grid button.muted {
+  color: #5f686f;
+}
+
+.submission-calendar-grid button.selected {
+  border-color: rgba(203, 255, 74, 0.48);
+  background: var(--lime);
+  color: #090c0c;
 }
 
 .submission-trust-callout {
