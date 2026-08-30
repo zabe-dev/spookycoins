@@ -10,7 +10,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Account',
+  title: 'Dashboard',
   robots: {
     index: false,
     follow: false,

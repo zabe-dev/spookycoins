@@ -167,10 +167,10 @@ Better Auth is responsible for identity and sessions using SpookyCoins-owned dat
 - [x] Signup currently uses direct Better Auth email/password account creation without a signup OTP step.
 - [x] Password reset by email code is available from the custom auth modal.
 - [x] Password reset uses the OTP only during the final password update so the code is not consumed before password validation.
-- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Watchlist, Orders, Settings, and Logout.
-- [x] Desktop signed-in navigation uses an account-style dropdown with Watchlist, Orders, Settings, and a red Logout action with a matching red icon.
+- [x] Signed-in navbar state uses a two-letter generated email avatar and a dropdown with Dashboard, Orders, Settings, and Logout.
+- [x] Desktop signed-in navigation uses an account-style dropdown ordered as Dashboard, Orders, Settings, and a red Logout action with a matching red icon.
 - [x] Mobile navigation combines site links and account actions in one dropdown with user identity and item icons.
-- [x] `/account` is the signed-in Watchlist/account area and also displays the user's submitted coins.
+- [x] `/account` is the signed-in Dashboard area for watchlist/account activity and also displays the user's submitted coins.
 - [x] `/settings` is only for profile/security settings; submitted coins were moved out of Settings.
 - [x] Settings shows the user's email address as read-only because email changes are disabled for now.
 - [x] The old Sign-in methods section was removed from Settings.

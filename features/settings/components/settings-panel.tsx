@@ -89,7 +89,7 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
     <section className="container settings-shell">
       <header className="settings-heading">
         <p className="eyebrow">
-          <span>●</span> Account
+          <span>●</span> Preferences
         </p>
         <h1>Settings</h1>
         <p>Manage your profile and password.</p>

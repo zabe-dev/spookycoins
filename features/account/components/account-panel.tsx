@@ -25,9 +25,9 @@ export function AccountPanel({
     <section className="container settings-shell account-shell">
       <header className="account-heading">
         <p className="eyebrow">
-          <span>●</span> Account
+          <span>●</span> User area
         </p>
-        <h1>Account</h1>
+        <h1>Dashboard</h1>
         <p>
           Hello, {email}. Your watched coins and submitted projects will live here as the account
           area grows.
