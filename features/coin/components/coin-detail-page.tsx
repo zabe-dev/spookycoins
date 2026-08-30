@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Brand } from '@/components/ui/brand';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import type { Coin } from '@/features/coins/types';
 import { toCoinListItem } from '@/features/coins/view';
@@ -104,15 +104,7 @@ export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
         open={changeRequestOpen}
         onClose={() => setChangeRequestOpen(false)}
       />
-      <footer className="container footer coin-footer">
-        <Brand />
-        <p>Community-powered crypto discovery.</p>
-        <div>
-          <a href="#">Methodology</a>
-          <a href="#">Advertise</a>
-          <a href="#">Terms</a>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }

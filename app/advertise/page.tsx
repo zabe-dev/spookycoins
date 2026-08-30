@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { BoltIcon } from '@/features/coins/components';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -163,6 +164,7 @@ export default function AdvertisePage() {
           </div>
         </section>
       </section>
+      <SiteFooter />
     </main>
   );
 }

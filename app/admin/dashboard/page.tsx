@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { auth } from '@/lib/auth/server';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
@@ -39,6 +40,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

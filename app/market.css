@@ -6,11 +6,13 @@
   --copy: #eef1f2;
   --sub: #77818a;
   min-height: 100vh;
-  padding-bottom: 76px;
   background: var(--page);
   color: var(--copy);
   position: relative;
   isolation: isolate;
+}
+.market-page.with-bottom-ad {
+  padding-bottom: 76px;
 }
 .market-page::before {
   content: '';

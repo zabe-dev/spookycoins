@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { AccountPanel } from '@/features/account/components/account-panel';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
@@ -52,6 +53,7 @@ export default async function AccountPage() {
           coinData: readCoinData(submission.coinData),
         }))}
       />
+      <SiteFooter />
     </main>
   );
 }

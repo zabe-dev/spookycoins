@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { CoinSubmissionForm } from '@/features/submissions/components/coin-submission-form';
 import { auth } from '@/lib/auth/server';
 import type { Metadata } from 'next';
@@ -33,6 +34,7 @@ export default async function SubmitCoinPage() {
       <div className="container submission-shell">
         <CoinSubmissionForm userEmail={session.user.email || ''} />
       </div>
+      <SiteFooter />
     </main>
   );
 }

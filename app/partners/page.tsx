@@ -1,4 +1,5 @@
 import { SiteHeader } from '@/components/layout/site-header';
+import { SiteFooter } from '@/components/layout/site-footer';
 import type { Metadata } from 'next';
 import '../market.css';
 import './partners.css';
@@ -56,6 +57,7 @@ export default function PartnersPage() {
           ))}
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

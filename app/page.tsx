@@ -12,7 +12,7 @@ import {
   TableScroller,
   WatchButton as Watch,
 } from '@/features/coins/components';
-import { Brand } from '@/components/ui/brand';
+import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
 import { mockCoinListItems } from '@/features/coins/data/mock-coins';
@@ -207,7 +207,7 @@ export default function Home() {
     setHotspotIndex((i) => (delta > 0 ? i + 1 : i + 2) % 3);
   };
   return (
-    <main className="market-page">
+    <main className={adVisible ? 'market-page with-bottom-ad' : 'market-page'}>
       <SiteHeader />
       <div className="container ad-grid">
         <Ad />
@@ -502,15 +502,7 @@ export default function Home() {
           />
         </div>
       </section>
-      <footer className="container footer" id="footer">
-        <Brand />
-        <p>Community-powered crypto discovery.</p>
-        <div>
-          <a href="#">Methodology</a>
-          <a href="#">Advertise</a>
-          <a href="#">Terms</a>
-        </div>
-      </footer>
+      <SiteFooter id="footer" />
       {adVisible && (
         <aside className="bottom-ad">
           <div className="container bottom-ad-inner">
