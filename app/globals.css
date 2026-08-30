@@ -2235,6 +2235,9 @@ body.modal-open {
 .delete-confirm-form strong {
   color: #ffb2b2;
 }
+.delete-confirm-copy {
+  display: inline;
+}
 .delete-confirm-form input {
   width: 100%;
   border: 1px solid #343d43;

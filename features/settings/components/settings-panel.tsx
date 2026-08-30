@@ -198,7 +198,9 @@ export function SettingsPanel({ user }: { user: { name: string; email: string } 
               }}
             >
               <label>
-                Type <strong>{deleteConfirmationPhrase}</strong> to confirm.
+                <span className="delete-confirm-copy">
+                  Type <strong>{deleteConfirmationPhrase}</strong> to confirm.
+                </span>
                 <input
                   autoComplete="off"
                   autoFocus
