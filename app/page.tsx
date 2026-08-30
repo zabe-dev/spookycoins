@@ -346,7 +346,7 @@ export default function Home() {
         </div>
         <div className="leader-tabs">
           {(
-            ['Launched coins', 'Most watched', 'Presales', 'Recently added'] as LeaderboardView[]
+            ['Launched coins', 'Presales', 'Most watched', 'Recently added'] as LeaderboardView[]
           ).map((x) => (
             <button
               key={x}
