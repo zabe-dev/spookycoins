@@ -10,6 +10,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import '../market.css';
 import './partners.css';
 
@@ -27,15 +28,6 @@ export const metadata: Metadata = {
     url: '/partners',
   },
 };
-
-const partnerTypes = [
-  { label: 'Launchpads and presale platforms', icon: CalendarClock },
-  { label: 'KYC and audit providers', icon: ShieldCheck },
-  { label: 'Crypto communities and media pages', icon: UsersRound },
-  { label: 'DEX, chart, and data tooling teams', icon: ChartLine },
-  { label: 'Project service providers', icon: Wrench },
-  { label: 'Ecosystem growth partners', icon: Network },
-];
 
 export default function PartnersPage() {
   return (
@@ -59,17 +51,36 @@ export default function PartnersPage() {
         </div>
 
         <div className="partners-grid">
-          {partnerTypes.map(({ label, icon: Icon }) => (
-            <div key={label}>
-              <span>
-                <Icon aria-hidden="true" />
-              </span>
-              <strong>{label}</strong>
-            </div>
-          ))}
+          <PartnerType label="Launchpads and presale platforms">
+            <CalendarClock aria-hidden="true" />
+          </PartnerType>
+          <PartnerType label="KYC and audit providers">
+            <ShieldCheck aria-hidden="true" />
+          </PartnerType>
+          <PartnerType label="Crypto communities and media pages">
+            <UsersRound aria-hidden="true" />
+          </PartnerType>
+          <PartnerType label="DEX, chart, and data tooling teams">
+            <ChartLine aria-hidden="true" />
+          </PartnerType>
+          <PartnerType label="Project service providers">
+            <Wrench aria-hidden="true" />
+          </PartnerType>
+          <PartnerType label="Ecosystem growth partners">
+            <Network aria-hidden="true" />
+          </PartnerType>
         </div>
       </section>
       <SiteFooter />
     </main>
+  );
+}
+
+function PartnerType({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <div>
+      <span>{children}</span>
+      <strong>{label}</strong>
+    </div>
   );
 }
