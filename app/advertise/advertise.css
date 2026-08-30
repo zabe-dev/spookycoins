@@ -213,11 +213,6 @@
   padding: 12px;
 }
 
-.advertise-boosts div.golden {
-  border-color: rgba(240, 185, 11, 0.45);
-  background: linear-gradient(180deg, rgba(240, 185, 11, 0.1), rgba(255, 119, 0, 0.04));
-}
-
 .advertise-boosts b {
   font:
     800 22px var(--font-space-grotesk),

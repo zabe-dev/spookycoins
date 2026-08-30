@@ -107,7 +107,7 @@ export default function AdvertisePage() {
             </p>
             <div className="advertise-boosts">
               {boostRates.map((rate) => (
-                <div key={rate.package} className={rate.package === '500×' ? 'golden' : ''}>
+                <div key={rate.package}>
                   <b>{rate.package}</b>
                   <span>{rate.price}</span>
                   <small>
