@@ -27,7 +27,7 @@ export function AccountPanel({
         <p className="eyebrow">
           <span>●</span> Account
         </p>
-        <h1>Watchlist</h1>
+        <h1>Account</h1>
         <p>
           Hello, {email}. Your watched coins and submitted projects will live here as the account
           area grows.

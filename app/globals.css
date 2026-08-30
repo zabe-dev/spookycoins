@@ -1693,7 +1693,9 @@ body.modal-open {
 .auth-password-toggle svg {
   width: 17px;
   height: 17px;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 .auth-code-grid {
   display: grid;

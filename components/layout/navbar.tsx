@@ -10,9 +10,9 @@ import {
   Megaphone,
   Package,
   Plus,
+  CircleUserRound,
   Settings,
   Shield,
-  Star,
   UserRound,
   Zap,
 } from 'lucide-react';
@@ -76,7 +76,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     </span>
                   </div>
                   <Link href="/account" onClick={closeMenu}>
-                    <MenuIcon type="watchlist" /> Watchlist
+                    <MenuIcon type="account" /> Account
                   </Link>
                   <Link href="/settings" onClick={closeMenu}>
                     <MenuIcon type="settings" /> Settings
@@ -136,7 +136,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                         </span>
                       </div>
                       <Link href="/account" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="watchlist" /> Watchlist
+                        <MenuIcon type="account" /> Account
                       </Link>
                       <Link href="/settings" onClick={() => setUserMenuOpen(false)}>
                         <MenuIcon type="settings" /> Settings
@@ -212,7 +212,7 @@ function MenuIcon({
     | 'promoted'
     | 'partners'
     | 'advertise'
-    | 'watchlist'
+    | 'account'
     | 'orders'
     | 'settings'
     | 'admin'
@@ -223,7 +223,7 @@ function MenuIcon({
     promoted: Zap,
     partners: Handshake,
     advertise: Megaphone,
-    watchlist: Star,
+    account: CircleUserRound,
     orders: Package,
     settings: Settings,
     admin: Shield,

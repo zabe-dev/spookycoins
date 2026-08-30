@@ -10,7 +10,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Watchlist',
+  title: 'Account',
   robots: {
     index: false,
     follow: false,
