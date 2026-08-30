@@ -1,7 +1,7 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { BoltIcon } from '@/features/coins/components';
-import { Activity, BarChart3, Coins, Megaphone, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Activity, BarChart3, Megaphone, MessageCircle, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import '../market.css';
 import './advertise.css';
@@ -123,7 +123,7 @@ export default function AdvertisePage() {
         <section className="advertise-policy">
           <div className="advertise-policy-golden">
             <div className="golden-ticker-icon">
-              <Coins aria-hidden="true" />
+              <BoltIcon aria-hidden="true" />
             </div>
             <div className="golden-ticker-header">
               <h2>Golden Ticker</h2>
