@@ -5,7 +5,7 @@ import { toCoinListItem } from '../view';
 export const MOCK_DATASET_POPULATED_AT = '2026-08-28T00:00:00.000Z';
 
 // Flip this to true to simulate an empty leaderboard (no mock coins at all).
-const USE_EMPTY_DATASET = true;
+const USE_EMPTY_DATASET = false;
 
 const boostWindow = {
   startsAt: '2026-08-24T00:00:00.000Z',
