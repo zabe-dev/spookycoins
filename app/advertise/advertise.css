@@ -67,10 +67,33 @@
   min-height: 42px;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   border-radius: 12px;
   padding: 0 16px;
   font-size: 11px;
   font-weight: 900;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.advertise-primary svg,
+.advertise-secondary svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  transition: transform 0.18s ease;
+}
+
+.advertise-primary:hover,
+.advertise-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.advertise-primary:hover svg,
+.advertise-secondary:hover svg {
+  transform: translateX(2px) rotate(-5deg);
 }
 
 .advertise-primary {
@@ -287,6 +310,20 @@
 .advertise-policy > div {
   border-radius: 18px;
   padding: 20px;
+}
+
+.advertise-policy > div > svg {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 12px;
+  color: var(--lime);
+}
+
+.analytics-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 16px;
+  align-items: start;
 }
 
 @media (max-width: 900px) {

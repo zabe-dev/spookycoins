@@ -52,6 +52,7 @@
   min-height: 42px;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   margin-top: 22px;
   border: 1px solid var(--lime);
   border-radius: 12px;
@@ -60,6 +61,25 @@
   color: #080b0b;
   font-size: 11px;
   font-weight: 900;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease;
+}
+
+.partners-primary svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  transition: transform 0.18s ease;
+}
+
+.partners-primary:hover {
+  transform: translateY(-1px);
+  background: #dcff82;
+}
+
+.partners-primary:hover svg {
+  transform: translateX(2px) rotate(-5deg);
 }
 
 .partners-grid {
@@ -79,7 +99,19 @@
 }
 
 .partners-grid span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(203, 255, 74, 0.08);
   color: var(--lime);
+}
+
+.partners-grid svg {
+  width: 15px;
+  height: 15px;
 }
 
 .partners-grid strong {

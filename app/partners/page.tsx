@@ -1,5 +1,13 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
+import {
+  ArrowRight,
+  Handshake,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  UsersRound,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import '../market.css';
 import './partners.css';
@@ -20,12 +28,12 @@ export const metadata: Metadata = {
 };
 
 const partnerTypes = [
-  'Launchpads and presale platforms',
-  'KYC and audit providers',
-  'Crypto communities and media pages',
-  'DEX, chart, and data tooling teams',
-  'Project service providers',
-  'Ecosystem growth partners',
+  { label: 'Launchpads and presale platforms', icon: Sparkles },
+  { label: 'KYC and audit providers', icon: ShieldCheck },
+  { label: 'Crypto communities and media pages', icon: UsersRound },
+  { label: 'DEX, chart, and data tooling teams', icon: ArrowRight },
+  { label: 'Project service providers', icon: Handshake },
+  { label: 'Ecosystem growth partners', icon: Sparkles },
 ];
 
 export default function PartnersPage() {
@@ -44,15 +52,18 @@ export default function PartnersPage() {
             them, we should talk.
           </p>
           <a className="partners-primary" href="https://t.me/CoinSpookySupport">
+            <MessageCircle aria-hidden="true" />
             Contact @CoinSpookySupport
           </a>
         </div>
 
         <div className="partners-grid">
-          {partnerTypes.map((type) => (
-            <div key={type}>
-              <span>✦</span>
-              <strong>{type}</strong>
+          {partnerTypes.map(({ label, icon: Icon }) => (
+            <div key={label}>
+              <span>
+                <Icon aria-hidden="true" />
+              </span>
+              <strong>{label}</strong>
             </div>
           ))}
         </div>

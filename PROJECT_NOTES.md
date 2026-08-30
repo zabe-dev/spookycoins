@@ -279,9 +279,11 @@ Boost pricing:
 
 ## Review and activation — current commercial decision
 
-- Daily review cutoff is **6:00 PM**.
-- Requests submitted before 6:00 PM are reviewed for possible activation at **12:00 AM**, giving up to a six-hour review window.
-- Requests submitted after 6:00 PM are not guaranteed to be reviewed or activated by 12:00 AM and may move to the next activation cycle.
+- We review ad placements manually.
+- Manual approval first, automation later.
+- Customers should contact SpookyCoinsSupport on Telegram to discuss promotion type, project eligibility, and available placement dates.
+- Same-day advertisement starts are not guaranteed; support should inform customers directly during scheduling.
+- An advertisement analytics system is planned for advertisers, including measured impressions, clicks, and campaign reporting.
 - Promoted Coin placements and Boosts should move toward automated payment, eligibility checks, scheduling, activation, expiration, and receipt generation.
 - Banner ad placements are paused, not operational, and not available for self-serve purchase.
 - Future banner ad placements require manual review and direct scheduling through Telegram before they become operational.
@@ -389,7 +391,7 @@ Report moderation states are New, Under Review, Action Taken, Rejected, and Reso
 - Project CRUD/delisting without deleting historical records.
 - Simple workflow: Requests → Review → Approve/Reject → Scheduled → Live → Expired.
 - Submission, KYC/audit, report, Promoted Coin placement, and Boost approval queues.
-- Live clock and daily cutoff indicator.
+- Manual scheduling notes and advertiser analytics review tools.
 - Promoted Coin pricing calculator with automatic duration discounts.
 - Boost management, including one-active-boost enforcement and expiry.
 - Payment/order details, placement dates, rejection reasons, status tracking, and fraud detail.
@@ -448,6 +450,7 @@ Advertise page:
 - [x] Clearly state that banner ad placements are visible as prototype placeholders but are not available for purchase yet.
 - [x] Include Promoted Coin slot pricing, boost package pricing, Golden Ticker details, review/activation flow, and manual approval disclaimers.
 - [x] Boost packages section includes a visual Golden Ticker/badge example.
+- [x] Advertise page explains manual ad placement review and the planned advertiser analytics system.
 - [x] Direct promotion scheduling and banner-ad inquiries to **SpookyCoinsSupport** on Telegram.
 - [x] Navbar Advertise now routes to `/advertise`.
 

@@ -1,6 +1,7 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { BoltIcon } from '@/features/coins/components';
+import { ArrowRight, BarChart3, MessageCircle, Send, ShieldCheck, Sparkles } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import '../market.css';
@@ -39,9 +40,9 @@ const boostRates = [
 const approvalSteps = [
   'Choose the project and promotion type.',
   'Contact @SpookyCoinsSupport on Telegram.',
-  'We review eligibility, dates, and placement availability.',
+  'We review ad placements manually.',
   'Payment/order is confirmed.',
-  'Approved placement goes live on schedule.',
+  'Approved placement goes live on the next available schedule.',
 ];
 
 export default function AdvertisePage() {
@@ -61,9 +62,11 @@ export default function AdvertisePage() {
           </p>
           <div className="advertise-actions">
             <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
+              <MessageCircle aria-hidden="true" />
               Contact @SpookyCoinsSupport
             </a>
             <Link className="advertise-secondary" href="/submit">
+              <Send aria-hidden="true" />
               Submit your project first
             </Link>
           </div>
@@ -71,7 +74,9 @@ export default function AdvertisePage() {
 
         <div className="advertise-grid">
           <section className="advertise-card">
-            <span className="advertise-card-icon">★</span>
+            <span className="advertise-card-icon">
+              <Sparkles aria-hidden="true" />
+            </span>
             <h2>Promoted Coins</h2>
             <p>
               Promoted Coin placement gives approved projects premium table visibility for the dates
@@ -128,8 +133,9 @@ export default function AdvertisePage() {
             </p>
             <h2>Manual approval first, automation later.</h2>
             <p>
-              Daily cutoff is 6:00 PM. Requests submitted before cutoff are reviewed for possible
-              activation at 12:00 AM. Requests after cutoff may move to the next activation cycle.
+              We review ad placements manually. Message us with your project, preferred promotion,
+              and target dates, and we&apos;ll confirm the earliest available start time. Same-day
+              starts are not guaranteed.
             </p>
           </div>
           <ol className="approval-list" type="1">
@@ -139,8 +145,23 @@ export default function AdvertisePage() {
           </ol>
         </section>
 
+        <section className="advertise-card analytics-card">
+          <span className="advertise-card-icon">
+            <BarChart3 aria-hidden="true" />
+          </span>
+          <div>
+            <h2>Advertiser analytics are in development.</h2>
+            <p>
+              We&apos;re building an advertisement analytics system so advertisers can understand
+              placement performance with measured impressions, clicks, and campaign reporting once
+              the platform is ready for broader ad operations.
+            </p>
+          </div>
+        </section>
+
         <section className="advertise-policy">
           <div>
+            <ShieldCheck aria-hidden="true" />
             <h2>Eligibility rules</h2>
             <p>
               The project must already be submitted/listed on SpookyCoins, must not be suspended,
@@ -148,6 +169,7 @@ export default function AdvertisePage() {
             </p>
           </div>
           <div>
+            <BarChart3 aria-hidden="true" />
             <h2>Banner ads are paused</h2>
             <p>
               Banner placements are not operational right now. If we reopen them later, they will
@@ -155,6 +177,7 @@ export default function AdvertisePage() {
             </p>
           </div>
           <div>
+            <ArrowRight aria-hidden="true" />
             <h2>Golden Ticker</h2>
             <p>
               Give your project a premium Golden Ticker: a glowing orange/gold name treatment and a
