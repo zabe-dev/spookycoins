@@ -218,18 +218,15 @@ function MenuIcon({
     | 'admin'
     | 'logout';
 }) {
-  const icons = {
-    discover: Compass,
-    promoted: Zap,
-    partners: Handshake,
-    advertise: BadgeDollarSign,
-    account: CircleUserRound,
-    orders: Package,
-    settings: Settings,
-    admin: Shield,
-    logout: LogOut,
-  };
-  const Icon = icons[type];
+  if (type === 'discover') return <Compass className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'promoted') return <Zap className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'partners') return <Handshake className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'advertise')
+    return <BadgeDollarSign className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'account') return <CircleUserRound className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'orders') return <Package className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'settings') return <Settings className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'admin') return <Shield className="menu-item-icon" aria-hidden="true" />;
 
-  return <Icon className="menu-item-icon" aria-hidden="true" />;
+  return <LogOut className="menu-item-icon" aria-hidden="true" />;
 }
