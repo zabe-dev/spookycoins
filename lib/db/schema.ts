@@ -189,6 +189,9 @@ export const coinSubmissions = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     coinId: integer('coin_id').references(() => coins.id, { onDelete: 'set null' }),
+    submittedByUserId: text('submitted_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     requesterEmail: text('requester_email').notNull(),
     requesterTelegram: text('requester_telegram'),
     submissionType: text('submission_type').default('new-coin').notNull(),
@@ -198,6 +201,67 @@ export const coinSubmissions = pgTable(
     ...timestamps,
   },
   (table) => [index('coin_submissions_status_created_idx').on(table.status, table.createdAt)],
+);
+
+export const coinSubmissionCategories = pgTable(
+  'coin_submission_categories',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    submissionId: uuid('submission_id')
+      .references(() => coinSubmissions.id, { onDelete: 'cascade' })
+      .notNull(),
+    category: text('category').notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex('coin_submission_categories_submission_category_unique').on(
+      table.submissionId,
+      table.category,
+    ),
+    index('coin_submission_categories_submission_idx').on(table.submissionId),
+  ],
+);
+
+export const coinSubmissionContracts = pgTable(
+  'coin_submission_contracts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    submissionId: uuid('submission_id')
+      .references(() => coinSubmissions.id, { onDelete: 'cascade' })
+      .notNull(),
+    chain: text('chain').notNull(),
+    contractAddress: text('contract_address'),
+    isPrimary: boolean('is_primary').default(false).notNull(),
+    sortOrder: integer('sort_order').default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('coin_submission_contracts_submission_idx').on(table.submissionId),
+    uniqueIndex('coin_submission_contracts_submission_sort_unique').on(
+      table.submissionId,
+      table.sortOrder,
+    ),
+  ],
+);
+
+export const coinSubmissionLinks = pgTable(
+  'coin_submission_links',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    submissionId: uuid('submission_id')
+      .references(() => coinSubmissions.id, { onDelete: 'cascade' })
+      .notNull(),
+    kind: text('kind').notNull(),
+    provider: text('provider'),
+    label: text('label'),
+    url: text('url').notNull(),
+    sortOrder: integer('sort_order').default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('coin_submission_links_submission_idx').on(table.submissionId),
+    uniqueIndex('coin_submission_links_submission_kind_unique').on(table.submissionId, table.kind),
+  ],
 );
 
 export const payments = pgTable(

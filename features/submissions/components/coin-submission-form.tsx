@@ -1,77 +1,203 @@
 'use client';
 
-import { NETWORKS, SUPPORTED_NETWORK_IDS } from '@/features/coins/networks';
-import type { NetworkId } from '@/features/coins/types';
-import { coinCategories } from '@/features/coins/view';
+import { LogoCropDialog } from '@/features/submissions/components/logo-crop-dialog';
 import {
-  coinSubmissionSchema,
-  submissionBasicsSchema,
-  submissionMarketSchema,
-  submissionPresaleSchema,
-  submissionTrustSchema,
+  CategoryField,
+  ContractRow,
+  DateInput,
+  Field,
+  IconTextField,
+  LinkField,
+  LogoField,
+  PresaleToggle,
+  ProviderField,
+  RequiredMark,
+  ReviewCard,
+  SectionCard,
+  TurnstileSlot,
+} from '@/features/submissions/components/submission-fields';
+import { handleLogoFile, type LogoDraft } from '@/features/submissions/lib/logo-utils';
+import { socialLinkFields } from '@/features/submissions/lib/link-options';
+import {
+  clearScopedErrors,
+  setByPath,
+  stepFromIssues,
+  toFieldErrors,
+  validateStep,
+  type FieldErrors,
+} from '@/features/submissions/lib/form-utils';
+import { providerOptions } from '@/features/submissions/lib/market-options';
+import { buildReviewSections } from '@/features/submissions/lib/review-sections';
+import {
+  coinSubmissionPayloadSchema,
+  submissionPaymentTokens,
   type CoinSubmissionValues,
+  type SubmissionCategory,
+  type SubmissionNetwork,
 } from '@/features/submissions/schemas/coin-submission';
-import { Check } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Loader2, Plus } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState, type FormEvent } from 'react';
-import { z } from 'zod';
 
-const steps = ['Basics', 'Chain & links', 'Trust & contact', 'Review'] as const;
+const steps = ['Basics', 'Links', 'Market', 'Security', 'Contact', 'Review'] as const;
 
-const initialValues: CoinSubmissionValues = {
-  logoUrl: '',
+const emptyLogo = {
+  name: '',
+  mimeType: 'image/png' as const,
+  width: 0,
+  height: 0,
+  dataUrl: '',
+};
+
+const defaultChain: SubmissionNetwork = 'ethereum';
+const emptyContract = (chain: SubmissionNetwork | '' = defaultChain) => ({ chain, address: '' });
+
+const initialValues = (email: string): CoinSubmissionValues => ({
+  logo: emptyLogo,
   name: '',
   symbol: '',
   description: '',
-  category: 'Memecoins',
+  categories: ['Memecoins'],
   isPresale: false,
-  network: 'solana',
-  contractAddress: '',
-  launchDate: '',
-  dexPairUrl: '',
-  marketProviderId: '',
   website: '',
   telegram: '',
   x: '',
   discord: '',
-  youtube: '',
+  github: '',
   whitepaper: '',
-  kycProvider: '',
+  contracts: [emptyContract()],
+  launchDate: '2009-01-13',
+  chart: { provider: '', customUrl: '' },
+  dex: { provider: '', customUrl: '' },
+  presale: {
+    website: '',
+    startDate: '2009-01-13',
+    startTime: '00:00',
+    endDate: '2009-01-13',
+    endTime: '00:00',
+    paymentToken: 'USDT',
+    softCap: '',
+    hardCap: '',
+  },
   kycUrl: '',
-  auditProvider: '',
   auditUrl: '',
-  contactEmail: '',
-  contactTelegram: '',
-  presaleUrl: '',
-  presaleStart: '',
-  presaleEnd: '',
-  acceptedPayments: '',
-  softCap: '',
-  hardCap: '',
-  presalePrice: '',
-  contributionLimits: '',
-};
-
-type FieldErrors = Partial<Record<keyof CoinSubmissionValues, string>>;
+  email,
+  telegramContact: '',
+  agreedToTerms: false,
+  turnstileToken: '',
+});
 
 export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [values, setValues] = useState<CoinSubmissionValues>({
-    ...initialValues,
-    contactEmail: userEmail,
-  });
+  const [values, setValues] = useState<CoinSubmissionValues>(() => initialValues(userEmail));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [logoDraft, setLogoDraft] = useState<LogoDraft | null>(null);
+  const [logoError, setLogoError] = useState('');
 
   const activeStep = steps[stepIndex];
-  const reviewItems = useMemo(() => buildReviewItems(values), [values]);
+  const selectedChain = values.contracts[0]?.chain || defaultChain;
+  const chartOptions = useMemo(() => providerOptions('chart', selectedChain), [selectedChain]);
+  const dexOptions = useMemo(() => providerOptions('dex', selectedChain), [selectedChain]);
+  const reviewSections = useMemo(() => buildReviewSections(values), [values]);
+  const logoFieldError =
+    errors.logo ||
+    errors['logo.name'] ||
+    errors['logo.width'] ||
+    errors['logo.height'] ||
+    errors['logo.dataUrl'];
 
-  function update<K extends keyof CoinSubmissionValues>(field: K, value: CoinSubmissionValues[K]) {
-    setValues((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: undefined }));
+  function update<K extends keyof CoinSubmissionValues>(
+    field: K,
+    nextValue: CoinSubmissionValues[K],
+  ) {
+    setValues((current) => ({ ...current, [field]: nextValue }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[field as string];
+      return next;
+    });
+  }
+
+  function updateNested(path: string, nextValue: string) {
+    setValues((current) => setByPath(current, path, nextValue));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[path];
+      return next;
+    });
+  }
+
+  function updateContract(index: number, field: 'chain' | 'address', nextValue: string) {
+    setValues((current) => {
+      const contracts = current.contracts.map((contract, contractIndex) =>
+        contractIndex === index ? { ...contract, [field]: nextValue } : contract,
+      );
+      if (index === 0 && field === 'chain') {
+        return {
+          ...current,
+          contracts,
+          chart: { provider: '', customUrl: '' },
+          dex: { provider: '', customUrl: '' },
+        };
+      }
+      return { ...current, contracts };
+    });
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[`contracts.${index}.${field}`];
+      return next;
+    });
+  }
+
+  function addContractRow() {
+    setValues((current) => ({
+      ...current,
+      contracts: [...current.contracts, emptyContract()],
+    }));
+  }
+
+  function removeContractRow(index: number) {
+    setValues((current) => {
+      if (current.contracts.length === 1) return current;
+      const contracts = current.contracts.filter((_, contractIndex) => contractIndex !== index);
+      return { ...current, contracts };
+    });
+    setErrors((current) => {
+      const next = { ...current };
+      Object.keys(next).forEach((key) => {
+        if (key.startsWith(`contracts.${index}.`)) delete next[key];
+      });
+      return next;
+    });
+  }
+
+  function updateCategories(category: SubmissionCategory) {
+    if (!values.categories.includes(category) && values.categories.length >= 3) {
+      setErrors((current) => ({ ...current, categories: 'Choose up to 3 categories.' }));
+      return;
+    }
+    setValues((current) => {
+      const categories = current.categories.includes(category)
+        ? current.categories.filter((item) => item !== category)
+        : [...current.categories, category];
+      return { ...current, categories };
+    });
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.categories;
+      return next;
+    });
   }
 
   function goNext() {
-    if (!validateStep()) return;
+    const validation = validateStep(stepIndex, values);
+    if (!validation.success) {
+      setErrors(validation.errors);
+      return;
+    }
+    setErrors((current) => clearScopedErrors(current, validation.clearedPaths));
     setStepIndex((current) => Math.min(current + 1, steps.length - 1));
   }
 
@@ -80,38 +206,40 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   }
 
   function jumpTo(index: number) {
-    if (index <= stepIndex || validateStep()) setStepIndex(index);
+    if (index <= stepIndex) {
+      setStepIndex(index);
+      return;
+    }
+    const validation = validateStep(stepIndex, values);
+    if (!validation.success) {
+      setErrors(validation.errors);
+      return;
+    }
+    setErrors((current) => clearScopedErrors(current, validation.clearedPaths));
+    setStepIndex(index);
   }
 
-  function validateStep() {
-    const schema =
-      stepIndex === 0
-        ? submissionBasicsSchema
-        : stepIndex === 1
-          ? submissionMarketSchema
-          : stepIndex === 2
-            ? values.isPresale
-              ? submissionTrustSchema.merge(submissionPresaleSchema)
-              : submissionTrustSchema
-            : coinSubmissionSchema;
-
-    const result = schema.safeParse(values);
-    if (result.success) {
-      setErrors({});
-      return true;
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    const result = coinSubmissionPayloadSchema.safeParse(values);
+    if (!result.success) {
+      setSubmitting(false);
+      setErrors(toFieldErrors(result.error));
+      setStepIndex(stepFromIssues(result.error.issues));
+      return;
     }
 
-    setErrors(toFieldErrors(result.error));
-    return false;
-  }
+    const response = await fetch('/api/coin-submissions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(result.data),
+    });
+    const body = await response.json().catch(() => ({}));
+    setSubmitting(false);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const result = coinSubmissionSchema.safeParse(values);
-
-    if (!result.success) {
-      setErrors(toFieldErrors(result.error));
-      setStepIndex(0);
+    if (!response.ok) {
+      setErrors({ form: body.error || 'Could not submit your project right now.' });
       return;
     }
 
@@ -126,19 +254,19 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
           <Check aria-hidden="true" />
         </span>
         <p className="eyebrow">
-          <span>●</span> Submission drafted
+          <span>●</span> Submission sent
         </p>
-        <h1>{values.name || 'Project'} is ready for review</h1>
-        <p>
-          This prototype does not save submissions yet, but the form data is now structured for the
-          future database workflow: Requests → Review → Approve/Reject → Live.
-        </p>
+        <h1>{values.name || 'Your project'} is ready for review</h1>
+        <p>Your submission has been received. We&apos;ll contact you if anything else is needed.</p>
         <button
           className="submission-primary"
           type="button"
           onClick={() => {
             setSubmitted(false);
             setStepIndex(0);
+            setValues(initialValues(userEmail));
+            setErrors({});
+            setLogoDraft(null);
           }}
         >
           Submit another project
@@ -148,17 +276,14 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   }
 
   return (
-    <section className="submission-card">
+    <div className="submission-flow">
       <div className="submission-card-head">
         <div>
           <p className="eyebrow">
-            <span>●</span> Submit a project
+            <span>●</span> Submissions
           </p>
-          <h1>Add a coin to SpookyCoins</h1>
-          <p>
-            Send the details we need to review the project, resolve chart/DEX coverage later, and
-            keep admin contact private.
-          </p>
+          <h1>Submit your project</h1>
+          <p>Add your project details for review.</p>
         </div>
         <div className="submission-status">
           <b>{activeStep}</b>
@@ -168,337 +293,420 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
         </div>
       </div>
 
-      <div className="submission-steps" aria-label="Submission steps">
-        {steps.map((step, index) => (
-          <button
-            key={step}
-            className={index === stepIndex ? 'active' : index < stepIndex ? 'done' : ''}
-            type="button"
-            onClick={() => jumpTo(index)}
-          >
-            <span>{index + 1}</span>
-            {step}
-          </button>
-        ))}
-      </div>
+      <section className="submission-card">
+        <div className="submission-steps" aria-label="Submission steps">
+          {steps.map((step, index) => (
+            <button
+              key={step}
+              className={index === stepIndex ? 'active' : index < stepIndex ? 'done' : ''}
+              type="button"
+              onClick={() => jumpTo(index)}
+            >
+              <span>{index + 1}</span>
+              {step}
+            </button>
+          ))}
+        </div>
 
-      <form className="submission-form" onSubmit={submit}>
-        {stepIndex === 0 && (
-          <div className="submission-grid">
-            <Field label="Logo URL" error={errors.logoUrl}>
-              <input
-                value={values.logoUrl}
-                onChange={(event) => update('logoUrl', event.target.value)}
-                placeholder="https://..."
-              />
-            </Field>
-            <Field label="Coin name" error={errors.name}>
-              <input
-                value={values.name}
-                onChange={(event) => update('name', event.target.value)}
-                placeholder="Spooky Cat"
-              />
-            </Field>
-            <Field label="Symbol" error={errors.symbol}>
-              <input
-                value={values.symbol}
-                onChange={(event) => update('symbol', event.target.value)}
-                placeholder="SPOOK"
-              />
-            </Field>
-            <Field label="Category" error={errors.category}>
-              <select
-                value={values.category}
-                onChange={(event) => update('category', event.target.value)}
-              >
-                {coinCategories
-                  .filter((category) => category !== 'All')
-                  .map((category) => (
-                    <option key={category}>{category}</option>
-                  ))}
-              </select>
-            </Field>
-            <Field label="Description" error={errors.description} wide>
-              <textarea
-                value={values.description}
-                onChange={(event) => update('description', event.target.value)}
-                placeholder="Explain what the project is, who it is for, and why users should care."
-              />
-            </Field>
-            <label className="submission-toggle">
-              <input
-                type="checkbox"
-                checked={values.isPresale}
-                onChange={(event) => update('isPresale', event.target.checked)}
-              />
-              <span />
-              This is a presale project
-            </label>
-          </div>
-        )}
+        {errors.form && <div className="submission-alert">{errors.form}</div>}
 
-        {stepIndex === 1 && (
-          <div className="submission-grid">
-            <Field label="Chain / network" error={errors.network}>
-              <select
-                value={values.network}
-                onChange={(event) => update('network', event.target.value)}
-              >
-                {([...SUPPORTED_NETWORK_IDS, 'other'] as NetworkId[]).map((networkId) => (
-                  <option key={networkId} value={networkId}>
-                    {NETWORKS[networkId].name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Contract address" error={errors.contractAddress}>
-              <input
-                value={values.contractAddress}
-                onChange={(event) => update('contractAddress', event.target.value)}
-                placeholder="0x... or chain address"
-              />
-            </Field>
-            <Field label="Launch date/time UTC" error={errors.launchDate}>
-              <input
-                type="datetime-local"
-                value={values.launchDate}
-                onChange={(event) => update('launchDate', event.target.value)}
-                disabled={values.isPresale}
-              />
-            </Field>
-            <Field label="DEX pair URL" error={errors.dexPairUrl}>
-              <input
-                value={values.dexPairUrl}
-                onChange={(event) => update('dexPairUrl', event.target.value)}
-                placeholder="Optional"
-              />
-            </Field>
-            <Field label="Market provider ID" error={errors.marketProviderId}>
-              <input
-                value={values.marketProviderId}
-                onChange={(event) => update('marketProviderId', event.target.value)}
-                placeholder="Optional generic ID"
-              />
-            </Field>
-            {(['website', 'telegram', 'x', 'discord', 'youtube', 'whitepaper'] as const).map(
-              (field) => (
-                <Field key={field} label={linkLabels[field]} error={errors[field]}>
-                  <input
-                    value={values[field]}
-                    onChange={(event) => update(field, event.target.value)}
-                    placeholder="https://..."
+        <form className="submission-form" onSubmit={submit}>
+          {stepIndex === 0 && (
+            <section className="submission-basics">
+              <div className="submission-grid submission-basics-grid">
+                <LogoField
+                  value={values.logo}
+                  error={logoFieldError}
+                  draftError={logoError}
+                  onSelect={(file) => handleLogoFile(file, setLogoDraft, setLogoError)}
+                  onOpenCrop={() => {
+                    if (!values.logo.dataUrl) return;
+                    setLogoDraft(values.logo as LogoDraft);
+                  }}
+                  onRemove={() => {
+                    update('logo', emptyLogo);
+                    setLogoDraft(null);
+                    setLogoError('');
+                  }}
+                />
+
+                <div className="submission-identity-fields">
+                  <Field
+                    required
+                    label="Coin name"
+                    hint={`${values.name.length}/40`}
+                    error={errors.name}
+                  >
+                    <input
+                      value={values.name}
+                      maxLength={40}
+                      onChange={(event) => update('name', event.target.value)}
+                      placeholder="Enter coin name"
+                    />
+                  </Field>
+
+                  <Field
+                    required
+                    label="Symbol"
+                    hint={`${values.symbol.length}/8`}
+                    error={errors.symbol}
+                  >
+                    <input
+                      value={values.symbol}
+                      maxLength={8}
+                      onChange={(event) => update('symbol', event.target.value.replace(/^\$/, ''))}
+                      placeholder="Enter coin symbol"
+                    />
+                  </Field>
+                </div>
+
+                <Field
+                  label="Description"
+                  hint={`${values.description.length}/320`}
+                  error={errors.description}
+                  required
+                  wide
+                >
+                  <textarea
+                    value={values.description}
+                    maxLength={320}
+                    onChange={(event) => update('description', event.target.value)}
+                    placeholder="Tell us about your project."
                   />
                 </Field>
-              ),
-            )}
-          </div>
-        )}
 
-        {stepIndex === 2 && (
-          <div className="submission-grid">
-            <Field label="KYC provider" error={errors.kycProvider}>
-              <input
-                value={values.kycProvider}
-                onChange={(event) => update('kycProvider', event.target.value)}
-                placeholder="Optional"
-              />
-            </Field>
-            <Field label="KYC certificate URL" error={errors.kycUrl}>
-              <input
-                value={values.kycUrl}
-                onChange={(event) => update('kycUrl', event.target.value)}
-                placeholder="https://..."
-              />
-            </Field>
-            <Field label="Audit provider" error={errors.auditProvider}>
-              <input
-                value={values.auditProvider}
-                onChange={(event) => update('auditProvider', event.target.value)}
-                placeholder="Optional"
-              />
-            </Field>
-            <Field label="Audit report URL" error={errors.auditUrl}>
-              <input
-                value={values.auditUrl}
-                onChange={(event) => update('auditUrl', event.target.value)}
-                placeholder="https://..."
-              />
-            </Field>
-            <Field label="Contact email" error={errors.contactEmail}>
-              <input
-                type="email"
-                value={values.contactEmail}
-                onChange={(event) => update('contactEmail', event.target.value)}
-                placeholder="team@example.com"
-              />
-            </Field>
-            <Field label="Contact Telegram" error={errors.contactTelegram}>
-              <input
-                value={values.contactTelegram}
-                onChange={(event) => update('contactTelegram', event.target.value)}
-                placeholder="@projectteam"
-              />
-            </Field>
+                <CategoryField
+                  selected={values.categories}
+                  error={errors.categories}
+                  onToggle={updateCategories}
+                />
 
-            {values.isPresale && (
-              <div className="submission-presale-panel">
-                <h2>Presale details</h2>
-                <div className="submission-grid">
-                  <Field label="Presale URL" error={errors.presaleUrl}>
-                    <input
-                      value={values.presaleUrl}
-                      onChange={(event) => update('presaleUrl', event.target.value)}
-                      placeholder="https://..."
+                <PresaleToggle
+                  value={values.isPresale}
+                  error={errors.isPresale}
+                  onChange={(nextValue) => update('isPresale', nextValue)}
+                />
+              </div>
+            </section>
+          )}
+
+          {stepIndex === 1 && (
+            <div className="submission-section-stack">
+              <SectionCard>
+                <div className="submission-link-stack">
+                  <LinkField
+                    required
+                    icon="akar-icons:link-chain"
+                    label="Website Link"
+                    value={values.website || ''}
+                    error={errors.website}
+                    placeholder="https://example.com"
+                    onChange={(nextValue) => update('website', nextValue)}
+                  />
+                  {socialLinkFields.map((item) => (
+                    <LinkField
+                      key={item.key}
+                      icon={item.icon}
+                      label={item.label}
+                      value={values[item.key] || ''}
+                      error={errors[item.key]}
+                      placeholder={item.placeholder}
+                      onChange={(nextValue) => update(item.key, nextValue)}
                     />
-                  </Field>
-                  <Field label="Start date/time UTC" error={errors.presaleStart}>
-                    <input
-                      type="datetime-local"
-                      value={values.presaleStart}
-                      onChange={(event) => update('presaleStart', event.target.value)}
-                    />
-                  </Field>
-                  <Field label="End date/time UTC" error={errors.presaleEnd}>
-                    <input
-                      type="datetime-local"
-                      value={values.presaleEnd}
-                      onChange={(event) => update('presaleEnd', event.target.value)}
-                    />
-                  </Field>
-                  {(
-                    [
-                      'acceptedPayments',
-                      'softCap',
-                      'hardCap',
-                      'presalePrice',
-                      'contributionLimits',
-                    ] as const
-                  ).map((field) => (
-                    <Field key={field} label={presaleLabels[field]} error={errors[field]}>
-                      <input
-                        value={values[field]}
-                        onChange={(event) => update(field, event.target.value)}
-                        placeholder="Optional"
-                      />
-                    </Field>
                   ))}
                 </div>
-              </div>
+              </SectionCard>
+            </div>
+          )}
+
+          {stepIndex === 2 && (
+            <div className="submission-section-stack">
+              <SectionCard>
+                <div className="submission-contracts">
+                  {values.contracts.map((contract, index) => (
+                    <ContractRow
+                      key={`${index}-${contract.chain}`}
+                      index={index}
+                      contract={contract}
+                      errorChain={errors[`contracts.${index}.chain`]}
+                      errorAddress={errors[`contracts.${index}.address`]}
+                      addressRequired={!values.isPresale}
+                      chainRequired
+                      onChange={updateContract}
+                      onRemove={() => removeContractRow(index)}
+                      canRemove={values.contracts.length > 1 && index > 0}
+                    />
+                  ))}
+
+                  <button
+                    className="submission-inline-action"
+                    type="button"
+                    onClick={addContractRow}
+                  >
+                    <Plus aria-hidden="true" />
+                    Add another contract address
+                  </button>
+                </div>
+
+                {values.isPresale ? (
+                  <div className="submission-market-fields">
+                    <Field wide label="Presale Website Link" error={errors['presale.website']}>
+                      <input
+                        value={values.presale.website}
+                        onChange={(event) => updateNested('presale.website', event.target.value)}
+                        placeholder=""
+                      />
+                    </Field>
+                    <div className="submission-date-time-row">
+                      <Field
+                        required
+                        label="Presale start date (UTC)"
+                        error={errors['presale.startDate']}
+                      >
+                        <DateInput
+                          value={values.presale.startDate || ''}
+                          onChange={(value) => updateNested('presale.startDate', value)}
+                        />
+                      </Field>
+                      <Field required label="Start time" error={errors['presale.startTime']}>
+                        <input
+                          type="time"
+                          step={60}
+                          value={values.presale.startTime}
+                          onChange={(event) =>
+                            updateNested('presale.startTime', event.target.value)
+                          }
+                        />
+                      </Field>
+                    </div>
+                    <div className="submission-date-time-row">
+                      <Field
+                        required
+                        label="Presale end date (UTC)"
+                        error={errors['presale.endDate']}
+                      >
+                        <DateInput
+                          value={values.presale.endDate || ''}
+                          onChange={(value) => updateNested('presale.endDate', value)}
+                        />
+                      </Field>
+                      <Field required label="End time" error={errors['presale.endTime']}>
+                        <input
+                          type="time"
+                          step={60}
+                          value={values.presale.endTime}
+                          onChange={(event) => updateNested('presale.endTime', event.target.value)}
+                        />
+                      </Field>
+                    </div>
+                    <div className="submission-cap-row">
+                      <Field required label="Coin" error={errors['presale.paymentToken']}>
+                        <select
+                          value={values.presale.paymentToken}
+                          onChange={(event) =>
+                            updateNested('presale.paymentToken', event.target.value)
+                          }
+                        >
+                          <option value=""></option>
+                          {submissionPaymentTokens.map((token) => (
+                            <option key={token} value={token}>
+                              {token}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Soft cap" error={errors['presale.softCap']}>
+                        <input
+                          value={values.presale.softCap}
+                          onChange={(event) => updateNested('presale.softCap', event.target.value)}
+                        />
+                      </Field>
+                      <Field label="Hard cap" error={errors['presale.hardCap']}>
+                        <input
+                          value={values.presale.hardCap}
+                          onChange={(event) => updateNested('presale.hardCap', event.target.value)}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="submission-market-fields">
+                    <div className="submission-launch-row single">
+                      <Field required label="Launch date (UTC)" error={errors.launchDate}>
+                        <DateInput
+                          value={values.launchDate || ''}
+                          onChange={(value) => update('launchDate', value)}
+                        />
+                      </Field>
+                    </div>
+                    <p className="submission-market-note">
+                      This determines when your project appears in Recently launched.
+                    </p>
+                    <ProviderField
+                      label="Chart Link"
+                      options={chartOptions}
+                      provider={values.chart.provider || ''}
+                      customUrl={values.chart.customUrl || ''}
+                      error={errors['chart.customUrl']}
+                      onProvider={(value) => updateNested('chart.provider', value)}
+                      onUrl={(value) => updateNested('chart.customUrl', value)}
+                    />
+                    <ProviderField
+                      label="DEX Link"
+                      options={dexOptions}
+                      provider={values.dex.provider || ''}
+                      customUrl={values.dex.customUrl || ''}
+                      error={errors['dex.customUrl']}
+                      onProvider={(value) => updateNested('dex.provider', value)}
+                      onUrl={(value) => updateNested('dex.customUrl', value)}
+                    />
+                  </div>
+                )}
+              </SectionCard>
+            </div>
+          )}
+
+          {stepIndex === 3 && (
+            <div className="submission-section-stack">
+              <SectionCard>
+                <div className="submission-trust-callout">
+                  <h2>Build Investor Confidence</h2>
+                  <p>
+                    Investors move faster when they can see proof behind the project. Add your KYC
+                    or audit report if you have one so your coin feels easier to trust and stronger
+                    when people compare listings.
+                  </p>
+                </div>
+                <div className="submission-link-stack">
+                  <LinkField
+                    icon="lucide:shield-check"
+                    label="KYC Link"
+                    value={values.kycUrl || ''}
+                    error={errors.kycUrl}
+                    placeholder=""
+                    onChange={(value) => update('kycUrl', value)}
+                  />
+                  <LinkField
+                    icon="lucide:file-check-2"
+                    label="Audit Report Link"
+                    value={values.auditUrl || ''}
+                    error={errors.auditUrl}
+                    placeholder=""
+                    onChange={(value) => update('auditUrl', value)}
+                  />
+                </div>
+              </SectionCard>
+            </div>
+          )}
+
+          {stepIndex === 4 && (
+            <div className="submission-section-stack">
+              <SectionCard>
+                <div className="submission-link-stack">
+                  <IconTextField
+                    required
+                    icon="lucide:mail"
+                    label="Contact email"
+                    value={values.email}
+                    readOnly
+                  />
+                  <IconTextField
+                    required
+                    icon="lucide:send"
+                    label="Contact Telegram"
+                    value={values.telegramContact}
+                    error={errors.telegramContact}
+                    placeholder="username"
+                    onChange={(value) => update('telegramContact', value)}
+                  />
+                </div>
+
+                <label className="submission-terms">
+                  <input
+                    className="submission-terms-checkbox"
+                    type="checkbox"
+                    checked={values.agreedToTerms}
+                    onChange={(event) => update('agreedToTerms', event.target.checked)}
+                  />
+                  <span className="submission-terms-box" aria-hidden="true">
+                    <Check aria-hidden="true" />
+                  </span>
+                  <span className="submission-terms-copy">
+                    I agree to the{' '}
+                    <Link
+                      href="/terms"
+                      className="submission-terms-link"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      terms and conditions
+                    </Link>{' '}
+                    <RequiredMark />
+                  </span>
+                </label>
+                {errors.agreedToTerms && (
+                  <small className="submission-inline-error">{errors.agreedToTerms}</small>
+                )}
+
+                <TurnstileSlot
+                  token={values.turnstileToken || ''}
+                  onToken={(token) => update('turnstileToken', token)}
+                />
+              </SectionCard>
+            </div>
+          )}
+
+          {stepIndex === 5 && (
+            <div className="submission-review">
+              {reviewSections.map((section) => (
+                <ReviewCard key={section.title} section={section} />
+              ))}
+            </div>
+          )}
+
+          <div className="submission-actions">
+            <button
+              className="submission-secondary"
+              type="button"
+              onClick={goBack}
+              disabled={stepIndex === 0 || submitting}
+            >
+              <ChevronLeft aria-hidden="true" />
+              Back
+            </button>
+            {stepIndex < steps.length - 1 ? (
+              <button
+                className="submission-primary"
+                type="button"
+                onClick={goNext}
+                disabled={submitting}
+              >
+                Next
+                <ChevronRight aria-hidden="true" />
+              </button>
+            ) : (
+              <button className="submission-primary" type="submit" disabled={submitting}>
+                {submitting ? (
+                  <Loader2 className="spin" aria-hidden="true" />
+                ) : (
+                  <Check aria-hidden="true" />
+                )}
+                Submit project
+              </button>
             )}
           </div>
-        )}
+        </form>
+      </section>
 
-        {stepIndex === 3 && (
-          <div className="submission-review">
-            {reviewItems.map((group) => (
-              <div className="submission-review-card" key={group.title}>
-                <h2>{group.title}</h2>
-                {group.items.map((item) => (
-                  <p key={item.label}>
-                    <span>{item.label}</span>
-                    <b>{item.value || '—'}</b>
-                  </p>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="submission-actions">
-          <button
-            className="submission-secondary"
-            type="button"
-            onClick={goBack}
-            disabled={stepIndex === 0}
-          >
-            Back
-          </button>
-          {stepIndex < steps.length - 1 ? (
-            <button className="submission-primary" type="button" onClick={goNext}>
-              Continue
-            </button>
-          ) : (
-            <button className="submission-primary" type="submit">
-              Send for review
-            </button>
-          )}
-        </div>
-      </form>
-    </section>
+      {logoDraft && (
+        <LogoCropDialog
+          draft={logoDraft}
+          onCancel={() => setLogoDraft(null)}
+          onApply={(nextLogo) => {
+            update('logo', nextLogo);
+            setLogoDraft(null);
+          }}
+        />
+      )}
+    </div>
   );
 }
-
-function Field({
-  label,
-  error,
-  wide,
-  children,
-}: {
-  label: string;
-  error?: string;
-  wide?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className={wide ? 'submission-field wide' : 'submission-field'}>
-      <span>{label}</span>
-      {children}
-      {error && <small>{error}</small>}
-    </label>
-  );
-}
-
-function toFieldErrors(error: z.ZodError): FieldErrors {
-  return error.issues.reduce<FieldErrors>((fieldErrors, issue) => {
-    const field = issue.path[0] as keyof CoinSubmissionValues | undefined;
-    if (field) fieldErrors[field] = issue.message;
-    return fieldErrors;
-  }, {});
-}
-
-function buildReviewItems(values: CoinSubmissionValues) {
-  return [
-    {
-      title: 'Project',
-      items: [
-        { label: 'Name', value: values.name },
-        { label: 'Symbol', value: values.symbol ? `$${values.symbol}` : '' },
-        { label: 'Category', value: String(values.category) },
-        { label: 'Type', value: values.isPresale ? 'Presale' : 'Launched' },
-      ],
-    },
-    {
-      title: 'Chain',
-      items: [
-        { label: 'Network', value: NETWORKS[values.network as NetworkId].name },
-        { label: 'Contract', value: values.contractAddress },
-        { label: 'Launch', value: values.isPresale ? 'Presale project' : values.launchDate },
-      ],
-    },
-    {
-      title: 'Contact',
-      items: [
-        { label: 'Email', value: values.contactEmail },
-        { label: 'Telegram', value: values.contactTelegram },
-        { label: 'Website', value: values.website },
-      ],
-    },
-  ];
-}
-
-const linkLabels = {
-  website: 'Website',
-  telegram: 'Telegram',
-  x: 'X',
-  discord: 'Discord',
-  youtube: 'YouTube',
-  whitepaper: 'Whitepaper',
-};
-
-const presaleLabels = {
-  acceptedPayments: 'Accepted payments',
-  softCap: 'Soft cap',
-  hardCap: 'Hard cap',
-  presalePrice: 'Presale price',
-  contributionLimits: 'Contribution limits',
-};

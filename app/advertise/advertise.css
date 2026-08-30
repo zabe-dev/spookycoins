@@ -285,6 +285,14 @@
   padding: 20px;
 }
 
+.advertise-policy > div:nth-child(2) {
+  order: 2;
+}
+
+.advertise-policy > div:nth-child(3) {
+  order: 1;
+}
+
 .advertise-policy > div > svg {
   width: 18px;
   height: 18px;
@@ -293,6 +301,7 @@
 }
 
 .advertise-policy-golden {
+  order: 3;
   border-color: rgba(240, 185, 11, 0.45) !important;
   background: linear-gradient(180deg, rgba(240, 185, 11, 0.08), rgba(255, 119, 0, 0.03)) !important;
 }
@@ -382,6 +391,18 @@
   .advertise-wide,
   .advertise-policy {
     grid-template-columns: 1fr;
+  }
+
+  .advertise-policy-golden {
+    order: 0;
+  }
+
+  .advertise-policy > div:nth-child(2) {
+    order: 1;
+  }
+
+  .advertise-policy > div:nth-child(3) {
+    order: 2;
   }
 
   .advertise-wide-copy {
