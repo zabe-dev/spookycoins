@@ -136,6 +136,13 @@ export function providerOptions(kind: 'chart' | 'dex', chain: SubmissionNetwork)
   return kind === 'chart' ? chartMap[chain] : dexMap[chain];
 }
 
+export function defaultProviderOption(kind: 'chart' | 'dex', chain: SubmissionNetwork) {
+  return (
+    providerOptions(kind, chain).find((option) => option.value && option.value !== 'custom')
+      ?.value || ''
+  );
+}
+
 export function providerLabel(kind: 'chart' | 'dex', chain: SubmissionNetwork, value: string) {
   if (value === 'custom') return 'Custom Link';
   const options = providerOptions(kind, chain);

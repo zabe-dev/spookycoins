@@ -26,7 +26,10 @@ import {
   validateStep,
   type FieldErrors,
 } from '@/features/submissions/lib/form-utils';
-import { providerOptions } from '@/features/submissions/lib/market-options';
+import {
+  defaultProviderOption,
+  providerOptions,
+} from '@/features/submissions/lib/market-options';
 import { buildReviewSections } from '@/features/submissions/lib/review-sections';
 import {
   coinSubmissionPayloadSchema,
@@ -51,6 +54,10 @@ const emptyLogo = {
 
 const defaultChain: SubmissionNetwork = 'ethereum';
 const emptyContract = (chain: SubmissionNetwork | '' = defaultChain) => ({ chain, address: '' });
+const defaultMarketLinks = (chain: SubmissionNetwork) => ({
+  chart: { provider: defaultProviderOption('chart', chain), customUrl: '' },
+  dex: { provider: defaultProviderOption('dex', chain), customUrl: '' },
+});
 
 const initialValues = (email: string): CoinSubmissionValues => ({
   logo: emptyLogo,
@@ -67,8 +74,7 @@ const initialValues = (email: string): CoinSubmissionValues => ({
   whitepaper: '',
   contracts: [emptyContract()],
   launchDate: '01/13/2009',
-  chart: { provider: '', customUrl: '' },
-  dex: { provider: '', customUrl: '' },
+  ...defaultMarketLinks(defaultChain),
   presale: {
     website: '',
     startDate: '01/13/2009',
@@ -135,11 +141,11 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
         contractIndex === index ? { ...contract, [field]: nextValue } : contract,
       );
       if (index === 0 && field === 'chain') {
+        const chain = nextValue || defaultChain;
         return {
           ...current,
           contracts,
-          chart: { provider: '', customUrl: '' },
-          dex: { provider: '', customUrl: '' },
+          ...defaultMarketLinks(chain as SubmissionNetwork),
         };
       }
       return { ...current, contracts };
@@ -187,6 +193,25 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
     setErrors((current) => {
       const next = { ...current };
       delete next.categories;
+      return next;
+    });
+  }
+
+  function updatePresaleStatus(nextValue: boolean) {
+    setValues((current) => ({
+      ...current,
+      isPresale: nextValue,
+      ...(nextValue
+        ? { chart: { provider: '', customUrl: '' }, dex: { provider: '', customUrl: '' } }
+        : defaultMarketLinks((current.contracts[0]?.chain || defaultChain) as SubmissionNetwork)),
+    }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next.isPresale;
+      delete next['chart.provider'];
+      delete next['chart.customUrl'];
+      delete next['dex.provider'];
+      delete next['dex.customUrl'];
       return next;
     });
   }
@@ -384,7 +409,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                 <PresaleToggle
                   value={values.isPresale}
                   error={errors.isPresale}
-                  onChange={(nextValue) => update('isPresale', nextValue)}
+                  onChange={updatePresaleStatus}
                 />
               </div>
             </section>
