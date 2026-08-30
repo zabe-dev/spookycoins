@@ -3,6 +3,7 @@
 import { Brand } from '@/components/ui/brand';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import { authClient } from '@/lib/auth/client';
+import { hasAdminAccess } from '@/lib/auth/roles';
 import {
   BadgeDollarSign,
   ChevronDown,
@@ -31,6 +32,7 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   const email = session?.user.email || '';
   const userInitials = getEmailInitials(email);
   const accountLabel = getAccountLabel(session?.user.name, email);
+  const canOpenAdmin = hasAdminAccess(session?.user.role);
 
   function openAuth() {
     closeMenu();
@@ -95,9 +97,9 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                   <Link href="/settings" onClick={closeMenu}>
                     <MenuIcon type="settings" /> Settings
                   </Link>
-                  {session?.user.role === 'admin' && (
+                  {canOpenAdmin && (
                     <Link href="/admin/dashboard" onClick={closeMenu}>
-                      <MenuIcon type="admin" /> Admin panel
+                      <MenuIcon type="admin" /> Admin Panel
                     </Link>
                   )}
                   <button className="logout-action" onClick={() => void logout()}>
@@ -155,9 +157,9 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                       <Link href="/settings" onClick={() => setUserMenuOpen(false)}>
                         <MenuIcon type="settings" /> Settings
                       </Link>
-                      {session?.user.role === 'admin' && (
+                      {canOpenAdmin && (
                         <Link href="/admin/dashboard" onClick={() => setUserMenuOpen(false)}>
-                          <MenuIcon type="admin" /> Admin panel
+                          <MenuIcon type="admin" /> Admin Panel
                         </Link>
                       )}
                       <button className="logout-action" onClick={() => void logout()}>
