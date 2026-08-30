@@ -128,10 +128,12 @@ export default function AdvertisePage() {
 
         <section className="advertise-card advertise-wide">
           <div>
-            <p className="eyebrow">
-              <span>●</span> Review and activation
+            <h2>Advertiser analytics are in development.</h2>
+            <p>
+              We&apos;re building an advertisement analytics system so advertisers can understand
+              placement performance with measured impressions, clicks, and campaign reporting once
+              the platform is ready for broader ad operations.
             </p>
-            <h2>Manual approval first, automation later.</h2>
             <p>
               We review ad placements manually. Message us with your project, preferred promotion,
               and target dates, and we&apos;ll confirm the earliest available start time. Same-day
@@ -143,20 +145,6 @@ export default function AdvertisePage() {
               <li key={step}>{step}</li>
             ))}
           </ol>
-        </section>
-
-        <section className="advertise-card analytics-card">
-          <span className="advertise-card-icon">
-            <BarChart3 aria-hidden="true" />
-          </span>
-          <div>
-            <h2>Advertiser analytics are in development.</h2>
-            <p>
-              We&apos;re building an advertisement analytics system so advertisers can understand
-              placement performance with measured impressions, clicks, and campaign reporting once
-              the platform is ready for broader ad operations.
-            </p>
-          </div>
         </section>
 
         <section className="advertise-policy">
