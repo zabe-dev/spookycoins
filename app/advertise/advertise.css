@@ -125,10 +125,10 @@
   height: 42px;
   place-items: center;
   margin-bottom: 16px;
-  border: 1px solid rgba(240, 185, 11, 0.36);
+  border: 1px solid rgba(203, 255, 74, 0.3);
   border-radius: 14px;
-  background: rgba(240, 185, 11, 0.1);
-  color: #f0b90b;
+  background: rgba(203, 255, 74, 0.08);
+  color: var(--lime);
 }
 
 .advertise-card-icon.bolt {

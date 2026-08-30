@@ -1,20 +1,17 @@
 'use client';
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { SiteFooter } from '@/components/layout/site-footer';
+import { SiteHeader } from '@/components/layout/site-header';
 import {
   BannerAd as Ad,
   CoinCells as Cells,
-  CoinTable as SimpleTable,
   DiscoveryCard as Discovery,
   LineBurst,
-  SectionTitle as Title,
   SortHeader as SH,
+  CoinTable as SimpleTable,
   TableScroller,
+  SectionTitle as Title,
   WatchButton as Watch,
 } from '@/features/coins/components';
-import { SiteFooter } from '@/components/layout/site-footer';
-import { SiteHeader } from '@/components/layout/site-header';
-import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
 import { mockCoinListItems } from '@/features/coins/data/mock-coins';
 import {
   coinCategories,
@@ -22,6 +19,9 @@ import {
   type CoinListItem,
   type CoinSortKey,
 } from '@/features/coins/view';
+import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
+import { Check, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import './market.css';
 import './scroll-fix.css';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
