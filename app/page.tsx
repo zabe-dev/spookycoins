@@ -161,7 +161,7 @@ export default function Home() {
       [...list].sort((a, b) => b.votes - a.votes || a.rank - b.rank).slice(0, 5);
 
     return {
-      recent: rankByVotes([...withLocalVotes].sort((a, b) => parseInt(a.age) - parseInt(b.age))),
+      recent: [...withLocalVotes].sort((a, b) => parseInt(a.age) - parseInt(b.age)).slice(0, 5),
       presales: rankByVotes(withLocalVotes.filter((coin) => coin.lifecycle === 'presale')),
       watched: rankByVotes([...withLocalVotes].sort((a, b) => b.watchCount - a.watchCount)),
     };
@@ -274,6 +274,7 @@ export default function Home() {
                 sub="Fresh community listings"
                 coins={hotspotCoins.recent}
                 viewMoreHref="/?coins=recent#leaderboard"
+                metric="added"
               />
               <Discovery
                 icon="presale"

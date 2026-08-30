@@ -11,12 +11,14 @@ export function DiscoveryCard({
   sub,
   coins,
   viewMoreHref,
+  metric = 'votes',
 }: {
   icon: 'new' | 'presale' | 'watch';
   title: string;
   sub: string;
   coins: Coin[];
   viewMoreHref: string;
+  metric?: 'votes' | 'added';
 }) {
   return (
     <article className="discovery-card">
@@ -42,7 +44,7 @@ export function DiscoveryCard({
               {coin.symbol} · {coin.chain}
             </small>
           </span>
-          <em>{formatVotes(coin.votes)} votes</em>
+          <em>{metric === 'added' ? coin.age : `${formatVotes(coin.votes)} votes`}</em>
         </Link>
       ))}
     </article>
