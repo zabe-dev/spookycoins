@@ -1976,41 +1976,11 @@ body.modal-open {
   color: #eef1f2;
   font-size: 12px;
 }
-.settings-password-wrap {
-  position: relative;
-  display: block;
-}
-.settings-password-wrap input {
-  padding-right: 42px;
-}
-.settings-password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  display: grid;
-  width: 28px;
-  height: 28px;
-  place-items: center;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #7f8991;
-  cursor: pointer;
-}
-.settings-password-toggle:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f0f3f4;
-}
-.settings-password-toggle svg {
-  width: 17px;
-  height: 17px;
-  fill: currentColor;
-}
 .settings-form input:focus,
 .edit-request-form textarea:focus {
   border-color: rgba(203, 255, 74, 0.5);
 }
-.settings-form button,
+.settings-form > button,
 .edit-request-form button {
   justify-self: start;
   border: 0;
