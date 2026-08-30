@@ -320,6 +320,11 @@
   color: #080b0b;
   font-weight: 900;
 }
+.submission-success-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 3;
+}
 
 @media (max-width: 760px) {
   .submission-shell {

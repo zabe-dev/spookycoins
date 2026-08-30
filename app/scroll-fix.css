@@ -41,6 +41,10 @@
   }
 }
 .submit-coin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 1px solid var(--lime);
   border-radius: 8px;
   padding: 10px 14px;
@@ -52,6 +56,12 @@
   transition:
     transform 0.16s ease,
     background 0.16s ease;
+}
+.submit-coin-btn svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  stroke-width: 2.8;
 }
 .submit-coin-btn:hover {
   transform: translateY(-1px);

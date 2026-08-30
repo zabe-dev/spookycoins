@@ -484,12 +484,18 @@
   gap: 5px;
 }
 .pagination button {
+  display: inline-grid;
   min-width: 29px;
   height: 28px;
+  place-items: center;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--sub);
   border-radius: 6px;
+}
+.pagination button svg {
+  width: 14px;
+  height: 14px;
 }
 .pagination button.active {
   background: var(--lime);
@@ -1200,6 +1206,21 @@
   stroke: currentColor;
   stroke-width: 2;
   stroke-linejoin: round;
+}
+.vote-label,
+.action-button__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1;
+}
+.vote-label svg,
+.action-button__label svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  stroke-width: 3;
 }
 .action-burst {
   position: absolute;

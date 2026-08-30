@@ -1288,14 +1288,19 @@ footer > div {
   cursor: pointer;
 }
 .ad-close {
+  display: grid;
   width: 27px;
   height: 27px;
+  place-items: center;
   border-radius: 50%;
   border: 1px solid #363d42;
   background: #171b1e;
   color: #a9b0b5;
   cursor: pointer;
-  font-size: 17px;
+}
+.ad-close svg {
+  width: 14px;
+  height: 14px;
 }
 @media (max-width: 1050px) {
   .hero {
@@ -1524,14 +1529,19 @@ body.modal-open {
   position: absolute;
   top: 14px;
   right: 14px;
+  display: grid;
   width: 32px;
   height: 32px;
+  place-items: center;
   border: 1px solid #30373c;
   border-radius: 8px;
   background: #181d20;
   color: #aab2b7;
-  font-size: 22px;
   cursor: pointer;
+}
+.auth-close svg {
+  width: 16px;
+  height: 16px;
 }
 .auth-heading {
   margin: 25px 0 18px;
@@ -1733,6 +1743,11 @@ body.modal-open {
   color: var(--lime);
   font-size: 10px;
   font-weight: 900;
+}
+.auth-message-icon svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.5;
 }
 .auth-message.error {
   border-color: rgba(244, 97, 97, 0.28);
@@ -2206,6 +2221,10 @@ body.modal-open {
   cursor: not-allowed;
   opacity: 0.55;
 }
+.delete-confirm-close svg {
+  width: 15px;
+  height: 15px;
+}
 .delete-confirm-modal h2 {
   margin: 12px 0 8px;
   color: #f4f6f7;
@@ -2373,7 +2392,18 @@ body.modal-open {
 .vote-label {
   position: relative;
   z-index: 2;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  line-height: 1;
+}
+.vote-label svg,
+.action-button__label svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  stroke-width: 3;
 }
 .vote-btn.voted {
   animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
