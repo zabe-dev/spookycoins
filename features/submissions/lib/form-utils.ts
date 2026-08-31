@@ -52,13 +52,8 @@ export function stepFromIssues(issues: Array<{ path: Array<string | number | sym
   )
     return 2;
   if (firstPath.startsWith('kyc') || firstPath.startsWith('audit')) return 3;
-  if (
-    firstPath.startsWith('email') ||
-    firstPath.startsWith('telegramContact') ||
-    firstPath.startsWith('agreedToTerms') ||
-    firstPath.startsWith('turnstileToken')
-  )
-    return 4;
+  if (firstPath.startsWith('email') || firstPath.startsWith('telegramContact')) return 4;
+  if (firstPath.startsWith('agreedToTerms') || firstPath.startsWith('turnstileToken')) return 5;
   return 5;
 }
 
@@ -145,12 +140,17 @@ export function validateStep(
   }
 
   if (stepIndex === 4) {
-    const result = submissionContactSchema.safeParse(values);
+    const result = submissionContactSchema.safeParse({
+      email: values.email,
+      telegramContact: values.telegramContact,
+      agreedToTerms: true,
+      turnstileToken: values.turnstileToken,
+    });
     return result.success
       ? {
           success: true,
           errors: {},
-          clearedPaths: ['email', 'telegramContact', 'agreedToTerms', 'turnstileToken'],
+          clearedPaths: ['email', 'telegramContact'],
         }
       : { success: false, errors: toFieldErrors(result.error), clearedPaths: [] };
   }

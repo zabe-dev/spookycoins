@@ -94,14 +94,14 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                   <button className="menu-disabled" disabled>
                     <MenuIcon type="orders" /> Orders <small>Soon</small>
                   </button>
-                  <Link href="/settings" onClick={closeMenu}>
-                    <MenuIcon type="settings" /> Settings
-                  </Link>
                   {canOpenAdmin && (
                     <Link href="/admin/dashboard" onClick={closeMenu}>
                       <MenuIcon type="admin" /> Admin Panel
                     </Link>
                   )}
+                  <Link href="/settings" onClick={closeMenu}>
+                    <MenuIcon type="settings" /> Settings
+                  </Link>
                   <button className="logout-action" onClick={() => void logout()}>
                     <MenuIcon type="logout" /> Logout
                   </button>
@@ -154,14 +154,14 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                       <button className="menu-disabled" disabled>
                         <MenuIcon type="orders" /> Orders <small>Soon</small>
                       </button>
-                      <Link href="/settings" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="settings" /> Settings
-                      </Link>
                       {canOpenAdmin && (
                         <Link href="/admin/dashboard" onClick={() => setUserMenuOpen(false)}>
                           <MenuIcon type="admin" /> Admin Panel
                         </Link>
                       )}
+                      <Link href="/settings" onClick={() => setUserMenuOpen(false)}>
+                        <MenuIcon type="settings" /> Settings
+                      </Link>
                       <button className="logout-action" onClick={() => void logout()}>
                         <MenuIcon type="logout" /> Logout
                       </button>

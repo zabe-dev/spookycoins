@@ -282,3 +282,67 @@ export const payments = pgTable(
     index('payments_coin_status_idx').on(table.coinId, table.status),
   ],
 );
+
+export const coinBoosts = pgTable(
+  'coin_boosts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
+      .notNull(),
+    multiplier: integer('multiplier').notNull(),
+    status: text('status').default('active').notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    assignedByUserId: text('assigned_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    notes: text('notes'),
+    ...timestamps,
+  },
+  (table) => [
+    index('coin_boosts_coin_status_idx').on(table.coinId, table.status),
+    index('coin_boosts_expires_idx').on(table.expiresAt),
+  ],
+);
+
+export const coinPromotions = pgTable(
+  'coin_promotions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
+      .notNull(),
+    placement: text('placement').default('promoted-table').notNull(),
+    priority: integer('priority').default(1).notNull(),
+    status: text('status').default('active').notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    assignedByUserId: text('assigned_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    notes: text('notes'),
+    ...timestamps,
+  },
+  (table) => [
+    index('coin_promotions_coin_status_idx').on(table.coinId, table.status),
+    index('coin_promotions_expires_idx').on(table.expiresAt),
+  ],
+);
+
+export const adminAuditLogs = pgTable(
+  'admin_audit_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    adminUserId: text('admin_user_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    targetType: text('target_type').notNull(),
+    targetId: text('target_id').notNull(),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('admin_audit_logs_admin_idx').on(table.adminUserId),
+    index('admin_audit_logs_target_idx').on(table.targetType, table.targetId),
+  ],
+);

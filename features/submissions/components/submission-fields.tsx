@@ -21,7 +21,6 @@ import {
   Image,
   Landmark,
   Rocket,
-  ShieldCheck,
   SmilePlus,
   Trophy,
   Upload,
@@ -30,7 +29,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 const categoryButtons = [
   { value: 'AI', label: 'Artificial Intelligence', icon: BrainCircuit },
@@ -322,7 +321,9 @@ export function DateInput({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
   const selectedDate = parseSubmissionDate(value);
-  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(selectedDate || fallbackDate));
+  const [visibleMonth, setVisibleMonth] = useState(() =>
+    startOfMonth(selectedDate || fallbackDate),
+  );
   const calendarDays = getCalendarDays(visibleMonth);
 
   useEffect(() => {
@@ -445,9 +446,7 @@ function parseSubmissionDate(value: string) {
 function buildUtcDate(year: number, month: number, day: number) {
   const date = new Date(Date.UTC(year, month - 1, day));
   const valid =
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day;
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 
   return valid ? date : null;
 }
@@ -665,15 +664,26 @@ function ChainPicker({
   );
 }
 
-export function TurnstileSlot({
-  token,
-  onToken,
-}: {
-  token: string;
-  onToken: (nextValue: string) => void;
-}) {
+export type TurnstileSlotHandle = {
+  verify: () => Promise<string>;
+};
+
+export const TurnstileSlot = forwardRef<
+  TurnstileSlotHandle,
+  {
+    token: string;
+    onToken: (nextValue: string) => void;
+  }
+>(({ token, onToken }, handleRef) => {
   const siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
   const ref = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const pendingRef = useRef<((token: string) => void) | null>(null);
+  const onTokenRef = useRef(onToken);
+
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  }, [onToken]);
 
   useEffect(() => {
     if (!siteKey || !ref.current) return;
@@ -695,27 +705,87 @@ export function TurnstileSlot({
               element: HTMLElement,
               options: {
                 sitekey: string;
+                size?: 'normal' | 'compact' | 'flexible' | 'invisible';
+                execution?: 'render' | 'execute';
                 callback: (token: string) => void;
                 'error-callback': () => void;
                 'expired-callback': () => void;
               },
-            ) => unknown;
+            ) => string;
+            execute: (widgetId: string) => void;
           };
         }
       ).turnstile;
       if (!turnstile || !ref.current) return;
-      ref.current.innerHTML = '';
-      turnstile.render(ref.current, {
+      if (widgetIdRef.current) return;
+      widgetIdRef.current = turnstile.render(ref.current, {
         sitekey: siteKey,
-        callback: (nextToken: string) => onToken(nextToken),
-        'error-callback': () => onToken(''),
-        'expired-callback': () => onToken(''),
+        size: 'invisible',
+        execution: 'execute',
+        callback: (nextToken: string) => {
+          onTokenRef.current(nextToken);
+          pendingRef.current?.(nextToken);
+          pendingRef.current = null;
+        },
+        'error-callback': () => {
+          onTokenRef.current('');
+          pendingRef.current?.('');
+          pendingRef.current = null;
+        },
+        'expired-callback': () => onTokenRef.current(''),
       });
     };
 
     const timer = window.setTimeout(render, 0);
     return () => window.clearTimeout(timer);
-  }, [onToken, siteKey]);
+  }, [siteKey]);
+
+  useImperativeHandle(
+    handleRef,
+    () => ({
+      verify: () =>
+        new Promise((resolve) => {
+          if (!siteKey) {
+            resolve('');
+            return;
+          }
+          if (token) {
+            resolve(token);
+            return;
+          }
+
+          const execute = (attempt = 0) => {
+            const turnstile = (
+              window as Window & {
+                turnstile?: {
+                  execute: (widgetId: string) => void;
+                };
+              }
+            ).turnstile;
+
+            if (!turnstile || !widgetIdRef.current) {
+              if (attempt < 20) {
+                window.setTimeout(() => execute(attempt + 1), 150);
+                return;
+              }
+              resolve('');
+              return;
+            }
+
+            pendingRef.current = resolve;
+            turnstile.execute(widgetIdRef.current);
+          };
+
+          execute();
+          window.setTimeout(() => {
+            if (!pendingRef.current) return;
+            pendingRef.current = null;
+            resolve('');
+          }, 30_000);
+        }),
+    }),
+    [siteKey, token],
+  );
 
   if (!siteKey) {
     return null;
@@ -723,19 +793,12 @@ export function TurnstileSlot({
 
   return (
     <div className="turnstile-shell">
-      <div>
-        <ShieldCheck aria-hidden="true" />
-        <div>
-          <strong>Cloudflare Turnstile</strong>
-          <p>
-            {token ? 'Verified for this submission.' : 'Complete the anti-bot check to continue.'}
-          </p>
-        </div>
-      </div>
       <div ref={ref} />
     </div>
   );
-}
+});
+
+TurnstileSlot.displayName = 'TurnstileSlot';
 
 export function ReviewCard({ section }: { section: ReviewSection }) {
   return (

@@ -22,6 +22,49 @@ export function buildReviewSections(values: CoinSubmissionValues): ReviewSection
     )
     .join(', ');
 
+  const marketItems = values.isPresale
+    ? [
+        { label: 'Primary chain', value: chainLabel },
+        ...contractItems,
+        { label: 'Presale Website Link', value: textValue(values.presale.website) },
+        {
+          label: 'Presale dates',
+          value: `${values.presale.startDate || '—'} → ${values.presale.endDate || '—'}`,
+        },
+        { label: 'Accepted payment', value: textValue(values.presale.paymentToken) },
+        {
+          label: 'Caps',
+          value: [values.presale.softCap, values.presale.hardCap].filter(Boolean).join(' / '),
+        },
+      ]
+    : [
+        { label: 'Primary chain', value: chainLabel },
+        ...contractItems,
+        { label: 'Launch date', value: textValue(values.launchDate) },
+        {
+          label: 'Chart source',
+          value: textValue(
+            providerLabel(
+              'chart',
+              values.contracts[0]?.chain || defaultChain,
+              values.chart.provider || '',
+            ),
+          ),
+        },
+        { label: 'Chart Link', value: textValue(values.chart.customUrl) },
+        {
+          label: 'DEX source',
+          value: textValue(
+            providerLabel(
+              'dex',
+              values.contracts[0]?.chain || defaultChain,
+              values.dex.provider || '',
+            ),
+          ),
+        },
+        { label: 'DEX Link', value: textValue(values.dex.customUrl) },
+      ];
+
   return [
     {
       title: 'Basic info',
@@ -47,48 +90,7 @@ export function buildReviewSections(values: CoinSubmissionValues): ReviewSection
     },
     {
       title: 'Market details',
-      items: [
-        { label: 'Primary chain', value: chainLabel },
-        ...contractItems,
-        {
-          label: 'Launch date',
-          value: values.isPresale ? 'Presale project' : textValue(values.launchDate),
-        },
-        {
-          label: 'Chart source',
-          value: textValue(
-            providerLabel(
-              'chart',
-              values.contracts[0]?.chain || defaultChain,
-              values.chart.provider || '',
-            ),
-          ),
-        },
-        { label: 'Chart Link', value: textValue(values.chart.customUrl) },
-        {
-          label: 'DEX source',
-          value: textValue(
-            providerLabel(
-              'dex',
-              values.contracts[0]?.chain || defaultChain,
-              values.dex.provider || '',
-            ),
-          ),
-        },
-        { label: 'DEX Link', value: textValue(values.dex.customUrl) },
-        { label: 'Presale Website Link', value: textValue(values.presale.website) },
-        {
-          label: 'Presale dates',
-          value: values.isPresale
-            ? `${values.presale.startDate || '—'} → ${values.presale.endDate || '—'}`
-            : '',
-        },
-        { label: 'Accepted payment', value: textValue(values.presale.paymentToken) },
-        {
-          label: 'Caps',
-          value: [values.presale.softCap, values.presale.hardCap].filter(Boolean).join(' / '),
-        },
-      ],
+      items: marketItems,
     },
     {
       title: 'Security details',

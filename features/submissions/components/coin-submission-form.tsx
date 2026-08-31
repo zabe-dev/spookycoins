@@ -15,6 +15,7 @@ import {
   ReviewCard,
   SectionCard,
   TurnstileSlot,
+  type TurnstileSlotHandle,
 } from '@/features/submissions/components/submission-fields';
 import { handleLogoFile, type LogoDraft } from '@/features/submissions/lib/logo-utils';
 import { socialLinkFields } from '@/features/submissions/lib/link-options';
@@ -26,21 +27,19 @@ import {
   validateStep,
   type FieldErrors,
 } from '@/features/submissions/lib/form-utils';
-import {
-  defaultProviderOption,
-  providerOptions,
-} from '@/features/submissions/lib/market-options';
+import { defaultProviderOption, providerOptions } from '@/features/submissions/lib/market-options';
 import { buildReviewSections } from '@/features/submissions/lib/review-sections';
 import {
   coinSubmissionPayloadSchema,
   submissionPaymentTokens,
+  type CoinSubmissionPayload,
   type CoinSubmissionValues,
   type SubmissionCategory,
   type SubmissionNetwork,
 } from '@/features/submissions/schemas/coin-submission';
 import { Check, ChevronLeft, ChevronRight, Loader2, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 
 const steps = ['Basics', 'Links', 'Market', 'Security', 'Contact', 'Review'] as const;
 
@@ -64,7 +63,7 @@ const initialValues = (email: string): CoinSubmissionValues => ({
   name: '',
   symbol: '',
   description: '',
-  categories: ['Memecoins'],
+  categories: [],
   isPresale: false,
   website: '',
   telegram: '',
@@ -101,6 +100,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [logoDraft, setLogoDraft] = useState<LogoDraft | null>(null);
   const [logoError, setLogoError] = useState('');
+  const turnstileRef = useRef<TurnstileSlotHandle>(null);
 
   const activeStep = steps[stepIndex];
   const selectedChain = values.contracts[0]?.chain || defaultChain;
@@ -247,7 +247,19 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
-    const result = coinSubmissionPayloadSchema.safeParse(values);
+
+    const turnstileToken = values.turnstileToken || (await turnstileRef.current?.verify()) || '';
+    if (process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSubmitting(false);
+      setErrors({
+        turnstileToken: 'Please complete the verification before submitting.',
+      });
+      setStepIndex(5);
+      return;
+    }
+
+    const finalValues = { ...values, turnstileToken };
+    const result = coinSubmissionPayloadSchema.safeParse(finalValues);
     if (!result.success) {
       setSubmitting(false);
       setErrors(toFieldErrors(result.error));
@@ -258,7 +270,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
     const response = await fetch('/api/coin-submissions', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(result.data),
+      body: JSON.stringify(buildSubmissionRequest(result.data)),
     });
     const body = await response.json().catch(() => ({}));
     setSubmitting(false);
@@ -645,7 +657,19 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                     onChange={(value) => update('telegramContact', value)}
                   />
                 </div>
+              </SectionCard>
+            </div>
+          )}
 
+          {stepIndex === 5 && (
+            <div className="submission-review-stack">
+              <div className="submission-review">
+                {reviewSections.map((section) => (
+                  <ReviewCard key={section.title} section={section} />
+                ))}
+              </div>
+
+              <SectionCard>
                 <label className="submission-terms">
                   <input
                     className="submission-terms-checkbox"
@@ -671,20 +695,16 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                 {errors.agreedToTerms && (
                   <small className="submission-inline-error">{errors.agreedToTerms}</small>
                 )}
+                {errors.turnstileToken && (
+                  <small className="submission-inline-error">{errors.turnstileToken}</small>
+                )}
 
                 <TurnstileSlot
+                  ref={turnstileRef}
                   token={values.turnstileToken || ''}
                   onToken={(token) => update('turnstileToken', token)}
                 />
               </SectionCard>
-            </div>
-          )}
-
-          {stepIndex === 5 && (
-            <div className="submission-review">
-              {reviewSections.map((section) => (
-                <ReviewCard key={section.title} section={section} />
-              ))}
             </div>
           )}
 
@@ -734,4 +754,55 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
       )}
     </div>
   );
+}
+
+function buildSubmissionRequest(payload: CoinSubmissionPayload) {
+  const contracts = payload.contracts.map((contract) => ({
+    chain: contract.chain,
+    address: contract.address,
+  }));
+
+  return {
+    basic: {
+      logo: payload.logo,
+      name: payload.name,
+      symbol: payload.symbol,
+      description: payload.description,
+      categories: payload.categories,
+      isPresale: payload.isPresale,
+    },
+    links: {
+      website: payload.website,
+      telegram: payload.telegram,
+      x: payload.x,
+      discord: payload.discord,
+      github: payload.github,
+      whitepaper: payload.whitepaper,
+    },
+    market: payload.isPresale
+      ? {
+          type: 'presale',
+          primaryChain: contracts[0]?.chain || 'ethereum',
+          contracts,
+          presale: payload.presale,
+        }
+      : {
+          type: 'launched',
+          primaryChain: contracts[0]?.chain || 'ethereum',
+          contracts,
+          launchDate: payload.launchDate,
+          chart: payload.chart,
+          dex: payload.dex,
+        },
+    security: {
+      kycUrl: payload.kycUrl,
+      auditUrl: payload.auditUrl,
+    },
+    contact: {
+      email: payload.email,
+      telegram: payload.telegramContact,
+    },
+    agreedToTerms: payload.agreedToTerms,
+    turnstileToken: payload.turnstileToken,
+  };
 }

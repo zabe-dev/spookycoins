@@ -248,7 +248,12 @@ export const coinSubmissionSchema = z
     }
 
     if (value.isPresale) {
-      if (value.chart.provider || value.chart.customUrl || value.dex.provider || value.dex.customUrl) {
+      if (
+        value.chart.provider ||
+        value.chart.customUrl ||
+        value.dex.provider ||
+        value.dex.customUrl
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Chart and DEX links are only used for launched coins.',
@@ -299,11 +304,31 @@ export const coinSubmissionSchema = z
 
 export const coinSubmissionPayloadSchema = coinSubmissionSchema.transform((value) => {
   const { startTime, endTime, ...presale } = value.presale;
+  const contracts = value.contracts.filter(
+    (contract, index) => index === 0 || Boolean(contract.chain || contract.address.trim()),
+  );
+
+  if (!value.isPresale) {
+    return {
+      ...value,
+      contracts,
+      presale: {
+        website: '',
+        startDate: '',
+        endDate: '',
+        paymentToken: '',
+        softCap: '',
+        hardCap: '',
+      },
+    };
+  }
+
   return {
     ...value,
-    contracts: value.contracts.filter(
-      (contract, index) => index === 0 || Boolean(contract.chain || contract.address.trim()),
-    ),
+    contracts,
+    launchDate: '',
+    chart: { provider: '', customUrl: '' },
+    dex: { provider: '', customUrl: '' },
     presale: {
       ...presale,
       startDate:

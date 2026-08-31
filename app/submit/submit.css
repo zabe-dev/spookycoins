@@ -986,52 +986,24 @@
 }
 
 .turnstile-shell {
-  display: grid;
-  gap: 14px;
-  margin-top: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 14px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .turnstile-shell > div {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.turnstile-shell svg {
-  width: 18px;
-  height: 18px;
-  color: var(--lime);
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.turnstile-shell strong {
-  display: block;
-  margin-bottom: 4px;
-  color: #f2f4f5;
-  font-size: 12px;
-}
-
-.turnstile-shell p {
-  max-width: 620px;
-  margin: 0;
-  color: var(--sub);
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-.turnstile-shell.muted {
-  opacity: 0.9;
+  min-height: 0;
 }
 
 .submission-review {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+}
+
+.submission-review-stack {
+  display: grid;
+  gap: 14px;
 }
 
 .submission-review-card {

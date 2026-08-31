@@ -44,10 +44,16 @@ export async function POST(request: Request) {
   }
 
   const body = parseJson(rawBody);
-  const parsed = coinSubmissionPayloadSchema.safeParse({
-    ...(isRecord(body) ? body : {}),
-    email: session.user.email,
-  });
+  const normalizedBody = normalizeSubmissionRequestBody(body, session.user.email);
+  if (!normalizedBody) {
+    return apiError(
+      'INVALID_SUBMISSION_SHAPE',
+      'Submission data is not in the expected format.',
+      400,
+    );
+  }
+
+  const parsed = coinSubmissionPayloadSchema.safeParse(normalizedBody);
   if (!parsed.success) {
     return apiError(
       'INVALID_SUBMISSION',
@@ -63,7 +69,7 @@ export async function POST(request: Request) {
   if (!turnstile.ok) {
     return apiError(
       'TURNSTILE_FAILED',
-      turnstile.error || 'Bot protection verification failed.',
+      turnstile.error || 'Could not verify this submission. Please try again.',
       400,
     );
   }
@@ -129,6 +135,114 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function normalizeSubmissionRequestBody(body: unknown, email: string) {
+  if (!isRecord(body)) return null;
+  const basic = isRecord(body.basic) ? body.basic : null;
+  const links = isRecord(body.links) ? body.links : null;
+  const market = isRecord(body.market) ? body.market : null;
+  const security = isRecord(body.security) ? body.security : {};
+  const contact = isRecord(body.contact) ? body.contact : {};
+
+  if (!basic || !links || !market) return null;
+
+  const marketType = readString(market.type);
+  const contracts = Array.isArray(market.contracts)
+    ? market.contracts.map((contract) =>
+        isRecord(contract)
+          ? {
+              chain: readString(contract.chain),
+              address: readString(contract.address),
+            }
+          : { chain: '', address: '' },
+      )
+    : [];
+
+  const normalized = {
+    logo: basic.logo,
+    name: readString(basic.name),
+    symbol: readString(basic.symbol),
+    description: readString(basic.description),
+    categories: Array.isArray(basic.categories) ? basic.categories : [],
+    isPresale: marketType === 'presale',
+    website: readString(links.website),
+    telegram: readString(links.telegram),
+    x: readString(links.x),
+    discord: readString(links.discord),
+    github: readString(links.github),
+    whitepaper: readString(links.whitepaper),
+    contracts,
+    launchDate: '',
+    chart: { provider: '', customUrl: '' },
+    dex: { provider: '', customUrl: '' },
+    presale: {
+      website: '',
+      startDate: '',
+      startTime: '',
+      endDate: '',
+      endTime: '',
+      paymentToken: '',
+      softCap: '',
+      hardCap: '',
+    },
+    kycUrl: readString(security.kycUrl),
+    auditUrl: readString(security.auditUrl),
+    email,
+    telegramContact: readString(contact.telegram),
+    agreedToTerms: body.agreedToTerms === true,
+    turnstileToken: readString(body.turnstileToken),
+  };
+
+  if (marketType === 'launched') {
+    const chart = isRecord(market.chart) ? market.chart : {};
+    const dex = isRecord(market.dex) ? market.dex : {};
+    return {
+      ...normalized,
+      isPresale: false,
+      launchDate: readString(market.launchDate),
+      chart: {
+        provider: readString(chart.provider),
+        customUrl: readString(chart.customUrl),
+      },
+      dex: {
+        provider: readString(dex.provider),
+        customUrl: readString(dex.customUrl),
+      },
+    };
+  }
+
+  if (marketType === 'presale') {
+    const presale = isRecord(market.presale) ? market.presale : {};
+    const start = splitDateTime(readString(presale.startDate));
+    const end = splitDateTime(readString(presale.endDate));
+    return {
+      ...normalized,
+      isPresale: true,
+      presale: {
+        website: readString(presale.website),
+        startDate: start.date,
+        startTime: start.time,
+        endDate: end.date,
+        endTime: end.time,
+        paymentToken: readString(presale.paymentToken),
+        softCap: readString(presale.softCap),
+        hardCap: readString(presale.hardCap),
+      },
+    };
+  }
+
+  return null;
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function splitDateTime(value: string) {
+  const isoDate = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  if (isoDate) return { date: isoDate[1], time: isoDate[2] };
+  return { date: value, time: '' };
+}
+
 function parseJson(value: string) {
   try {
     return JSON.parse(value);
@@ -165,7 +279,7 @@ function isRateLimited(key: string) {
 async function verifyTurnstile(token: string, requestHeaders: Headers) {
   const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
   if (!secret) return { ok: true };
-  if (!token) return { ok: false, error: 'Complete the bot protection check.' };
+  if (!token) return { ok: false, error: 'Please complete the verification before submitting.' };
 
   const remoteip =
     requestHeaders.get('cf-connecting-ip') ||
@@ -183,9 +297,9 @@ async function verifyTurnstile(token: string, requestHeaders: Headers) {
     const result = (await response.json().catch(() => null)) as { success?: boolean } | null;
     return result?.success
       ? { ok: true }
-      : { ok: false, error: 'Bot protection verification failed.' };
+      : { ok: false, error: 'Could not verify this submission. Please try again.' };
   } catch {
-    return { ok: false, error: 'Bot protection verification failed.' };
+    return { ok: false, error: 'Could not verify this submission. Please try again.' };
   }
 }
 
