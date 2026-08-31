@@ -20,6 +20,8 @@ export function DiscoveryCard({
   viewMoreHref: string;
   metric?: 'votes' | 'added';
 }) {
+  const rows = Array.from({ length: 5 }, (_, index) => coins[index] || null);
+
   return (
     <article className="discovery-card">
       <div className="discovery-heading">
@@ -32,21 +34,33 @@ export function DiscoveryCard({
           View more →
         </a>
       </div>
-      {coins.map((coin, index) => (
-        <Link className="mini-coin" href={`/coin/${coin.coinId}`} key={coin.symbol}>
-          <b>{index + 1}</b>
-          <div className={`coin-logo ${coin.color}`}>
-            {coin.image ? <img src={coin.image} alt="" /> : coin.logo}
+      {rows.map((coin, index) =>
+        coin ? (
+          <Link className="mini-coin" href={`/coin/${coin.coinId}`} key={coin.symbol}>
+            <b>{index + 1}</b>
+            <div className={`coin-logo ${coin.color}`}>
+              {coin.image ? <img src={coin.image} alt="" /> : coin.logo}
+            </div>
+            <span>
+              <strong>{coin.name}</strong>
+              <small>
+                {coin.symbol} · {coin.chain}
+              </small>
+            </span>
+            <em>{metric === 'added' ? coin.age : `${formatVotes(coin.votes)} votes`}</em>
+          </Link>
+        ) : (
+          <div className="mini-coin mini-coin-empty" key={`empty-${index}`}>
+            <b>{index + 1}</b>
+            <div className="coin-logo">-</div>
+            <span>
+              <strong>-</strong>
+              <small>-</small>
+            </span>
+            <em>-</em>
           </div>
-          <span>
-            <strong>{coin.name}</strong>
-            <small>
-              {coin.symbol} · {coin.chain}
-            </small>
-          </span>
-          <em>{metric === 'added' ? coin.age : `${formatVotes(coin.votes)} votes`}</em>
-        </Link>
-      ))}
+        ),
+      )}
     </article>
   );
 }

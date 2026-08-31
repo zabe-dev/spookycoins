@@ -36,6 +36,13 @@
       "when": 1788132625951,
       "tag": "0004_smart_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788159600000,
+      "tag": "0005_persistent_votes_watchlists",
+      "breakpoints": true
     }
   ]
 }

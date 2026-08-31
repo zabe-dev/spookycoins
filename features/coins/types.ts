@@ -83,6 +83,8 @@ export type CoinCommunityData = {
   weeklyVotes: number;
   totalVotes: number;
   watchlistCount: number;
+  userHasVoted?: boolean;
+  userWatching?: boolean;
 };
 
 export type Coin = {

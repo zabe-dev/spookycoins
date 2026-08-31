@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import type { Coin } from '@/features/coins/types';
-import { toCoinListItem } from '@/features/coins/view';
+import { getBoostVoteFactor, toCoinListItem } from '@/features/coins/view';
 import { makeChartPath } from '../utils';
 import type { ChartPoint, ChartRange } from '../types';
 import { ChangeRequestModal } from './change-request-modal';
@@ -17,10 +17,11 @@ import { CoinSidebar } from './coin-sidebar';
 
 export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
   const canonicalCoin = coinRecord;
-  const coin = toCoinListItem(canonicalCoin, 0);
+  const [coin, setCoin] = useState(() => toCoinListItem(canonicalCoin, 0));
   const contractAddress = coin.contractAddress || 'Contract address unavailable';
-  const [voted, setVoted] = useState(false);
-  const [watched, setWatched] = useState(false);
+  const [voted, setVoted] = useState(coin.hasVoted);
+  const [watched, setWatched] = useState(coin.isWatching);
+  const [notice, setNotice] = useState('');
   const [contractCopied, setContractCopied] = useState(false);
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
   const [voteAnimating, setVoteAnimating] = useState(false);
@@ -32,19 +33,95 @@ export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
   );
   const chartPath = useMemo(() => makeChartPath(chartPoints), [chartPoints]);
 
-  function vote() {
+  async function vote() {
     if (voted) return;
+    setNotice('');
     setVoted(true);
+    setCoin((current) => ({
+      ...current,
+      hasVoted: true,
+      rawVotes: current.rawVotes + 1,
+      votes: current.votes + getBoostVoteFactor(current.boost),
+      trend: current.trend + getBoostVoteFactor(current.boost),
+    }));
     setVoteAnimating(true);
     window.setTimeout(() => setVoteAnimating(false), 650);
+
+    const response = await fetch(`/api/coins/${coin.coinId}/vote`, { method: 'POST' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setVoted(false);
+      setCoin((current) => ({
+        ...current,
+        hasVoted: false,
+        rawVotes: Math.max(0, current.rawVotes - 1),
+        votes: Math.max(0, current.votes - getBoostVoteFactor(current.boost)),
+        trend: Math.max(0, current.trend - getBoostVoteFactor(current.boost)),
+      }));
+      setNotice(body.message || 'Could not record your vote.');
+      return;
+    }
+
+    updateInteractionSummary(body.data?.summary);
   }
 
-  function toggleWatch() {
+  async function toggleWatch() {
     const adding = !watched;
+    setNotice('');
     setWatched(adding);
-    if (!adding) return;
-    setWatchAnimating(true);
-    window.setTimeout(() => setWatchAnimating(false), 650);
+    setCoin((current) => ({
+      ...current,
+      isWatching: adding,
+      watchCount: Math.max(0, current.watchCount + (adding ? 1 : -1)),
+    }));
+    if (adding) {
+      setWatchAnimating(true);
+      window.setTimeout(() => setWatchAnimating(false), 650);
+    }
+
+    const response = await fetch(`/api/coins/${coin.coinId}/watchlist`, { method: 'POST' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setWatched(!adding);
+      setCoin((current) => ({
+        ...current,
+        isWatching: !adding,
+        watchCount: Math.max(0, current.watchCount + (adding ? -1 : 1)),
+      }));
+      setNotice(body.message || 'Could not update your watchlist.');
+      return;
+    }
+
+    updateInteractionSummary(body.data?.summary);
+  }
+
+  function updateInteractionSummary(
+    summary:
+      | {
+          weeklyVotes?: number;
+          totalVotes?: number;
+          watchlistCount?: number;
+          userHasVoted?: boolean;
+          userWatching?: boolean;
+        }
+      | undefined,
+  ) {
+    if (!summary) return;
+    setCoin((current) => {
+      const rawVotes = summary.weeklyVotes ?? current.rawVotes;
+      const boostedVotes = rawVotes * getBoostVoteFactor(current.boost);
+      return {
+        ...current,
+        rawVotes,
+        votes: boostedVotes,
+        trend: current.trend - current.votes + boostedVotes,
+        watchCount: summary.watchlistCount ?? current.watchCount,
+        hasVoted: summary.userHasVoted ?? current.hasVoted,
+        isWatching: summary.userWatching ?? current.isWatching,
+      };
+    });
+    if (typeof summary.userHasVoted === 'boolean') setVoted(summary.userHasVoted);
+    if (typeof summary.userWatching === 'boolean') setWatched(summary.userWatching);
   }
 
   async function copyContract() {
@@ -75,6 +152,12 @@ export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
         onToggleWatch={toggleWatch}
         onVote={vote}
       />
+
+      {notice && (
+        <div className="container interaction-notice" role="status">
+          {notice}
+        </div>
+      )}
 
       <CoinAd />
 

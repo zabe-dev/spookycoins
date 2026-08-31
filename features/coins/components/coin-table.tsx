@@ -118,12 +118,12 @@ export function WatchButton({
 
 export type CoinTableProps = {
   coins: Coin[];
-  watchlist: string[];
-  watchAnimating: string | null;
-  voted: string[];
-  animating: string | null;
-  watch: (symbol: string) => void;
-  vote: (symbol: string) => void;
+  watchlist: number[];
+  watchAnimating: number | null;
+  voted: number[];
+  animating: number | null;
+  watch: (coinId: number) => void;
+  vote: (coinId: number) => void;
   header?: ReactNode;
   className?: string;
   coinLinks?: boolean;
@@ -163,22 +163,22 @@ export function CoinTable({
         </thead>
         <tbody>
           {coins.map((coin) => {
-            const hasVoted = voted.includes(coin.symbol);
+            const hasVoted = voted.includes(coin.coinId);
             return (
-              <tr key={coin.symbol} className={coin.boost ? 'boosted-row' : ''}>
+              <tr key={coin.coinId} className={coin.boost ? 'boosted-row' : ''}>
                 <CoinCells coin={coin} linkEnabled={coinLinks} />
                 <td>
                   <WatchlistButton
-                    active={watchlist.includes(coin.symbol)}
-                    animating={watchAnimating === coin.symbol}
-                    onClick={() => watch(coin.symbol)}
+                    active={watchlist.includes(coin.coinId)}
+                    animating={watchAnimating === coin.coinId}
+                    onClick={() => watch(coin.coinId)}
                   />
                 </td>
                 <td>
                   <VoteButton
                     active={hasVoted}
-                    animating={animating === coin.symbol}
-                    onClick={() => vote(coin.symbol)}
+                    animating={animating === coin.coinId}
+                    onClick={() => vote(coin.coinId)}
                   />
                 </td>
               </tr>

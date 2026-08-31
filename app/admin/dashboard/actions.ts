@@ -6,12 +6,13 @@ import { db } from '@/lib/db/client';
 import {
   adminAuditLogs,
   coinBoosts,
+  coinLinks,
   coinPromotions,
   coins,
   coinSubmissions,
   users,
 } from '@/lib/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
@@ -26,7 +27,6 @@ const submissionStatuses = [
   'rejected',
 ] as const;
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
-const promotionDurations = [1, 3, 7, 14, 30] as const;
 const boostPackageRules = {
   10: { durationHours: 24, voteMultiplier: 2 },
   30: { durationHours: 72, voteMultiplier: 2 },
@@ -35,9 +35,14 @@ const boostPackageRules = {
   500: { durationHours: 168, voteMultiplier: 5 },
 } as const;
 
+type AdminTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type CoinSubmissionRecord = typeof coinSubmissions.$inferSelect;
+
 export async function updateAdminUser(formData: FormData) {
   const adminUser = await requireAdmin();
   const userId = readRequired(formData, 'userId');
+  const name = readOptional(formData, 'name');
+  const email = readOptional(formData, 'email');
   const role = readEnum(formData, 'role', userRoles);
   const banned = formData.get('banned') === 'on';
   const banReason = readOptional(formData, 'banReason');
@@ -49,6 +54,8 @@ export async function updateAdminUser(formData: FormData) {
   await db
     .update(users)
     .set({
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
       role,
       banned,
       banReason: banned ? banReason || 'Admin action' : null,
@@ -57,7 +64,7 @@ export async function updateAdminUser(formData: FormData) {
     })
     .where(eq(users.id, userId));
 
-  await audit(adminUser.id, 'user.updated', 'user', userId, { role, banned });
+  await audit(adminUser.id, 'user.updated', 'user', userId, { name, email, role, banned });
   revalidatePath('/admin/dashboard');
 }
 
@@ -84,18 +91,45 @@ export async function updateAdminSubmission(formData: FormData) {
   const adminUser = await requireAdmin();
   const submissionId = readRequired(formData, 'submissionId');
   const status = readEnum(formData, 'status', submissionStatuses);
+  const reviewReason = readOptional(formData, 'reviewReason');
+  let approvedCoinId: number | null = null;
 
-  await db
-    .update(coinSubmissions)
-    .set({
-      status,
-      reviewedAt: ['approved', 'rejected'].includes(status) ? new Date() : null,
-      updatedAt: new Date(),
-    })
-    .where(eq(coinSubmissions.id, submissionId));
+  if (status === 'rejected' && !reviewReason) {
+    throw new Error('A rejection reason is required.');
+  }
 
-  await audit(adminUser.id, 'submission.updated', 'submission', submissionId, { status });
+  await db.transaction(async (tx) => {
+    const [submission] = await tx
+      .select()
+      .from(coinSubmissions)
+      .where(eq(coinSubmissions.id, submissionId))
+      .limit(1);
+
+    if (!submission) throw new Error('Submission not found.');
+
+    if (status === 'approved') {
+      approvedCoinId = submission.coinId || (await createCoinFromSubmission(tx, submission));
+    }
+
+    await tx
+      .update(coinSubmissions)
+      .set({
+        status,
+        coinId: approvedCoinId || submission.coinId,
+        reviewedAt: ['approved', 'rejected'].includes(status) ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(coinSubmissions.id, submissionId));
+  });
+
+  await audit(adminUser.id, 'submission.updated', 'submission', submissionId, {
+    status,
+    reviewReason,
+    coinId: approvedCoinId,
+  });
   revalidatePath('/admin/dashboard');
+  revalidatePath('/');
+  if (approvedCoinId) revalidatePath(`/coin/${approvedCoinId}`);
 }
 
 export async function grantCoinBoost(formData: FormData) {
@@ -144,24 +178,50 @@ export async function addPromotedCoin(formData: FormData) {
   const priority = readNumber(formData, 'priority');
   const notes = readOptional(formData, 'notes');
 
-  if (!promotionDurations.includes(durationDays as (typeof promotionDurations)[number])) {
-    throw new Error('Invalid promoted duration.');
+  if (durationDays < 1 || durationDays > 365) {
+    throw new Error('Promoted duration must be between 1 and 365 days.');
   }
   if (priority < 1 || priority > 999) {
     throw new Error('Priority must be between 1 and 999.');
   }
 
-  await cancelActivePromotions(coinId);
-  await db.insert(coinPromotions).values({
-    coinId,
-    placement: 'promoted-table',
-    priority,
-    status: 'active',
-    startsAt: new Date(),
-    expiresAt: addHours(new Date(), durationDays * 24),
-    assignedByUserId: adminUser.id,
-    notes,
-  });
+  const now = new Date();
+  const [activePromotion] = await db
+    .select()
+    .from(coinPromotions)
+    .where(
+      and(
+        eq(coinPromotions.coinId, coinId),
+        eq(coinPromotions.status, 'active'),
+        gt(coinPromotions.expiresAt, now),
+      ),
+    )
+    .orderBy(desc(coinPromotions.expiresAt))
+    .limit(1);
+
+  if (activePromotion) {
+    await db
+      .update(coinPromotions)
+      .set({
+        priority,
+        expiresAt: addHours(activePromotion.expiresAt, durationDays * 24),
+        assignedByUserId: adminUser.id,
+        notes,
+        updatedAt: now,
+      })
+      .where(eq(coinPromotions.id, activePromotion.id));
+  } else {
+    await db.insert(coinPromotions).values({
+      coinId,
+      placement: 'promoted-table',
+      priority,
+      status: 'active',
+      startsAt: now,
+      expiresAt: addHours(now, durationDays * 24),
+      assignedByUserId: adminUser.id,
+      notes,
+    });
+  }
 
   await audit(adminUser.id, 'promotion.added', 'coin', String(coinId), {
     durationDays,
@@ -183,6 +243,138 @@ async function requireAdmin() {
   if (!session) redirect('/');
   if (!hasAdminAccess(session.user.role)) notFound();
   return session.user;
+}
+
+async function createCoinFromSubmission(tx: AdminTransaction, submission: CoinSubmissionRecord) {
+  const data = parseSubmissionData(submission.coinData);
+  if (!data.name || !data.symbol) throw new Error('Submission is missing project basics.');
+
+  const [{ nextId }] = await tx
+    .select({ nextId: sql<number>`coalesce(max(${coins.id}), 999) + 1` })
+    .from(coins);
+
+  const coinId = nextId;
+  const now = new Date();
+
+  await tx.insert(coins).values({
+    id: coinId,
+    slug: `${slugify(data.name)}-${coinId}`,
+    name: data.name,
+    symbol: data.symbol,
+    logoUrl: data.logoUrl || null,
+    description: data.description || null,
+    category: data.categories[0] || 'Other',
+    chain: data.primaryChain || null,
+    contractAddress: data.primaryContractAddress || null,
+    launchDate: data.isPresale || !data.launchDate ? null : new Date(data.launchDate),
+    listingSource: 'submission',
+    listingStatus: 'active',
+    isPresale: data.isPresale,
+    submittedAt: submission.createdAt,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  const links = buildCoinLinksFromSubmission(data, coinId);
+  if (links.length) await tx.insert(coinLinks).values(links);
+
+  return coinId;
+}
+
+function parseSubmissionData(value: unknown) {
+  const root = isRecord(value) ? value : {};
+  const basic = isRecord(root.basic) ? root.basic : {};
+  const logo = isRecord(basic.logo) ? basic.logo : {};
+  const links = isRecord(root.links) ? root.links : {};
+  const market = isRecord(root.market) ? root.market : {};
+  const chart = isRecord(market.chart) ? market.chart : {};
+  const dex = isRecord(market.dex) ? market.dex : {};
+  const presale = isRecord(market.presale) ? market.presale : {};
+  const security = isRecord(root.security) ? root.security : {};
+  const contracts = Array.isArray(market.contracts)
+    ? market.contracts
+        .map((contract) =>
+          isRecord(contract)
+            ? {
+                chain: readRecordString(contract.chain),
+                address: readRecordString(contract.address),
+              }
+            : { chain: '', address: '' },
+        )
+        .filter((contract) => contract.chain || contract.address)
+    : [];
+  const primaryContract = contracts.find((contract) => contract.address) || contracts[0];
+
+  return {
+    name: readRecordString(basic.name),
+    symbol: readRecordString(basic.symbol).toUpperCase(),
+    description: readRecordString(basic.description),
+    categories: Array.isArray(basic.categories)
+      ? basic.categories.filter((category): category is string => typeof category === 'string')
+      : [],
+    logoUrl: readRecordString(logo.url),
+    isPresale: readRecordString(market.type) === 'presale' || basic.isPresale === true,
+    primaryChain: readRecordString(market.primaryChain) || primaryContract?.chain || '',
+    primaryContractAddress: primaryContract?.address || '',
+    launchDate: readRecordString(market.launchDate),
+    links: {
+      website: readRecordString(links.website),
+      telegram: readRecordString(links.telegram),
+      x: readRecordString(links.x),
+      discord: readRecordString(links.discord),
+      github: readRecordString(links.github),
+      whitepaper: readRecordString(links.whitepaper),
+      chart: readRecordString(chart.customUrl),
+      dex: readRecordString(dex.customUrl),
+      presaleWebsite: readRecordString(presale.website),
+      kyc: readRecordString(security.kycUrl),
+      audit: readRecordString(security.auditUrl),
+    },
+  };
+}
+
+function buildCoinLinksFromSubmission(
+  data: ReturnType<typeof parseSubmissionData>,
+  coinId: number,
+) {
+  return [
+    { type: 'website', url: data.links.website },
+    { type: 'telegram', url: data.links.telegram },
+    { type: 'x', url: data.links.x },
+    { type: 'discord', url: data.links.discord },
+    { type: 'github', url: data.links.github },
+    { type: 'whitepaper', url: data.links.whitepaper },
+    { type: 'chart', url: data.isPresale ? '' : data.links.chart },
+    { type: 'dex', url: data.isPresale ? '' : data.links.dex },
+    { type: 'presale-website', url: data.isPresale ? data.links.presaleWebsite : '' },
+    { type: 'kyc', url: data.links.kyc },
+    { type: 'audit', url: data.links.audit },
+  ]
+    .filter((link) => link.url)
+    .map((link) => ({
+      coinId,
+      type: link.type,
+      url: link.url,
+    }));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readRecordString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function slugify(value: string) {
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 64) || 'coin'
+  );
 }
 
 async function cancelActiveBoosts(coinId: number) {

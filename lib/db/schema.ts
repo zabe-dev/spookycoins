@@ -330,6 +330,47 @@ export const coinPromotions = pgTable(
   ],
 );
 
+export const coinVotes = pgTable(
+  'coin_votes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    weekStartsAt: timestamp('week_starts_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('coin_votes_coin_created_idx').on(table.coinId, table.createdAt),
+    index('coin_votes_coin_week_idx').on(table.coinId, table.weekStartsAt),
+    index('coin_votes_user_coin_created_idx').on(table.userId, table.coinId, table.createdAt),
+  ],
+);
+
+export const coinWatchlists = pgTable(
+  'coin_watchlists',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    coinId: integer('coin_id')
+      .references(() => coins.id, { onDelete: 'cascade' })
+      .notNull(),
+    userId: text('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex('coin_watchlists_user_coin_unique').on(table.userId, table.coinId),
+    index('coin_watchlists_coin_idx').on(table.coinId),
+    index('coin_watchlists_user_idx').on(table.userId),
+  ],
+);
+
 export const adminAuditLogs = pgTable(
   'admin_audit_logs',
   {

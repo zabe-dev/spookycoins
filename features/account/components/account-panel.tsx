@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -12,11 +14,22 @@ export type AccountSubmission = {
   coinData: { name?: string; symbol?: string; chain?: string };
 };
 
+export type AccountWatchedCoin = {
+  coinId: number;
+  name: string;
+  symbol: string;
+  chain: string | null;
+  logoUrl: string | null;
+  createdAt: string;
+};
+
 export function AccountPanel({
   email,
+  watchedCoins,
   submissions,
 }: {
   email: string;
+  watchedCoins: AccountWatchedCoin[];
   submissions: AccountSubmission[];
 }) {
   const [notice, setNotice] = useState('');
@@ -46,12 +59,20 @@ export function AccountPanel({
             <small>Watchlist</small>
             <h2>Watched coins</h2>
           </div>
-          <span>Soon</span>
+          <span>{watchedCoins.length}</span>
         </div>
-        <div className="settings-empty">
-          <strong>No watched coins yet</strong>
-          <p>Coins you add to your watchlist will appear here once persistence is connected.</p>
-        </div>
+        {watchedCoins.length ? (
+          <div className="submission-list">
+            {watchedCoins.map((coin) => (
+              <WatchedCoinRow key={coin.coinId} coin={coin} />
+            ))}
+          </div>
+        ) : (
+          <div className="settings-empty">
+            <strong>No watched coins yet</strong>
+            <p>Coins you add to your watchlist will appear here.</p>
+          </div>
+        )}
       </section>
 
       <section className="settings-card submissions-card">
@@ -76,6 +97,32 @@ export function AccountPanel({
         )}
       </section>
     </section>
+  );
+}
+
+function WatchedCoinRow({ coin }: { coin: AccountWatchedCoin }) {
+  const initials =
+    (coin.symbol || coin.name)
+      .replace(/[^a-z0-9]/gi, '')
+      .slice(0, 2)
+      .toUpperCase() || 'SC';
+
+  return (
+    <article className="submission-row">
+      <div className="submission-coin">
+        <span>{coin.logoUrl ? <img src={coin.logoUrl} alt="" /> : initials}</span>
+        <div>
+          <strong>{coin.name}</strong>
+          <small>
+            {coin.symbol || '—'} · {coin.chain || 'Chain not set'} · saved{' '}
+            {new Date(coin.createdAt).toLocaleDateString()}
+          </small>
+        </div>
+      </div>
+      <div className="submission-actions">
+        <Link href={`/coin/${coin.coinId}`}>View</Link>
+      </div>
+    </article>
   );
 }
 

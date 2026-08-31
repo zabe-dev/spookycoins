@@ -29,7 +29,7 @@ export default async function SubmitCoinPage() {
   if (!session) redirect('/');
 
   return (
-    <main className="market-page">
+    <main className="market-page submit-page">
       <SiteHeader active="none" />
       <div className="container submission-shell">
         <CoinSubmissionForm userEmail={session.user.email || ''} />

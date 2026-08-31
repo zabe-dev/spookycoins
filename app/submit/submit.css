@@ -1,6 +1,16 @@
+.submit-page {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
 .submission-shell {
   width: min(760px, calc(100% - 40px));
   padding: 64px 0 124px;
+}
+
+.submit-page .submission-shell {
+  flex: 1;
 }
 
 .submission-card {
@@ -1109,9 +1119,9 @@
 .submission-flow .submission-secondary,
 .submission-modal .submission-secondary,
 .submission-success .submission-secondary {
-  border: 0;
-  background: var(--lime);
-  color: #10130c;
+  border: 1px solid #30383e;
+  background: rgba(255, 255, 255, 0.025);
+  color: #e5ecec;
 }
 
 .submission-flow .submission-primary:hover:not(:disabled),
@@ -1121,6 +1131,33 @@
 .submission-success .submission-primary:hover:not(:disabled),
 .submission-success .submission-secondary:hover:not(:disabled) {
   background: #d9ff64;
+}
+
+.submission-success .submission-secondary:hover:not(:disabled) {
+  border-color: rgba(203, 255, 74, 0.28);
+  background: rgba(203, 255, 74, 0.08);
+  color: var(--lime);
+}
+
+.submission-primary svg,
+.submission-secondary svg {
+  width: 15px;
+  height: 15px;
+}
+
+@keyframes submission-confetti-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.8);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--confetti-x)), calc(-50% + var(--confetti-y) + 160px))
+      rotate(520deg) scale(0.9);
+  }
 }
 
 .submission-flow .submission-primary:disabled,
@@ -1140,10 +1177,44 @@
 }
 
 .submission-success {
+  overflow: hidden;
   display: grid;
   place-items: start;
   max-width: 760px;
   margin-inline: auto;
+  margin-top: clamp(34px, 8vh, 96px);
+}
+
+.submission-confetti {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.submission-confetti i {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  width: 7px;
+  height: 12px;
+  border-radius: 3px;
+  background: hsl(calc(70 + var(--confetti-index) * 19) 95% 62%);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(0deg) scale(0.8);
+  animation: submission-confetti-pop 1050ms cubic-bezier(0.18, 0.9, 0.28, 1) forwards;
+  animation-delay: calc(var(--confetti-index) * 18ms);
+}
+
+.submission-confetti i:nth-child(3n) {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.submission-confetti i:nth-child(4n) {
+  background: var(--lime);
 }
 
 .submission-success h1 {
@@ -1178,6 +1249,18 @@
   width: 20px;
   height: 20px;
   stroke-width: 3;
+}
+
+.submission-success-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.submission-success-actions .submission-primary,
+.submission-success-actions .submission-secondary {
+  min-width: 182px;
 }
 
 .submission-modal-backdrop {

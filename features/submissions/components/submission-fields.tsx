@@ -677,7 +677,7 @@ export const TurnstileSlot = forwardRef<
 >(({ token, onToken }, handleRef) => {
   const siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
   const ref = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<string | null>(null);
+  const widgetIdRef = useRef<string | number | null>(null);
   const pendingRef = useRef<((token: string) => void) | null>(null);
   const onTokenRef = useRef(onToken);
 
@@ -687,6 +687,7 @@ export const TurnstileSlot = forwardRef<
 
   useEffect(() => {
     if (!siteKey || !ref.current) return;
+    let canceled = false;
     const scriptId = 'cf-turnstile-script';
     if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
@@ -711,13 +712,13 @@ export const TurnstileSlot = forwardRef<
                 'error-callback': () => void;
                 'expired-callback': () => void;
               },
-            ) => string;
+            ) => string | number;
             execute: (widgetId: string) => void;
           };
         }
       ).turnstile;
-      if (!turnstile || !ref.current) return;
-      if (widgetIdRef.current) return;
+      if (canceled || widgetIdRef.current !== null) return true;
+      if (!turnstile || !ref.current) return false;
       widgetIdRef.current = turnstile.render(ref.current, {
         sitekey: siteKey,
         size: 'invisible',
@@ -734,10 +735,21 @@ export const TurnstileSlot = forwardRef<
         },
         'expired-callback': () => onTokenRef.current(''),
       });
+      return true;
     };
 
-    const timer = window.setTimeout(render, 0);
-    return () => window.clearTimeout(timer);
+    let attempts = 0;
+    const renderWhenReady = () => {
+      if (render()) return;
+      attempts += 1;
+      if (attempts < 60) window.setTimeout(renderWhenReady, 250);
+    };
+
+    const timer = window.setTimeout(renderWhenReady, 0);
+    return () => {
+      canceled = true;
+      window.clearTimeout(timer);
+    };
   }, [siteKey]);
 
   useImperativeHandle(
@@ -758,12 +770,12 @@ export const TurnstileSlot = forwardRef<
             const turnstile = (
               window as Window & {
                 turnstile?: {
-                  execute: (widgetId: string) => void;
+                  execute: (widgetId: string | number) => void;
                 };
               }
             ).turnstile;
 
-            if (!turnstile || !widgetIdRef.current) {
+            if (!turnstile || widgetIdRef.current === null) {
               if (attempt < 20) {
                 window.setTimeout(() => execute(attempt + 1), 150);
                 return;

@@ -1,9 +1,10 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { AccountPanel } from '@/features/account/components/account-panel';
+import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
-import { coinSubmissions } from '@/lib/db/schema';
+import { coinSubmissions, coinWatchlists, coins } from '@/lib/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
@@ -36,11 +37,33 @@ export default async function DashboardPage() {
     )
     .orderBy(desc(coinSubmissions.createdAt));
 
+  const watchedCoins = await db
+    .select({
+      coinId: coins.id,
+      name: coins.name,
+      symbol: coins.symbol,
+      chain: coins.chain,
+      logoUrl: coins.logoUrl,
+      createdAt: coinWatchlists.createdAt,
+    })
+    .from(coinWatchlists)
+    .innerJoin(coins, eq(coins.id, coinWatchlists.coinId))
+    .where(and(eq(coinWatchlists.userId, session.user.id), eq(coins.listingStatus, 'active')))
+    .orderBy(desc(coinWatchlists.createdAt))
+    .catch((error) => {
+      if (isMissingInteractionTableError(error)) return [];
+      throw error;
+    });
+
   return (
     <main className="market-page">
       <SiteHeader active="none" />
       <AccountPanel
         email={session.user.email}
+        watchedCoins={watchedCoins.map((coin) => ({
+          ...coin,
+          createdAt: coin.createdAt.toISOString(),
+        }))}
         submissions={submissions.map((submission) => ({
           ...submission,
           createdAt: submission.createdAt.toISOString(),

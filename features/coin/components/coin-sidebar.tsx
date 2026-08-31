@@ -28,7 +28,7 @@ export function CoinSidebar({
           {coin.rank}
         </div>
         <p>
-          <b>{(coin.votes + (voted ? 1 : 0)).toLocaleString()}</b> community votes
+          <b>{coin.votes.toLocaleString()}</b> community votes
         </p>
         <div className="vote-progress">
           <i style={{ width: coin.votes ? '20%' : '0%' }} />

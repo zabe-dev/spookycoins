@@ -37,9 +37,9 @@ import {
   type SubmissionCategory,
   type SubmissionNetwork,
 } from '@/features/submissions/schemas/coin-submission';
-import { Check, ChevronLeft, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Home, Loader2, PartyPopper, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useRef, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 
 const steps = ['Basics', 'Links', 'Market', 'Security', 'Contact', 'Review'] as const;
 
@@ -287,6 +287,17 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   if (submitted) {
     return (
       <section className="submission-card submission-success">
+        <span className="submission-confetti" aria-hidden="true">
+          {Array.from({ length: 18 }, (_, index) => {
+            const style = {
+              '--confetti-index': index,
+              '--confetti-x': `${(index - 8.5) * 24}px`,
+              '--confetti-y': `${(index % 5) * -18 - 54}px`,
+            } as CSSProperties;
+
+            return <i key={index} style={style} />;
+          })}
+        </span>
         <span className="submission-success-icon">
           <Check aria-hidden="true" />
         </span>
@@ -295,19 +306,26 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
         </p>
         <h1>{values.name || 'Your project'} is ready for review</h1>
         <p>Your submission has been received. We&apos;ll contact you if anything else is needed.</p>
-        <button
-          className="submission-primary"
-          type="button"
-          onClick={() => {
-            setSubmitted(false);
-            setStepIndex(0);
-            setValues(initialValues(userEmail));
-            setErrors({});
-            setLogoDraft(null);
-          }}
-        >
-          Submit another project
-        </button>
+        <div className="submission-success-actions">
+          <button
+            className="submission-primary"
+            type="button"
+            onClick={() => {
+              setSubmitted(false);
+              setStepIndex(0);
+              setValues(initialValues(userEmail));
+              setErrors({});
+              setLogoDraft(null);
+            }}
+          >
+            <PartyPopper aria-hidden="true" />
+            Submit another project
+          </button>
+          <Link className="submission-secondary" href="/">
+            <Home aria-hidden="true" />
+            Go back home
+          </Link>
+        </div>
       </section>
     );
   }
@@ -577,7 +595,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                       </Field>
                     </div>
                     <p className="submission-market-note">
-                      This determines when your project appears in Recently launched.
+                      This determines when your project appears in Launched recently.
                     </p>
                     <ProviderField
                       label="Chart Link"

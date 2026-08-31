@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CoinDetailPage } from '@/features/coin/components/coin-detail-page';
-import { mockCoins } from '@/features/coins/data/mock-coins';
+import { getPublicCoinById } from '@/features/coins/server/coin-list';
 import { NETWORKS } from '@/features/coins/networks';
+import { auth } from '@/lib/auth/server';
+import { headers } from 'next/headers';
 import '../../market.css';
 import '../../../features/coin/styles/coin-page.css';
 
@@ -12,7 +14,7 @@ export async function generateMetadata({ params }: CoinPageParams): Promise<Meta
   const { id } = await params;
   if (!/^\d+$/.test(id)) return {};
 
-  const coin = mockCoins.find((item) => item.id === Number(id));
+  const coin = await getPublicCoinById(Number(id));
   if (!coin) return {};
 
   const networkName = NETWORKS[coin.network].name;
@@ -45,7 +47,8 @@ export async function generateMetadata({ params }: CoinPageParams): Promise<Meta
 export default async function CoinPage({ params }: CoinPageParams) {
   const { id } = await params;
   if (!/^\d+$/.test(id)) notFound();
-  const coin = mockCoins.find((item) => item.id === Number(id));
+  const session = await auth.api.getSession({ headers: await headers() });
+  const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
   return <CoinDetailPage coinRecord={coin} />;
 }
