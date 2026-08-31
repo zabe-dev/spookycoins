@@ -356,6 +356,10 @@ function toMockCoin(project: MockCoinInput): Coin {
       project.launchDate === undefined
         ? daysAgo(project.submittedDaysAgo + 14)
         : project.launchDate,
+    presaleEndDate:
+      (project.lifecycle ?? 'launched') === 'presale'
+        ? daysAgo(project.submittedDaysAgo - 7)
+        : null,
     submittedAt,
     populatedAt: MOCK_DATASET_POPULATED_AT,
     chart: { source: 'unavailable' },

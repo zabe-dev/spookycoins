@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from 'next/link';
+import { CircleHelp, Copy, ExternalLink, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 export type AccountSubmission = {
@@ -19,20 +20,30 @@ export type AccountWatchedCoin = {
   name: string;
   symbol: string;
   chain: string | null;
+  chainIcon: string | null;
   logoUrl: string | null;
   createdAt: string;
 };
 
 export function AccountPanel({
   email,
+  userId,
   watchedCoins,
   submissions,
 }: {
   email: string;
+  userId: string;
   watchedCoins: AccountWatchedCoin[];
   submissions: AccountSubmission[];
 }) {
   const [notice, setNotice] = useState('');
+  const watchlistPath = `/watchlist/${userId}`;
+
+  async function copyWatchlistUrl() {
+    const watchlistUrl = `${window.location.origin}${watchlistPath}`;
+    await navigator.clipboard.writeText(watchlistUrl);
+    setNotice('Watchlist link copied.');
+  }
 
   return (
     <section className="container settings-shell account-shell">
@@ -59,13 +70,31 @@ export function AccountPanel({
             <small>Watchlist</small>
             <h2>Watched coins</h2>
           </div>
-          <span>{watchedCoins.length}</span>
+          <div className="settings-card-actions">
+            <button type="button" onClick={() => void copyWatchlistUrl()}>
+              <Copy aria-hidden="true" />
+              Copy public link
+            </button>
+            <span>{watchedCoins.length}</span>
+          </div>
         </div>
         {watchedCoins.length ? (
-          <div className="submission-list">
-            {watchedCoins.map((coin) => (
-              <WatchedCoinRow key={coin.coinId} coin={coin} />
-            ))}
+          <div className="watchlist-table-wrap">
+            <table className="watchlist-table">
+              <thead>
+                <tr>
+                  <th>Coin</th>
+                  <th>Chain</th>
+                  <th>Saved</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {watchedCoins.map((coin) => (
+                  <WatchedCoinRow key={coin.coinId} coin={coin} />
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="settings-empty">
@@ -108,21 +137,55 @@ function WatchedCoinRow({ coin }: { coin: AccountWatchedCoin }) {
       .toUpperCase() || 'SC';
 
   return (
-    <article className="submission-row">
-      <div className="submission-coin">
-        <span>{coin.logoUrl ? <img src={coin.logoUrl} alt="" /> : initials}</span>
-        <div>
-          <strong>{coin.name}</strong>
-          <small>
-            {coin.symbol || '—'} · {coin.chain || 'Chain not set'} · saved{' '}
-            {new Date(coin.createdAt).toLocaleDateString()}
-          </small>
+    <tr>
+      <td>
+        <div className="submission-coin">
+          <span>{coin.logoUrl ? <img src={coin.logoUrl} alt="" /> : initials}</span>
+          <div>
+            <strong>{coin.name}</strong>
+            <small>{coin.symbol || '—'}</small>
+          </div>
         </div>
-      </div>
-      <div className="submission-actions">
-        <Link href={`/coin/${coin.coinId}`}>View</Link>
-      </div>
-    </article>
+      </td>
+      <td>
+        <span className="watchlist-chain-logo" title={coin.chain || 'Chain not set'}>
+          {coin.chainIcon ? <img src={coin.chainIcon} alt="" /> : <CircleHelp aria-hidden="true" />}
+        </span>
+      </td>
+      <td>{new Date(coin.createdAt).toLocaleDateString()}</td>
+      <td>
+        <Link
+          className="submission-icon-action"
+          href={`/coin/${coin.coinId}`}
+          aria-label={`View ${coin.name}`}
+          title={`View ${coin.name}`}
+        >
+          <ExternalLink aria-hidden="true" />
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+export function PublicWatchlistTable({ coins }: { coins: AccountWatchedCoin[] }) {
+  return (
+    <div className="watchlist-table-wrap">
+      <table className="watchlist-table">
+        <thead>
+          <tr>
+            <th>Coin</th>
+            <th>Chain</th>
+            <th>Saved</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {coins.map((coin) => (
+            <WatchedCoinRow key={coin.coinId} coin={coin} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -133,24 +196,27 @@ function SubmissionRow({
   submission: AccountSubmission;
   onNotice: (message: string) => void;
 }) {
-  const [editing, setEditing] = useState(false);
   const name = submission.coinData.name || `Submission ${submission.id.slice(0, 8)}`;
 
-  async function request(action: 'edit' | 'delete', details?: string) {
-    if (action === 'delete' && !window.confirm(`Request deletion of ${name}?`)) return;
+  async function requestDelete() {
+    if (
+      !window.confirm(
+        `Request deletion of ${name}? The coin will be suspended now and scheduled for deletion in 24 hours.`,
+      )
+    )
+      return;
     onNotice('Sending request…');
     const response = await fetch(`/api/coin-submissions/${submission.id}/request`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action, details }),
+      body: JSON.stringify({ action: 'delete' }),
     });
     const body = await response.json().catch(() => ({}));
     onNotice(
       response.ok
-        ? `${action === 'edit' ? 'Edit' : 'Deletion'} request sent for review.`
-        : body.message || 'Could not send the request.',
+        ? 'Deletion request sent. The coin is now suspended and scheduled for deletion in 24 hours.'
+        : body.message || body.errorMessage || 'Could not send the request.',
     );
-    if (response.ok) setEditing(false);
   }
 
   return (
@@ -167,25 +233,26 @@ function SubmissionRow({
       </div>
       <span className={`submission-status status-${submission.status}`}>{submission.status}</span>
       <div className="submission-actions">
-        {submission.coinId && <Link href={`/coin/${submission.coinId}`}>View</Link>}
-        <button onClick={() => setEditing((value) => !value)}>Request edit</button>
-        <button className="delete-request" onClick={() => void request('delete')}>
-          Request delete
+        {submission.coinId && (
+          <Link
+            className="submission-icon-action"
+            href={`/coin/${submission.coinId}`}
+            aria-label={`View ${name}`}
+            title={`View ${name}`}
+          >
+            <ExternalLink aria-hidden="true" />
+          </Link>
+        )}
+        <button
+          className="delete-request submission-icon-action"
+          type="button"
+          onClick={() => void requestDelete()}
+          aria-label={`Request deletion for ${name}`}
+          title={`Request deletion for ${name}`}
+        >
+          <Trash2 aria-hidden="true" />
         </button>
       </div>
-      {editing && (
-        <form
-          className="edit-request-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const data = new FormData(event.currentTarget);
-            void request('edit', String(data.get('details') || ''));
-          }}
-        >
-          <textarea name="details" required placeholder="Describe what needs to change…" />
-          <button type="submit">Send edit request</button>
-        </form>
-      )}
     </article>
   );
 }

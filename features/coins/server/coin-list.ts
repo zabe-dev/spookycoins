@@ -1,8 +1,16 @@
 import 'server-only';
 
 import { db } from '@/lib/db/client';
-import { coinBoosts, coinLinks, coinPromotions, coins, marketSnapshots } from '@/lib/db/schema';
+import {
+  coinBoosts,
+  coinLinks,
+  coinPromotions,
+  coins,
+  coinSubmissions,
+  marketSnapshots,
+} from '@/lib/db/schema';
 import { NETWORKS } from '@/features/coins/networks';
+import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getCoinInteractionSummaries } from '@/features/coins/server/interactions';
 import type {
   BoostMultiplier,
@@ -12,7 +20,7 @@ import type {
   NetworkId,
 } from '@/features/coins/types';
 import { toCoinListItem, type CoinListItem } from '@/features/coins/view';
-import { and, desc, eq, gt, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
 
@@ -21,6 +29,7 @@ type DbMarketSnapshot = typeof marketSnapshots.$inferSelect;
 type DbCoinBoost = typeof coinBoosts.$inferSelect;
 type DbCoinPromotion = typeof coinPromotions.$inferSelect;
 type DbCoinLink = typeof coinLinks.$inferSelect;
+type DbCoinSubmission = typeof coinSubmissions.$inferSelect;
 type InteractionSummary = NonNullable<
   Awaited<ReturnType<typeof getCoinInteractionSummaries>> extends Map<number, infer Summary>
     ? Summary
@@ -38,7 +47,10 @@ export async function getPublicCoinById(id: number, userId?: string | null): Pro
 }
 
 async function getPublicCoinRecords(coinId?: number, userId?: string | null): Promise<Coin[]> {
+  await processExpiredCoinDeletionRequests();
+
   const now = new Date();
+  const nowIso = now.toISOString();
   const coinRows = await db
     .select()
     .from(coins)
@@ -49,7 +61,7 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
   if (!coinRows.length) return [];
 
   const coinIds = coinRows.map((coin) => coin.id);
-  const [snapshotRows, boostRows, promotionRows, linkRows] = await Promise.all([
+  const [snapshotRows, boostRows, promotionRows, linkRows, submissionRows] = await Promise.all([
     db
       .select()
       .from(marketSnapshots)
@@ -62,7 +74,7 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
         and(
           inArray(coinBoosts.coinId, coinIds),
           eq(coinBoosts.status, 'active'),
-          gt(coinBoosts.expiresAt, now),
+          sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
         ),
       )
       .orderBy(desc(coinBoosts.expiresAt)),
@@ -73,17 +85,28 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
         and(
           inArray(coinPromotions.coinId, coinIds),
           eq(coinPromotions.status, 'active'),
-          gt(coinPromotions.expiresAt, now),
+          sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
         ),
       )
       .orderBy(desc(coinPromotions.expiresAt)),
     db.select().from(coinLinks).where(inArray(coinLinks.coinId, coinIds)),
+    db
+      .select()
+      .from(coinSubmissions)
+      .where(
+        and(
+          inArray(coinSubmissions.coinId, coinIds),
+          eq(coinSubmissions.submissionType, 'new-coin'),
+        ),
+      )
+      .orderBy(desc(coinSubmissions.createdAt)),
   ]);
 
   const snapshotByCoin = firstByCoinId(snapshotRows);
   const boostByCoin = firstByCoinId(boostRows);
   const promotionByCoin = firstByCoinId(promotionRows);
   const linksByCoin = groupLinksByCoinId(linkRows);
+  const submissionByCoin = firstByCoinId(submissionRows.filter(hasLinkedCoinId));
   const interactionsByCoin = await getCoinInteractionSummaries(coinIds, userId);
 
   return coinRows.map((coin, index) =>
@@ -94,6 +117,7 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
       boost: boostByCoin.get(coin.id) || null,
       promotion: promotionByCoin.get(coin.id) || null,
       links: linksByCoin.get(coin.id) || new Map(),
+      submission: submissionByCoin.get(coin.id) || null,
       interactions: interactionsByCoin.get(coin.id) || null,
     }),
   );
@@ -106,6 +130,7 @@ function mapDbCoinToCoin({
   boost,
   promotion,
   links,
+  submission,
   interactions,
 }: {
   coin: DbCoin;
@@ -114,6 +139,7 @@ function mapDbCoinToCoin({
   boost: DbCoinBoost | null;
   promotion: DbCoinPromotion | null;
   links: Map<string, DbCoinLink>;
+  submission: DbCoinSubmission | null;
   interactions: InteractionSummary | null;
 }): Coin {
   const network = toNetworkId(coin.chain);
@@ -134,6 +160,7 @@ function mapDbCoinToCoin({
     description: coin.description,
     category: toCoinCategory(coin.category),
     launchDate: coin.launchDate ? coin.launchDate.toISOString() : null,
+    presaleEndDate: readPresaleEndDate(submission?.coinData),
     submittedAt: coin.submittedAt.toISOString(),
     populatedAt: coin.updatedAt.toISOString(),
     chart: buildChartConfig(links),
@@ -180,6 +207,22 @@ function firstByCoinId<T extends { coinId: number }>(rows: T[]) {
     if (!map.has(row.coinId)) map.set(row.coinId, row);
   });
   return map;
+}
+
+function hasLinkedCoinId(row: DbCoinSubmission): row is DbCoinSubmission & { coinId: number } {
+  return typeof row.coinId === 'number';
+}
+
+function readPresaleEndDate(value: unknown) {
+  if (!isRecord(value)) return null;
+  const market = isRecord(value.market) ? value.market : {};
+  const presale = isRecord(market.presale) ? market.presale : {};
+  const endDate = typeof presale.endDate === 'string' ? presale.endDate : '';
+  return endDate || null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function groupLinksByCoinId(rows: DbCoinLink[]) {

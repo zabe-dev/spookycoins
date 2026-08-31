@@ -8,5 +8,5 @@ import './scroll-fix.css';
 export default async function Home() {
   const session = await auth.api.getSession({ headers: await headers() });
   const marketCoins = await getPublicCoinListItems(session?.user.id);
-  return <HomeClient initialCoins={marketCoins} />;
+  return <HomeClient initialCoins={marketCoins} isSignedIn={Boolean(session?.user)} />;
 }

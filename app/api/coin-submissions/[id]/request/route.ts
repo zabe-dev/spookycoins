@@ -1,19 +1,14 @@
 import { auth } from '@/lib/auth/server';
 import { apiError, apiSuccess } from '@/lib/api/responses';
 import { db } from '@/lib/db/client';
-import { coinSubmissions } from '@/lib/db/schema';
+import { coins, coinSubmissions } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
-const requestSchema = z
-  .object({
-    action: z.enum(['edit', 'delete']),
-    details: z.string().trim().max(2000).optional(),
-  })
-  .refine((value) => value.action !== 'edit' || Boolean(value.details), {
-    message: 'Describe the requested edit.',
-  });
+const requestSchema = z.object({
+  action: z.literal('delete'),
+});
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -26,20 +21,41 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const [owned] = await db
     .select()
     .from(coinSubmissions)
-    .where(and(eq(coinSubmissions.id, id), eq(coinSubmissions.requesterEmail, session.user.email)))
+    .where(
+      and(
+        eq(coinSubmissions.id, id),
+        eq(coinSubmissions.requesterEmail, session.user.email),
+        eq(coinSubmissions.submissionType, 'new-coin'),
+      ),
+    )
     .limit(1);
   if (!owned) return apiError('SUBMISSION_NOT_FOUND', 'Submission not found.', 404);
 
-  await db.insert(coinSubmissions).values({
-    coinId: owned.coinId,
-    requesterEmail: session.user.email,
-    requesterTelegram: owned.requesterTelegram,
-    submissionType: parsed.data.action === 'edit' ? 'edit-request' : 'delete-request',
-    status: 'pending',
-    coinData: {
-      sourceSubmissionId: owned.id,
-      requestedChanges: parsed.data.details || 'Delete this coin listing.',
-    },
+  const scheduledDeleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await db.transaction(async (tx) => {
+    if (owned.coinId) {
+      await tx
+        .update(coins)
+        .set({ listingStatus: 'suspended', updatedAt: new Date() })
+        .where(eq(coins.id, owned.coinId));
+    }
+
+    await tx.insert(coinSubmissions).values({
+      coinId: owned.coinId,
+      requesterEmail: session.user.email,
+      requesterTelegram: owned.requesterTelegram,
+      submissionType: 'delete-request',
+      status: 'pending',
+      coinData: {
+        sourceSubmissionId: owned.id,
+        requestedChanges: 'Delete this coin listing.',
+        scheduledDeleteAt: scheduledDeleteAt.toISOString(),
+      },
+    });
   });
-  return apiSuccess({ id: owned.id }, 'Request sent for review.');
+  return apiSuccess(
+    { id: owned.id, scheduledDeleteAt: scheduledDeleteAt.toISOString() },
+    'Deletion request sent.',
+  );
 }

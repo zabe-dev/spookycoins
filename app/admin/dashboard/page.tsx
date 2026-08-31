@@ -8,6 +8,7 @@ import type {
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { NETWORKS } from '@/features/coins/networks';
+import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
@@ -19,7 +20,7 @@ import {
   sessions,
   users,
 } from '@/lib/db/schema';
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
@@ -34,7 +35,10 @@ export default async function AdminDashboardPage() {
   if (!session) redirect('/');
   if (!hasAdminAccess(session.user.role)) notFound();
 
+  await processExpiredCoinDeletionRequests();
+
   const now = new Date();
+  const nowIso = now.toISOString();
   const [
     userRows,
     coinRows,
@@ -55,23 +59,37 @@ export default async function AdminDashboardPage() {
     db
       .select()
       .from(coinBoosts)
-      .where(and(eq(coinBoosts.status, 'active'), gt(coinBoosts.expiresAt, now)))
+      .where(
+        and(eq(coinBoosts.status, 'active'), sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`),
+      )
       .orderBy(desc(coinBoosts.expiresAt)),
     db
       .select()
       .from(coinPromotions)
-      .where(and(eq(coinPromotions.status, 'active'), gt(coinPromotions.expiresAt, now)))
+      .where(
+        and(
+          eq(coinPromotions.status, 'active'),
+          sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
+        ),
+      )
       .orderBy(desc(coinPromotions.expiresAt)),
     db.select({ count: sql<number>`count(*)::int` }).from(users),
     db.select({ count: sql<number>`count(*)::int` }).from(coins),
     db
       .select({ count: sql<number>`count(distinct ${coinBoosts.coinId})::int` })
       .from(coinBoosts)
-      .where(and(eq(coinBoosts.status, 'active'), gt(coinBoosts.expiresAt, now))),
+      .where(
+        and(eq(coinBoosts.status, 'active'), sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`),
+      ),
     db
       .select({ count: sql<number>`count(distinct ${coinPromotions.coinId})::int` })
       .from(coinPromotions)
-      .where(and(eq(coinPromotions.status, 'active'), gt(coinPromotions.expiresAt, now))),
+      .where(
+        and(
+          eq(coinPromotions.status, 'active'),
+          sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
+        ),
+      ),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(coinSubmissions)

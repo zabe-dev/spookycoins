@@ -2,7 +2,7 @@ import 'server-only';
 
 import { db } from '@/lib/db/client';
 import { coinVotes, coinWatchlists, coins, users } from '@/lib/db/schema';
-import { and, desc, eq, gt, gte, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 export const voteCooldownHours = 12;
 
@@ -30,12 +30,18 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
   });
 
   const cooldownStart = addHours(new Date(), -voteCooldownHours);
-  const weekStart = getCurrentVoteWeekStart();
+  const cooldownStartIso = cooldownStart.toISOString();
+  const weekStartIso = getCurrentVoteWeekStart().toISOString();
   const interactionRows = await Promise.all([
     db
       .select({ coinId: coinVotes.coinId, count: sql<number>`count(*)::int` })
       .from(coinVotes)
-      .where(and(inArray(coinVotes.coinId, uniqueIds), gte(coinVotes.createdAt, weekStart)))
+      .where(
+        and(
+          inArray(coinVotes.coinId, uniqueIds),
+          sql`${coinVotes.createdAt} >= ${weekStartIso}::timestamptz`,
+        ),
+      )
       .groupBy(coinVotes.coinId),
     db
       .select({ coinId: coinVotes.coinId, count: sql<number>`count(*)::int` })
@@ -55,7 +61,7 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
             and(
               eq(coinVotes.userId, userId),
               inArray(coinVotes.coinId, uniqueIds),
-              gt(coinVotes.createdAt, cooldownStart),
+              sql`${coinVotes.createdAt} > ${cooldownStartIso}::timestamptz`,
             ),
           )
       : Promise.resolve([]),
@@ -98,6 +104,7 @@ export async function recordCoinVote({
   await assertActiveCoin(coinId);
 
   const cooldownStart = addHours(new Date(), -voteCooldownHours);
+  const cooldownStartIso = cooldownStart.toISOString();
   const [recentVote] = await db
     .select({ createdAt: coinVotes.createdAt })
     .from(coinVotes)
@@ -105,7 +112,7 @@ export async function recordCoinVote({
       and(
         eq(coinVotes.userId, userId),
         eq(coinVotes.coinId, coinId),
-        gt(coinVotes.createdAt, cooldownStart),
+        sql`${coinVotes.createdAt} > ${cooldownStartIso}::timestamptz`,
       ),
     )
     .orderBy(desc(coinVotes.createdAt))

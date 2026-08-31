@@ -101,6 +101,7 @@ export type Coin = {
   description: string | null;
   category: CoinCategory;
   launchDate: string | null;
+  presaleEndDate: string | null;
   submittedAt: string;
   populatedAt: string;
   chart: ChartConfig;

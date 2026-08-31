@@ -653,17 +653,21 @@ nav a.active {
   border-radius: 11px;
   display: grid;
   place-items: center;
-  color: #fff;
+  overflow: visible;
+  border: 0;
+  background: transparent !important;
+  color: #d8e0e5;
   font-size: 15px;
   font-weight: 850;
   position: relative;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.13);
+  box-shadow: none;
 }
 .coin-logo img {
   width: 100%;
   height: 100%;
   border-radius: inherit;
   object-fit: cover;
+  overflow: hidden;
 }
 .coin-logo.large {
   width: 52px;
@@ -673,13 +677,13 @@ nav a.active {
 }
 .chain-badge {
   position: absolute !important;
-  right: -4px;
-  bottom: -4px;
-  background: #12161a !important;
-  border: 2px solid #0d1012;
+  right: -2px;
+  bottom: -2px;
+  background: transparent !important;
+  border: 0;
   border-radius: 50% !important;
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   display: grid !important;
   place-items: center;
   color: #d6dce0 !important;
@@ -690,37 +694,31 @@ nav a.active {
 .chain-badge img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  border-radius: 50%;
 }
-.violet {
-  background: linear-gradient(135deg, #8468ff, #4a2cbd);
-}
-.cyan {
-  background: linear-gradient(135deg, #27cbdf, #126c9d);
-}
-.orange {
-  background: linear-gradient(135deg, #ff965a, #d13d26);
-}
-.pink {
-  background: linear-gradient(135deg, #f569ba, #9b2d83);
-}
-.blue {
-  background: linear-gradient(135deg, #5db5ff, #2865c9);
-}
-.green {
-  background: linear-gradient(135deg, #69dc8d, #208552);
-}
-.yellow {
-  background: linear-gradient(135deg, #f8d553, #b97b13);
-}
-.red {
-  background: linear-gradient(135deg, #f46161, #aa2323);
-}
-.gold-name {
-  background: linear-gradient(90deg, #fff2a0, #ffc526, #ff9d00);
+.gold-name,
+.gold-name b,
+.gold-name strong {
+  background: linear-gradient(90deg, #fff2a0, #ffc526, #ff9d00, #fff2a0);
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
+}
+.gold-name-animated,
+.gold-name-animated b,
+.gold-name-animated strong {
+  animation: gold-drift 4s ease-in-out infinite;
+}
+@keyframes gold-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 .signal-chart {
   height: 138px;
@@ -1048,6 +1046,7 @@ tbody tr:hover td {
 }
 .coin-cell b,
 .mini-coin strong {
+  color: var(--copy);
   font-family: var(--font-space-grotesk), sans-serif;
 }
 .coin-cell > div:last-child {
@@ -1620,10 +1619,11 @@ tbody tr:hover td {
   .nav-band .navbar nav.open {
     position: absolute;
     top: calc(100% + 8px);
-    right: 12px;
-    left: 12px;
+    right: 15px;
+    left: auto;
     z-index: 40;
     display: grid;
+    width: min(320px, calc(100vw - 30px));
     max-height: calc(100dvh - 90px);
     overflow-y: auto;
     gap: 6px;
@@ -3136,6 +3136,91 @@ img.admin-project-logo {
 .submissions-card {
   margin-top: 16px;
 }
+.settings-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.settings-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(203, 255, 74, 0.26);
+  border-radius: 999px;
+  background: rgba(203, 255, 74, 0.08);
+  padding: 8px 11px;
+  color: var(--lime);
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.settings-card-actions button svg {
+  width: 13px;
+  height: 13px;
+}
+.watchlist-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #262e33;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.012);
+}
+.watchlist-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.watchlist-table th,
+.watchlist-table td {
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  padding: 13px 14px;
+  color: #aeb6bb;
+  font-size: 11px;
+  text-align: left;
+  vertical-align: middle;
+}
+.watchlist-table th {
+  border-top: 0;
+  color: #78838b;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.watchlist-table td:last-child,
+.watchlist-table th:last-child {
+  text-align: right;
+}
+.watchlist-chain-logo {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: #88939a;
+}
+.watchlist-chain-logo img,
+.watchlist-chain-logo svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.watchlist-table .submission-icon-action {
+  margin-left: auto;
+}
+.submission-icon-action {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #323a40;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0;
+  color: #bec5c9;
+}
+.submission-icon-action svg {
+  width: 15px;
+  height: 15px;
+}
 .submission-list {
   display: grid;
   gap: 8px;
@@ -3201,18 +3286,25 @@ img.admin-project-logo {
 }
 .submission-actions {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 .submission-actions a,
 .submission-actions button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
   border: 1px solid #323a40;
-  border-radius: 7px;
+  border-radius: 999px;
   background: transparent;
-  padding: 7px 9px;
+  padding: 0;
   color: #bec5c9;
-  font-size: 8px;
-  font-weight: 700;
   cursor: pointer;
+}
+.submission-actions svg {
+  width: 15px;
+  height: 15px;
 }
 .submission-actions .delete-request {
   color: #ff9d9d;

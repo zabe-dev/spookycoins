@@ -37,9 +37,10 @@ import {
   type SubmissionCategory,
   type SubmissionNetwork,
 } from '@/features/submissions/schemas/coin-submission';
+import confetti from 'canvas-confetti';
 import { Check, ChevronLeft, ChevronRight, Home, Loader2, PartyPopper, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 const steps = ['Basics', 'Links', 'Market', 'Security', 'Contact', 'Review'] as const;
 
@@ -113,6 +114,41 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
     errors['logo.width'] ||
     errors['logo.height'] ||
     errors['logo.dataUrl'];
+
+  useEffect(() => {
+    if (!submitted) return;
+
+    const colors = ['#cbff4a', '#ffc52f', '#37d9ff', '#ffffff', '#b36bff'];
+    void confetti({
+      particleCount: 90,
+      spread: 72,
+      startVelocity: 42,
+      scalar: 0.86,
+      origin: { y: 0.72 },
+      colors,
+    });
+
+    window.setTimeout(() => {
+      void confetti({
+        particleCount: 45,
+        angle: 60,
+        spread: 58,
+        startVelocity: 36,
+        scalar: 0.72,
+        origin: { x: 0, y: 0.78 },
+        colors,
+      });
+      void confetti({
+        particleCount: 45,
+        angle: 120,
+        spread: 58,
+        startVelocity: 36,
+        scalar: 0.72,
+        origin: { x: 1, y: 0.78 },
+        colors,
+      });
+    }, 180);
+  }, [submitted]);
 
   function update<K extends keyof CoinSubmissionValues>(
     field: K,
@@ -287,17 +323,6 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
   if (submitted) {
     return (
       <section className="submission-card submission-success">
-        <span className="submission-confetti" aria-hidden="true">
-          {Array.from({ length: 18 }, (_, index) => {
-            const style = {
-              '--confetti-index': index,
-              '--confetti-x': `${(index - 8.5) * 24}px`,
-              '--confetti-y': `${(index % 5) * -18 - 54}px`,
-            } as CSSProperties;
-
-            return <i key={index} style={style} />;
-          })}
-        </span>
         <span className="submission-success-icon">
           <Check aria-hidden="true" />
         </span>

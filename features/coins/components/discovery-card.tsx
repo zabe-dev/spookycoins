@@ -18,7 +18,7 @@ export function DiscoveryCard({
   sub: string;
   coins: Coin[];
   viewMoreHref: string;
-  metric?: 'votes' | 'added';
+  metric?: 'votes' | 'launch' | 'presaleEnd' | 'watchlist';
 }) {
   const rows = Array.from({ length: 5 }, (_, index) => coins[index] || null);
 
@@ -36,7 +36,7 @@ export function DiscoveryCard({
       </div>
       {rows.map((coin, index) =>
         coin ? (
-          <Link className="mini-coin" href={`/coin/${coin.coinId}`} key={coin.symbol}>
+          <Link className="mini-coin" href={`/coin/${coin.coinId}`} key={coin.coinId}>
             <b>{index + 1}</b>
             <div className={`coin-logo ${coin.color}`}>
               {coin.image ? <img src={coin.image} alt="" /> : coin.logo}
@@ -47,7 +47,9 @@ export function DiscoveryCard({
                 {coin.symbol} · {coin.chain}
               </small>
             </span>
-            <em>{metric === 'added' ? coin.age : `${formatVotes(coin.votes)} votes`}</em>
+            <strong className={`mini-coin-metric metric-${metric}`}>
+              {formatMetric(coin, metric)}
+            </strong>
           </Link>
         ) : (
           <div className="mini-coin mini-coin-empty" key={`empty-${index}`}>
@@ -57,10 +59,18 @@ export function DiscoveryCard({
               <strong>-</strong>
               <small>-</small>
             </span>
-            <em>-</em>
+            <strong className="mini-coin-metric">-</strong>
           </div>
         ),
       )}
     </article>
   );
+}
+
+function formatMetric(coin: Coin, metric: 'votes' | 'launch' | 'presaleEnd' | 'watchlist') {
+  if (metric === 'launch') return coin.launch;
+  if (metric === 'presaleEnd')
+    return coin.presaleEnd === '—' ? 'No end date' : `${coin.presaleEnd}`;
+  if (metric === 'watchlist') return formatVotes(coin.watchCount);
+  return `${formatVotes(coin.votes)} votes`;
 }

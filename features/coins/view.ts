@@ -24,6 +24,8 @@ export type CoinListItem = {
   change: number;
   launch: string;
   launchTimestamp: string | null;
+  presaleEnd: string;
+  presaleEndTimestamp: string | null;
   boost?: number;
   promoted: boolean;
   rawVotes: number;
@@ -102,8 +104,17 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     volume24h: formatMoney(coin.market.volume24hUsd),
     price: formatPrice(priceUsd),
     change,
-    launch: coin.launchDate ? formatAge(coin.launchDate) : '—',
+    launch:
+      coin.lifecycle === 'presale'
+        ? coin.presaleEndDate
+          ? formatTimeUntil(coin.presaleEndDate)
+          : '—'
+        : coin.launchDate
+          ? formatTimeAgo(coin.launchDate)
+          : '—',
     launchTimestamp: coin.launchDate,
+    presaleEnd: coin.presaleEndDate ? formatTimeUntil(coin.presaleEndDate) : '—',
+    presaleEndTimestamp: coin.presaleEndDate,
     ...(boostPackage ? { boost: boostPackage } : {}),
     promoted: coin.promoted.active,
     rawVotes,
@@ -111,7 +122,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     watchCount: coin.community.watchlistCount,
     hasVoted: Boolean(coin.community.userHasVoted),
     isWatching: Boolean(coin.community.userWatching),
-    age: formatAge(coin.submittedAt),
+    age: formatTimeAgo(coin.submittedAt),
     submittedTimestamp: coin.submittedAt,
     category: coin.category,
     trend: Math.abs(change) + Math.log10(Math.max(coin.market.volume24hUsd ?? 1, 1)) + boostedVotes,
@@ -149,19 +160,51 @@ function formatPrice(value: number | null) {
   return `$${value.toLocaleString('en-US', { maximumFractionDigits: digits })}`;
 }
 
-function formatAge(value: string) {
-  const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
+function formatTimeAgo(value: string) {
+  return formatCompactRelativeTime(Date.now() - new Date(value).getTime(), 'ago');
+}
 
-  const hours = Math.floor(seconds / 3_600);
-  if (hours < 24) return `${Math.max(1, hours)}h ago`;
+function formatTimeUntil(value: string) {
+  return formatLongRelativeTime(new Date(value).getTime() - Date.now());
+}
 
-  const days = Math.floor(seconds / 86_400);
-  if (days < 30) return `${days}d ago`;
+function formatCompactRelativeTime(deltaMs: number, direction: 'ago' | 'in') {
+  const seconds = Math.max(0, Math.round(deltaMs / 1000));
+  const prefix = direction === 'in' ? 'in ' : '';
+  const suffix = direction === 'ago' ? ' ago' : '';
 
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months}m ago`;
+  if (seconds < 60) return `${prefix}${seconds}s${suffix}`;
 
-  const years = Math.floor(months / 12);
-  return `${years}y ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${prefix}${minutes}m${suffix}`;
+
+  const hours = Math.round(seconds / 3_600);
+  if (hours < 24) return `${prefix}${hours}h${suffix}`;
+
+  const days = Math.round(seconds / 86_400);
+  if (days < 30) return `${prefix}${days}d${suffix}`;
+
+  const months = Math.round(days / 30);
+  if (months < 12) return `${prefix}${months}m${suffix}`;
+
+  const years = Math.round(months / 12);
+  return `${prefix}${years}y${suffix}`;
+}
+
+function formatLongRelativeTime(deltaMs: number) {
+  const seconds = Math.max(0, Math.round(deltaMs / 1000));
+  const [value, unit] =
+    seconds < 60
+      ? [seconds, 'second']
+      : seconds < 3_600
+        ? [Math.round(seconds / 60), 'minute']
+        : seconds < 86_400
+          ? [Math.round(seconds / 3_600), 'hour']
+          : seconds < 2_592_000
+            ? [Math.round(seconds / 86_400), 'day']
+            : seconds < 31_104_000
+              ? [Math.round(seconds / 2_592_000), 'month']
+              : [Math.round(seconds / 31_104_000), 'year'];
+
+  return `in ${value} ${unit}${value === 1 ? '' : 's'}`;
 }

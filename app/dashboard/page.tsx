@@ -1,6 +1,8 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { AccountPanel } from '@/features/account/components/account-panel';
+import { NETWORKS } from '@/features/coins/networks';
+import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
@@ -18,6 +20,8 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect('/');
+
+  await processExpiredCoinDeletionRequests();
 
   const submissions = await db
     .select({
@@ -60,8 +64,10 @@ export default async function DashboardPage() {
       <SiteHeader active="none" />
       <AccountPanel
         email={session.user.email}
+        userId={session.user.id}
         watchedCoins={watchedCoins.map((coin) => ({
           ...coin,
+          ...readChainData(coin.chain),
           createdAt: coin.createdAt.toISOString(),
         }))}
         submissions={submissions.map((submission) => ({
@@ -86,6 +92,18 @@ function readCoinData(value: unknown) {
     symbol: readString(basic?.symbol) || readString(record.symbol),
     chain: readString(market?.primaryChain) || readString(record.chain),
   };
+}
+
+function readChainData(value: string | null) {
+  if (value && value in NETWORKS) {
+    const network = NETWORKS[value as keyof typeof NETWORKS];
+    return {
+      chain: network.shortName,
+      chainIcon: network.iconUrl,
+    };
+  }
+
+  return { chain: value, chainIcon: null };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { AuthModal } from '@/features/auth/components/auth-modal';
 import type { Coin } from '@/features/coins/types';
 import { getBoostVoteFactor, toCoinListItem } from '@/features/coins/view';
 import { makeChartPath } from '../utils';
@@ -15,13 +16,20 @@ import { CoinHero } from './coin-hero';
 import { CoinInfoSections } from './coin-info-sections';
 import { CoinSidebar } from './coin-sidebar';
 
-export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
+export function CoinDetailPage({
+  coinRecord,
+  isSignedIn,
+}: {
+  coinRecord: Coin;
+  isSignedIn: boolean;
+}) {
   const canonicalCoin = coinRecord;
   const [coin, setCoin] = useState(() => toCoinListItem(canonicalCoin, 0));
   const contractAddress = coin.contractAddress || 'Contract address unavailable';
   const [voted, setVoted] = useState(coin.hasVoted);
   const [watched, setWatched] = useState(coin.isWatching);
   const [notice, setNotice] = useState('');
+  const [authOpen, setAuthOpen] = useState(false);
   const [contractCopied, setContractCopied] = useState(false);
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
   const [voteAnimating, setVoteAnimating] = useState(false);
@@ -35,6 +43,10 @@ export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
 
   async function vote() {
     if (voted) return;
+    if (!isSignedIn) {
+      setAuthOpen(true);
+      return;
+    }
     setNotice('');
     setVoted(true);
     setCoin((current) => ({
@@ -66,6 +78,10 @@ export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
   }
 
   async function toggleWatch() {
+    if (!isSignedIn) {
+      setAuthOpen(true);
+      return;
+    }
     const adding = !watched;
     setNotice('');
     setWatched(adding);
@@ -187,6 +203,7 @@ export function CoinDetailPage({ coinRecord }: { coinRecord: Coin }) {
         open={changeRequestOpen}
         onClose={() => setChangeRequestOpen(false)}
       />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <SiteFooter />
     </main>
   );

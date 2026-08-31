@@ -12,7 +12,7 @@ import {
   coinSubmissions,
   users,
 } from '@/lib/db/schema';
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
@@ -186,6 +186,7 @@ export async function addPromotedCoin(formData: FormData) {
   }
 
   const now = new Date();
+  const nowIso = now.toISOString();
   const [activePromotion] = await db
     .select()
     .from(coinPromotions)
@@ -193,7 +194,7 @@ export async function addPromotedCoin(formData: FormData) {
       and(
         eq(coinPromotions.coinId, coinId),
         eq(coinPromotions.status, 'active'),
-        gt(coinPromotions.expiresAt, now),
+        sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
       ),
     )
     .orderBy(desc(coinPromotions.expiresAt))

@@ -50,5 +50,5 @@ export default async function CoinPage({ params }: CoinPageParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
-  return <CoinDetailPage coinRecord={coin} />;
+  return <CoinDetailPage coinRecord={coin} isSignedIn={Boolean(session?.user)} />;
 }
