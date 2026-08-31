@@ -3,16 +3,27 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from 'next/link';
-import { CircleHelp, Copy, ExternalLink, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import {
+  CircleHelp,
+  Clock3,
+  Copy,
+  ExternalLink,
+  LoaderCircle,
+  RotateCcw,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export type AccountSubmission = {
   id: string;
   coinId: number | null;
   status: string;
+  baseStatus?: string;
   submissionType: string;
   createdAt: string;
   coinData: { name?: string; symbol?: string; chain?: string };
+  scheduledDeleteAt?: string;
 };
 
 export type AccountWatchedCoin = {
@@ -37,7 +48,20 @@ export function AccountPanel({
   submissions: AccountSubmission[];
 }) {
   const [notice, setNotice] = useState('');
+  const [deleteModal, setDeleteModal] = useState<AccountSubmission | null>(null);
+  const [deletionOverrides, setDeletionOverrides] = useState<Record<string, string | null>>({});
   const watchlistPath = `/watchlist/${userId}`;
+  const listingRows = submissions.map((submission) => {
+    if (!(submission.id in deletionOverrides)) return submission;
+    const scheduledDeleteAt = deletionOverrides[submission.id];
+    return scheduledDeleteAt
+      ? { ...submission, status: 'suspended', scheduledDeleteAt }
+      : {
+          ...submission,
+          status: submission.baseStatus || 'approved',
+          scheduledDeleteAt: undefined,
+        };
+  });
 
   async function copyWatchlistUrl() {
     const watchlistUrl = `${window.location.origin}${watchlistPath}`;
@@ -114,8 +138,12 @@ export function AccountPanel({
         </div>
         {submissions.length ? (
           <div className="submission-list">
-            {submissions.map((submission) => (
-              <SubmissionRow key={submission.id} submission={submission} onNotice={setNotice} />
+            {listingRows.map((submission) => (
+              <SubmissionRow
+                key={submission.id}
+                submission={submission}
+                onRequestDelete={setDeleteModal}
+              />
             ))}
           </div>
         ) : (
@@ -125,6 +153,27 @@ export function AccountPanel({
           </div>
         )}
       </section>
+      {deleteModal && (
+        <DeleteSubmissionModal
+          submission={deleteModal}
+          onClose={() => setDeleteModal(null)}
+          onNotice={setNotice}
+          onScheduled={(scheduledDeleteAt) => {
+            setDeletionOverrides((current) => ({
+              ...current,
+              [deleteModal.id]: scheduledDeleteAt,
+            }));
+            setDeleteModal((current) =>
+              current ? { ...current, status: 'suspended', scheduledDeleteAt } : current,
+            );
+          }}
+          onCancelled={() => {
+            setDeletionOverrides((current) => ({ ...current, [deleteModal.id]: null }));
+            setDeleteModal(null);
+            setNotice('Deletion request cancelled. The coin is active again.');
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -191,33 +240,13 @@ export function PublicWatchlistTable({ coins }: { coins: AccountWatchedCoin[] })
 
 function SubmissionRow({
   submission,
-  onNotice,
+  onRequestDelete,
 }: {
   submission: AccountSubmission;
-  onNotice: (message: string) => void;
+  onRequestDelete: (submission: AccountSubmission) => void;
 }) {
   const name = submission.coinData.name || `Submission ${submission.id.slice(0, 8)}`;
-
-  async function requestDelete() {
-    if (
-      !window.confirm(
-        `Request deletion of ${name}? The coin will be suspended now and scheduled for deletion in 24 hours.`,
-      )
-    )
-      return;
-    onNotice('Sending request…');
-    const response = await fetch(`/api/coin-submissions/${submission.id}/request`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action: 'delete' }),
-    });
-    const body = await response.json().catch(() => ({}));
-    onNotice(
-      response.ok
-        ? 'Deletion request sent. The coin is now suspended and scheduled for deletion in 24 hours.'
-        : body.message || body.errorMessage || 'Could not send the request.',
-    );
-  }
+  const deleteRequested = Boolean(submission.scheduledDeleteAt);
 
   return (
     <article className="submission-row">
@@ -246,13 +275,165 @@ function SubmissionRow({
         <button
           className="delete-request submission-icon-action"
           type="button"
-          onClick={() => void requestDelete()}
-          aria-label={`Request deletion for ${name}`}
-          title={`Request deletion for ${name}`}
+          onClick={() => onRequestDelete(submission)}
+          aria-label={
+            deleteRequested ? `View deletion countdown for ${name}` : `Request deletion for ${name}`
+          }
+          title={
+            deleteRequested ? `View deletion countdown for ${name}` : `Request deletion for ${name}`
+          }
         >
-          <Trash2 aria-hidden="true" />
+          {deleteRequested ? <Clock3 aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
         </button>
       </div>
     </article>
   );
+}
+
+function DeleteSubmissionModal({
+  submission,
+  onClose,
+  onNotice,
+  onScheduled,
+  onCancelled,
+}: {
+  submission: AccountSubmission;
+  onClose: () => void;
+  onNotice: (message: string) => void;
+  onScheduled: (scheduledDeleteAt: string) => void;
+  onCancelled: () => void;
+}) {
+  const [deleting, setDeleting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const scheduledDeleteAt = submission.scheduledDeleteAt || '';
+  const countdown = useCountdown(scheduledDeleteAt);
+  const name = submission.coinData.name || `Submission ${submission.id.slice(0, 8)}`;
+  const alreadyScheduled = Boolean(scheduledDeleteAt);
+
+  async function requestDelete() {
+    onNotice('Sending request…');
+    setDeleting(true);
+    const response = await fetch(`/api/coin-submissions/${submission.id}/request`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'delete' }),
+    });
+    const body = await response.json().catch(() => ({}));
+    setDeleting(false);
+
+    if (response.ok) {
+      const nextScheduledDeleteAt =
+        body.data?.scheduledDeleteAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      onScheduled(nextScheduledDeleteAt);
+      onNotice('Deletion request sent. The coin is suspended and will be deleted in 24 hours.');
+      return;
+    }
+
+    onNotice(body.message || body.errorMessage || 'Could not send the deletion request.');
+  }
+
+  async function cancelDelete() {
+    onNotice('Cancelling deletion…');
+    setCancelling(true);
+    const response = await fetch(`/api/coin-submissions/${submission.id}/request`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'cancel-delete' }),
+    });
+    const body = await response.json().catch(() => ({}));
+    setCancelling(false);
+
+    if (response.ok) {
+      onCancelled();
+      return;
+    }
+
+    onNotice(body.message || body.errorMessage || 'Could not cancel the deletion request.');
+  }
+
+  return (
+    <div className="account-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="account-confirm-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-submission-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          className="account-modal-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Close deletion request"
+        >
+          <X aria-hidden="true" />
+        </button>
+        <div className="account-modal-icon danger">
+          <Trash2 aria-hidden="true" />
+        </div>
+        <h2 id="delete-submission-title">Delete this submitted coin?</h2>
+        <p>
+          {alreadyScheduled
+            ? `${name} is already suspended and queued for permanent deletion.`
+            : `${name} will be suspended right away, then permanently deleted after 24 hours.`}
+        </p>
+        <div className="account-countdown-card">
+          <span>{alreadyScheduled ? 'Time before deletion' : 'Deletion window'}</span>
+          <strong>{alreadyScheduled ? countdown : '24 hours'}</strong>
+        </div>
+        <div className="account-modal-actions">
+          <button type="button" className="account-secondary-action" onClick={onClose}>
+            Close
+          </button>
+          {!alreadyScheduled && (
+            <button
+              type="button"
+              className="account-danger-action"
+              onClick={() => void requestDelete()}
+              disabled={deleting}
+            >
+              {deleting && <LoaderCircle className="account-action-spinner" aria-hidden="true" />}
+              {deleting ? 'Scheduling…' : 'Suspend and delete'}
+            </button>
+          )}
+          {alreadyScheduled && (
+            <button
+              type="button"
+              className="account-restore-action"
+              onClick={() => void cancelDelete()}
+              disabled={cancelling}
+            >
+              {cancelling ? (
+                <LoaderCircle className="account-action-spinner" aria-hidden="true" />
+              ) : (
+                <RotateCcw aria-hidden="true" />
+              )}
+              {cancelling ? 'Cancelling…' : 'Cancel deletion'}
+            </button>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function useCountdown(deadline: string) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!deadline) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [deadline]);
+
+  if (!deadline) return '24 hours';
+  const remaining = Math.max(0, new Date(deadline).getTime() - now);
+  if (!remaining) return 'Deleting soon';
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${hours}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
 }

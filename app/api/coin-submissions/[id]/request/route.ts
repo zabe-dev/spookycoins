@@ -2,12 +2,12 @@ import { auth } from '@/lib/auth/server';
 import { apiError, apiSuccess } from '@/lib/api/responses';
 import { db } from '@/lib/db/client';
 import { coins, coinSubmissions } from '@/lib/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
 const requestSchema = z.object({
-  action: z.literal('delete'),
+  action: z.enum(['delete', 'cancel-delete']),
 });
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -30,6 +30,52 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     )
     .limit(1);
   if (!owned) return apiError('SUBMISSION_NOT_FOUND', 'Submission not found.', 404);
+
+  const [existingDeleteRequest] = await db
+    .select({ id: coinSubmissions.id, coinData: coinSubmissions.coinData })
+    .from(coinSubmissions)
+    .where(
+      and(
+        eq(coinSubmissions.requesterEmail, session.user.email),
+        eq(coinSubmissions.submissionType, 'delete-request'),
+        eq(coinSubmissions.status, 'pending'),
+        sql`${coinSubmissions.coinData}->>'sourceSubmissionId' = ${owned.id}`,
+      ),
+    )
+    .limit(1);
+
+  if (parsed.data.action === 'cancel-delete') {
+    if (!existingDeleteRequest) {
+      return apiSuccess(
+        { id: owned.id, scheduledDeleteAt: null },
+        'Deletion request is already cancelled.',
+      );
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(coinSubmissions)
+        .set({ status: 'cancelled', updatedAt: new Date() })
+        .where(eq(coinSubmissions.id, existingDeleteRequest.id));
+
+      if (owned.coinId) {
+        await tx
+          .update(coins)
+          .set({ listingStatus: 'active', updatedAt: new Date() })
+          .where(eq(coins.id, owned.coinId));
+      }
+    });
+
+    return apiSuccess({ id: owned.id, scheduledDeleteAt: null }, 'Deletion request cancelled.');
+  }
+
+  if (existingDeleteRequest) {
+    const scheduledDeleteAt = readScheduledDeleteAt(existingDeleteRequest.coinData);
+    return apiSuccess(
+      { id: owned.id, scheduledDeleteAt },
+      'Deletion request is already scheduled.',
+    );
+  }
 
   const scheduledDeleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -58,4 +104,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     { id: owned.id, scheduledDeleteAt: scheduledDeleteAt.toISOString() },
     'Deletion request sent.',
   );
+}
+
+function readScheduledDeleteAt(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const scheduledDeleteAt = (value as Record<string, unknown>).scheduledDeleteAt;
+  return typeof scheduledDeleteAt === 'string' ? scheduledDeleteAt : null;
 }

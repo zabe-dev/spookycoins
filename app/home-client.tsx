@@ -200,20 +200,13 @@ export function HomeClient({
         (!search ||
           `${c.name} ${c.symbol} ${c.chain}`.toLowerCase().includes(search.toLowerCase())),
     );
-    if (view === 'Most watched') return [...list].sort(sortByWatchCount);
+    if (view === 'Most watched')
+      return [...list].filter((coin) => coin.watchCount > 0).sort(sortByVotes);
     if (view === 'Launched recently')
-      return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByNewestLaunch);
-    if (view === 'Presales') return [...list].sort(sortByPresaleEnd);
-    return [...list].sort((a, b) => {
-      const av = sort.key === 'boost' ? a.boost || 0 : a[sort.key],
-        bv = sort.key === 'boost' ? b.boost || 0 : b[sort.key];
-      return (
-        (typeof av === 'number' && typeof bv === 'number'
-          ? av - bv
-          : String(av).localeCompare(String(bv))) * sort.dir
-      );
-    });
-  }, [category, chain, marketCoins, search, sort, view]);
+      return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByVotes);
+    if (view === 'Presales') return [...list].sort(sortByVotes);
+    return [...list].sort(sortByVotes);
+  }, [category, chain, marketCoins, search, view]);
   const rows = filtered
       .slice((page - 1) * 25, page * 25)
       .map((coin, index) => ({ ...coin, rank: (page - 1) * 25 + index + 1 })),

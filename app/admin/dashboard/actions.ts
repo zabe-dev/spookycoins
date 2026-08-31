@@ -68,6 +68,19 @@ export async function updateAdminUser(formData: FormData) {
   revalidatePath('/admin/dashboard');
 }
 
+export async function deleteAdminUser(formData: FormData) {
+  const adminUser = await requireAdmin();
+  const userId = readRequired(formData, 'userId');
+
+  if (userId === adminUser.id) {
+    throw new Error('You cannot delete your own admin account.');
+  }
+
+  await db.delete(users).where(eq(users.id, userId));
+  await audit(adminUser.id, 'user.deleted', 'user', userId, {});
+  revalidatePath('/admin/dashboard');
+}
+
 export async function updateAdminCoin(formData: FormData) {
   const adminUser = await requireAdmin();
   const coinId = readNumber(formData, 'coinId');
@@ -85,6 +98,16 @@ export async function updateAdminCoin(formData: FormData) {
 
   await audit(adminUser.id, 'coin.updated', 'coin', String(coinId), { listingStatus, category });
   revalidatePath('/admin/dashboard');
+}
+
+export async function deleteAdminCoin(formData: FormData) {
+  const adminUser = await requireAdmin();
+  const coinId = readNumber(formData, 'coinId');
+
+  await db.delete(coins).where(eq(coins.id, coinId));
+  await audit(adminUser.id, 'coin.deleted', 'coin', String(coinId), {});
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/');
 }
 
 export async function updateAdminSubmission(formData: FormData) {

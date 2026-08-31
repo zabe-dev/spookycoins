@@ -41,6 +41,34 @@ export default async function DashboardPage() {
     )
     .orderBy(desc(coinSubmissions.createdAt));
 
+  const deletionRequests = await db
+    .select({
+      coinId: coinSubmissions.coinId,
+      coinData: coinSubmissions.coinData,
+    })
+    .from(coinSubmissions)
+    .where(
+      and(
+        eq(coinSubmissions.requesterEmail, session.user.email),
+        eq(coinSubmissions.submissionType, 'delete-request'),
+        eq(coinSubmissions.status, 'pending'),
+      ),
+    )
+    .orderBy(desc(coinSubmissions.createdAt));
+
+  const pendingDeletionBySubmissionId = new Map<string, string>();
+  const pendingDeletionByCoinId = new Map<number, string>();
+  deletionRequests.forEach((request) => {
+    const data = readDeleteRequestData(request.coinData);
+    if (!data.scheduledDeleteAt) return;
+    if (data.sourceSubmissionId) {
+      pendingDeletionBySubmissionId.set(data.sourceSubmissionId, data.scheduledDeleteAt);
+    }
+    if (typeof request.coinId === 'number') {
+      pendingDeletionByCoinId.set(request.coinId, data.scheduledDeleteAt);
+    }
+  });
+
   const watchedCoins = await db
     .select({
       coinId: coins.id,
@@ -72,8 +100,20 @@ export default async function DashboardPage() {
         }))}
         submissions={submissions.map((submission) => ({
           ...submission,
+          baseStatus: submission.status,
+          status:
+            pendingDeletionBySubmissionId.has(submission.id) ||
+            (typeof submission.coinId === 'number' &&
+              pendingDeletionByCoinId.has(submission.coinId))
+              ? 'suspended'
+              : submission.status,
           createdAt: submission.createdAt.toISOString(),
           coinData: readCoinData(submission.coinData),
+          scheduledDeleteAt:
+            pendingDeletionBySubmissionId.get(submission.id) ||
+            (typeof submission.coinId === 'number'
+              ? pendingDeletionByCoinId.get(submission.coinId)
+              : undefined),
         }))}
       />
       <SiteFooter />
@@ -91,6 +131,14 @@ function readCoinData(value: unknown) {
     name: readString(basic?.name) || readString(record.name),
     symbol: readString(basic?.symbol) || readString(record.symbol),
     chain: readString(market?.primaryChain) || readString(record.chain),
+  };
+}
+
+function readDeleteRequestData(value: unknown) {
+  if (!isRecord(value)) return {};
+  return {
+    sourceSubmissionId: readString(value.sourceSubmissionId),
+    scheduledDeleteAt: readString(value.scheduledDeleteAt),
   };
 }
 

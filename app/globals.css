@@ -3158,6 +3158,18 @@ img.admin-project-logo {
   width: 13px;
   height: 13px;
 }
+.settings-card-actions > span {
+  display: inline-grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #30383e;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #e5eaed;
+  font-size: 10px;
+  font-weight: 850;
+}
 .watchlist-table-wrap {
   overflow-x: auto;
   border: 1px solid #262e33;
@@ -3284,6 +3296,10 @@ img.admin-project-logo {
   background: rgba(203, 255, 74, 0.1);
   color: var(--lime);
 }
+.submission-status.status-suspended {
+  background: rgba(255, 157, 157, 0.1);
+  color: #ffb3b3;
+}
 .submission-actions {
   display: flex;
   align-items: center;
@@ -3308,6 +3324,132 @@ img.admin-project-logo {
 }
 .submission-actions .delete-request {
   color: #ff9d9d;
+}
+.account-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 7, 8, 0.72);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+.account-confirm-modal {
+  position: relative;
+  width: min(430px, 100%);
+  border: 1px solid #2b3338;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 157, 157, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(24, 30, 34, 0.98), rgba(10, 14, 16, 0.98));
+  padding: 26px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
+}
+.account-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #30383e;
+  border-radius: 999px;
+  background: #111719;
+  color: #c6ced2;
+  cursor: pointer;
+}
+.account-modal-close svg,
+.account-modal-icon svg,
+.account-modal-actions svg {
+  width: 15px;
+  height: 15px;
+}
+.account-modal-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255, 157, 157, 0.1);
+  color: #ff9d9d;
+}
+.account-confirm-modal h2 {
+  margin: 18px 0 8px;
+  color: #f2f5f6;
+  font:
+    760 24px/1 var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.04em;
+}
+.account-confirm-modal p {
+  margin: 0;
+  color: #95a0a7;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.account-countdown-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  border: 1px solid rgba(255, 157, 157, 0.18);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 14px;
+}
+.account-countdown-card span {
+  color: #7c878e;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.account-countdown-card strong {
+  color: #fff;
+  font:
+    780 22px/1 var(--font-space-grotesk),
+    sans-serif;
+}
+.account-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 20px;
+}
+.account-modal-actions button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 0 15px;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.account-modal-actions button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+.account-secondary-action {
+  border: 1px solid #30383e;
+  background: #111719;
+  color: #c6ced2;
+}
+.account-danger-action {
+  border: 1px solid rgba(255, 157, 157, 0.36);
+  background: rgba(255, 157, 157, 0.12);
+  color: #ffc2c2;
+}
+.account-restore-action {
+  border: 1px solid rgba(203, 255, 74, 0.3);
+  background: rgba(203, 255, 74, 0.11);
+  color: var(--lime);
+}
+.account-action-spinner {
+  animation: settings-spin 0.8s linear infinite;
 }
 .edit-request-form {
   grid-column: 1 / -1;

@@ -2,6 +2,8 @@
 
 import {
   addPromotedCoin,
+  deleteAdminCoin,
+  deleteAdminUser,
   grantCoinBoost,
   removeCoinBoost,
   removePromotedCoin,
@@ -11,7 +13,6 @@ import {
 } from '@/app/admin/dashboard/actions';
 import {
   Check,
-  Eye,
   ExternalLink,
   Megaphone,
   Pause,
@@ -19,6 +20,7 @@ import {
   Play,
   Search,
   Square,
+  Trash2,
   X,
   Zap,
 } from 'lucide-react';
@@ -201,24 +203,6 @@ function PendingSubmissionsTable({
                 <td>{row.flag || '—'}</td>
                 <td>
                   <ActionGroup>
-                    <DetailsAction
-                      popover={popover}
-                      popoverId={`submission-view-${row.id}`}
-                      title="View submission details"
-                      items={[
-                        ['Project', row.name],
-                        ['Symbol', row.symbol ? `$${row.symbol}` : '—'],
-                        ['Chain', row.chain || '—'],
-                        ['Submitted by', row.submittedBy || '—'],
-                        ['Email', row.contactEmail || '—'],
-                        ['Telegram', row.contactTelegram || '—'],
-                        ['Submitted', row.submittedAt],
-                        ['Status', labelize(row.status)],
-                      ]}
-                    />
-                    <IconOnlyButton title="Edit project details" tone="neutral">
-                      <Pencil aria-hidden="true" />
-                    </IconOnlyButton>
                     <ConfirmAction
                       popover={popover}
                       popoverId={`submission-approve-${row.id}`}
@@ -347,9 +331,17 @@ function ListedCoinsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Po
                       >
                         {suspended ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
                       </ConfirmAction>
-                      <IconOnlyButton title="Edit project details" tone="neutral">
-                        <Pencil aria-hidden="true" />
-                      </IconOnlyButton>
+                      <ConfirmAction
+                        popover={popover}
+                        popoverId={`coin-delete-${row.id}`}
+                        action={deleteAdminCoin}
+                        title="Delete coin"
+                        tone="danger"
+                        message={`Delete ${row.name}? This removes the coin from the database.`}
+                        fields={{ coinId: row.id }}
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </ConfirmAction>
                       <BoostAction row={row} popover={popover} />
                       <PromoteAction row={row} popover={popover} />
                       <ConfirmAction
@@ -394,7 +386,7 @@ function UsersTable({ rows, popover }: { rows: AdminUserRow[]; popover: PopoverC
       eyebrow="Accounts"
       title="User management"
       count={`${rows.length} latest`}
-      note="Users are sorted newest first. Suspension is soft-state only; no account records are deleted."
+      note="Users are sorted newest first. Admins can edit, suspend, or permanently delete accounts."
       rows={rows}
       searchPlaceholder="Search name or email"
       search={(row) => [row.name, row.email, row.role, row.status, row.lastIp]}
@@ -460,6 +452,17 @@ function UsersTable({ rows, popover }: { rows: AdminUserRow[]; popover: PopoverC
                         }}
                       >
                         {suspended ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+                      </ConfirmAction>
+                      <ConfirmAction
+                        popover={popover}
+                        popoverId={`user-delete-${row.id}`}
+                        action={deleteAdminUser}
+                        title="Delete user"
+                        tone="danger"
+                        message={`Delete ${row.email}? This removes the user account from the database.`}
+                        fields={{ userId: row.id }}
+                      >
+                        <Trash2 aria-hidden="true" />
                       </ConfirmAction>
                     </ActionGroup>
                   </td>
@@ -820,71 +823,6 @@ function ConfirmAction({
             </div>
             {feedback && <small className={`admin-confirm-feedback ${status}`}>{feedback}</small>}
           </form>,
-          document.body,
-        )}
-    </span>
-  );
-}
-
-function IconOnlyButton({
-  title,
-  tone,
-  children,
-}: {
-  title: string;
-  tone: 'neutral';
-  children: ReactNode;
-}) {
-  return (
-    <button type="button" className={`admin-icon-button ${tone}`} title={title} aria-label={title}>
-      {children}
-    </button>
-  );
-}
-
-function DetailsAction({
-  popover,
-  popoverId,
-  title,
-  items,
-}: {
-  popover: PopoverController;
-  popoverId: string;
-  title: string;
-  items: Array<[string, string]>;
-}) {
-  const open = popover.activePopoverId === popoverId;
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const popoverPosition = usePopoverPosition(open, buttonRef);
-
-  return (
-    <span className="admin-confirm-wrap">
-      <button
-        ref={buttonRef}
-        type="button"
-        className="admin-icon-button neutral"
-        title={title}
-        aria-label={title}
-        onClick={() => popover.setActivePopoverId(open ? null : popoverId)}
-      >
-        <Eye aria-hidden="true" />
-      </button>
-      {open &&
-        createPortal(
-          <div className="admin-confirm-popover admin-detail-popover" style={popoverPosition}>
-            <strong>{title}</strong>
-            {items.map(([label, value]) => (
-              <p key={label}>
-                <span>{label}</span>
-                <b>{value || '—'}</b>
-              </p>
-            ))}
-            <div>
-              <button type="button" onClick={() => popover.setActivePopoverId(null)}>
-                Close
-              </button>
-            </div>
-          </div>,
           document.body,
         )}
     </span>
