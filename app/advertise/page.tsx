@@ -30,13 +30,13 @@ const promotedRates = [
 ];
 
 const boostRates = [
-  { package: '10×', price: '$39', multiplier: '×2', duration: '24 hours', extra: '—' },
-  { package: '30×', price: '$89', multiplier: '×2', duration: '3 days', extra: '—' },
-  { package: '50×', price: '$149', multiplier: '×3', duration: '24 hours', extra: '—' },
-  { package: '100×', price: '$299', multiplier: '×3', duration: '3 days', extra: '—' },
+  { package: '10×', price: '$19', multiplier: '×2', duration: '24 hours', extra: '—' },
+  { package: '30×', price: '$49', multiplier: '×2', duration: '3 days', extra: '—' },
+  { package: '50×', price: '$79', multiplier: '×3', duration: '24 hours', extra: '—' },
+  { package: '100×', price: '$149', multiplier: '×3', duration: '3 days', extra: '—' },
   {
     package: '500×',
-    price: '$799',
+    price: '$499',
     multiplier: '×5',
     duration: '7 days',
     extra: '+ Golden ticker',
