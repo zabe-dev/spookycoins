@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { TopbarCoinLink } from '@/components/layout/topbar-coin-link';
 import type { TopbarSummary } from '@/features/topbar/types';
+import { useState } from 'react';
 
 export function TopbarMarquee({ summary }: { summary: TopbarSummary }) {
   const [paused, setPaused] = useState(false);
@@ -20,7 +20,13 @@ export function TopbarMarquee({ summary }: { summary: TopbarSummary }) {
         <div className="topbar-marquee-group">
           <TopbarItems summary={summary} />
         </div>
-        <div className="topbar-marquee-group" aria-hidden="true">
+        <div
+          className="topbar-marquee-group"
+          aria-hidden="true"
+          ref={(el) => {
+            if (el) el.inert = true;
+          }}
+        >
           <TopbarItems summary={summary} duplicate />
         </div>
       </div>
