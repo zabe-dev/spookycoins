@@ -73,10 +73,12 @@ export function CoinHero({
             <small>PRICE USD</small>
             <div>
               <strong>{coin.price}</strong>
-              <span className={coin.change >= 0 ? 'positive' : 'negative'}>
-                {coin.change >= 0 ? '+' : ''}
-                {coin.change}%
-              </span>
+              {coin.price !== '—' && (
+                <span className={coin.change >= 0 ? 'positive' : 'negative'}>
+                  {coin.change >= 0 ? '+' : ''}
+                  {coin.change}%
+                </span>
+              )}
             </div>
           </div>
           <div className="coin-primary-actions">

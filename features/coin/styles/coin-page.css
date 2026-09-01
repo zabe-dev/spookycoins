@@ -587,32 +587,17 @@
   align-items: baseline;
   gap: 10px;
 }
-.chart-head small {
+.chart-head strong {
   color: var(--sub);
   font: 500 10px var(--font-fira-mono);
 }
-.chart-head strong {
-  font: 600 20px var(--font-fira-mono);
-}
-.chart-head span {
-  font: 600 10px var(--font-fira-mono);
-}
-.range-tabs {
-  display: flex;
-  gap: 3px;
-}
-.range-tabs button {
-  width: 38px;
-  height: 27px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
+.chart-head > span,
+.chart-head > a {
   color: var(--sub);
-  font: 600 9px var(--font-fira-mono);
-  cursor: pointer;
+  font: 600 10px var(--font-fira-mono);
+  text-decoration: none;
 }
-.range-tabs button.active {
-  background: #20272a;
+.chart-head > a {
   color: var(--lime);
 }
 .price-chart {
@@ -1083,12 +1068,6 @@
   }
   .price-chart {
     height: 280px;
-  }
-  .range-tabs {
-    width: 100%;
-  }
-  .range-tabs button {
-    flex: 1;
   }
   .stat-grid {
     grid-template-columns: repeat(2, 1fr);

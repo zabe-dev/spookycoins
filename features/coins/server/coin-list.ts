@@ -30,6 +30,7 @@ type DbCoinBoost = typeof coinBoosts.$inferSelect;
 type DbCoinPromotion = typeof coinPromotions.$inferSelect;
 type DbCoinLink = typeof coinLinks.$inferSelect;
 type DbCoinSubmission = typeof coinSubmissions.$inferSelect;
+type DexProvider = Extract<DexConfig, { available: true }>['provider'];
 type InteractionSummary = NonNullable<
   Awaited<ReturnType<typeof getCoinInteractionSummaries>> extends Map<number, infer Summary>
     ? Summary
@@ -42,8 +43,9 @@ export async function getPublicCoinListItems(userId?: string | null): Promise<Co
 }
 
 export async function getPublicCoinById(id: number, userId?: string | null): Promise<Coin | null> {
-  const [coin] = await getPublicCoinRecords(id, userId);
-  return coin || null;
+  const coinRecords = await getPublicCoinRecords(undefined, userId);
+  const rankedRecords = rankCoinsByBoostedVotes(coinRecords);
+  return rankedRecords.find((coin) => coin.id === id) || null;
 }
 
 async function getPublicCoinRecords(coinId?: number, userId?: string | null): Promise<Coin[]> {
@@ -164,7 +166,7 @@ function mapDbCoinToCoin({
     submittedAt: coin.submittedAt.toISOString(),
     populatedAt: coin.updatedAt.toISOString(),
     chart: buildChartConfig(links, submission, network, coin.contractAddress || ''),
-    dex: buildDexConfig(dexLink, websiteLink),
+    dex: buildDexConfig(dexLink, websiteLink, submission),
     boost:
       boost && isBoostMultiplier(boost.multiplier)
         ? {
@@ -352,10 +354,31 @@ const dextoolsChainIds: Partial<Record<NetworkId, string>> = {
 function buildDexConfig(
   dexLink: DbCoinLink | undefined,
   websiteLink: DbCoinLink | undefined,
+  submission: DbCoinSubmission | null,
 ): DexConfig {
-  if (dexLink?.url) return { available: true, provider: 'custom', url: dexLink.url };
+  const provider = readSubmissionDexProvider(submission?.coinData);
+  if (dexLink?.url) return { available: true, provider, url: dexLink.url };
   if (websiteLink?.url) return { available: true, provider: 'custom', url: websiteLink.url };
   return { available: false };
+}
+
+function readSubmissionDexProvider(value: unknown): DexProvider {
+  if (!isRecord(value)) return 'custom';
+  const market = isRecord(value.market) ? value.market : {};
+  const dex = isRecord(market.dex) ? market.dex : {};
+  const provider = typeof dex.provider === 'string' ? dex.provider.trim() : '';
+  if (
+    provider === 'uniswap' ||
+    provider === 'pancakeswap' ||
+    provider === 'raydium' ||
+    provider === 'quickswap' ||
+    provider === 'mojitoswap' ||
+    provider === 'cetus' ||
+    provider === 'custom'
+  ) {
+    return provider;
+  }
+  return 'custom';
 }
 
 function toNetworkId(value: string | null): NetworkId {
@@ -388,4 +411,33 @@ function toNumber(value: string | number | null | undefined) {
   if (value === null || value === undefined) return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function rankCoinsByBoostedVotes(coinRecords: Coin[]) {
+  return [...coinRecords]
+    .sort(
+      (a, b) =>
+        boostedWeeklyVotes(b) - boostedWeeklyVotes(a) ||
+        a.name.localeCompare(b.name) ||
+        a.id - b.id,
+    )
+    .map((coin, index) => ({
+      ...coin,
+      market: {
+        ...coin.market,
+        marketRank: index + 1,
+      },
+    }));
+}
+
+function boostedWeeklyVotes(coin: Coin) {
+  const boostPackage = coin.boost.active ? coin.boost.multiplier : null;
+  return coin.community.weeklyVotes * getBoostVoteFactor(boostPackage);
+}
+
+function getBoostVoteFactor(boostPackage: number | null | undefined) {
+  if (boostPackage === 10 || boostPackage === 30) return 2;
+  if (boostPackage === 50 || boostPackage === 100) return 3;
+  if (boostPackage === 500) return 5;
+  return 1;
 }

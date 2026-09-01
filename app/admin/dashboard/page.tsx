@@ -147,6 +147,8 @@ export default async function AdminDashboardPage() {
         submittedAt: formatDateTime(submission.createdAt),
         status: submission.status,
         flag: buildSubmissionFlag(data),
+        details: buildSubmissionDetails(submission.coinData),
+        rawData: JSON.stringify(submission.coinData, null, 2),
       };
     });
 
@@ -271,6 +273,104 @@ function readSubmissionData(value: unknown) {
 function buildSubmissionFlag(data: ReturnType<typeof readSubmissionData>) {
   if (!data.auditUrl) return '';
   return '';
+}
+
+function buildSubmissionDetails(value: unknown) {
+  const root = isRecord(value) ? value : {};
+  const basic = isRecord(root.basic) ? root.basic : {};
+  const logo = isRecord(basic.logo) ? basic.logo : {};
+  const links = isRecord(root.links) ? root.links : {};
+  const market = isRecord(root.market) ? root.market : {};
+  const security = isRecord(root.security) ? root.security : {};
+  const contact = isRecord(root.contact) ? root.contact : {};
+  const chart = isRecord(market.chart) ? market.chart : {};
+  const dex = isRecord(market.dex) ? market.dex : {};
+  const presale = isRecord(market.presale) ? market.presale : {};
+  const contracts = Array.isArray(market.contracts) ? market.contracts : [];
+
+  return [
+    {
+      title: 'Basics',
+      rows: [
+        detail('Name', basic.name),
+        detail('Symbol', basic.symbol),
+        detail('Description', basic.description),
+        detail('Categories', Array.isArray(basic.categories) ? basic.categories.join(', ') : ''),
+        detail('Project type', readString(market.type) === 'presale' ? 'Presale' : 'Launched'),
+        detail('Logo URL', logo.url),
+        detail('Logo file', logo.fileName),
+      ],
+    },
+    {
+      title: 'Links',
+      rows: [
+        detail('Website', links.website),
+        detail('Telegram', links.telegram),
+        detail('X', links.x),
+        detail('Discord', links.discord),
+        detail('GitHub', links.github),
+        detail('Whitepaper', links.whitepaper),
+      ],
+    },
+    {
+      title: 'Market',
+      rows: [
+        detail('Primary chain', market.primaryChain),
+        detail('Contracts', formatContracts(contracts)),
+        detail('Launch date', market.launchDate),
+        detail('Chart provider', chart.provider),
+        detail('Custom Chart Link', chart.customUrl),
+        detail('DEX provider', dex.provider),
+        detail('Custom DEX Link', dex.customUrl),
+      ],
+    },
+    {
+      title: 'Presale',
+      rows: [
+        detail('Presale Website Link', presale.website),
+        detail('Start date', presale.startDate),
+        detail('Start time', presale.startTime),
+        detail('End date', presale.endDate),
+        detail('End time', presale.endTime),
+        detail('Payment token', presale.paymentToken),
+        detail('Soft cap', presale.softCap),
+        detail('Hard cap', presale.hardCap),
+      ],
+    },
+    {
+      title: 'Security',
+      rows: [detail('KYC', security.kycUrl), detail('Audit', security.auditUrl)],
+    },
+    {
+      title: 'Contact',
+      rows: [detail('Email', contact.email), detail('Telegram', contact.telegram)],
+    },
+  ];
+}
+
+function detail(label: string, value: unknown) {
+  return { label, value: formatDetailValue(value) };
+}
+
+function formatContracts(contracts: unknown[]) {
+  if (!contracts.length) return '';
+  return contracts
+    .map((contract, index) => {
+      if (!isRecord(contract)) return '';
+      const chain = readString(contract.chain) || 'No chain';
+      const address = readString(contract.address) || 'No address';
+      return `Contract Address ${index + 1}: ${chain} · ${address}`;
+    })
+    .filter(Boolean)
+    .join('\n');
+}
+
+function formatDetailValue(value: unknown): string {
+  if (Array.isArray(value)) return value.map(formatDetailValue).filter(Boolean).join(', ');
+  if (isRecord(value)) return JSON.stringify(value);
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (typeof value === 'number') return String(value);
+  return readString(value) || '';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

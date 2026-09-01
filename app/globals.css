@@ -2693,6 +2693,134 @@ img.admin-project-logo {
   align-items: center;
   margin-top: 2px;
 }
+.admin-detail-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 7, 8, 0.78);
+  padding: 18px;
+}
+.admin-detail-modal {
+  width: min(980px, 100%);
+  max-height: min(820px, calc(100dvh - 36px));
+  overflow-y: auto;
+  border: 1px solid #30383e;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(22, 27, 31, 0.99), rgba(9, 12, 14, 0.99));
+  padding: 18px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+}
+.admin-detail-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 16px;
+}
+.admin-detail-modal-head small {
+  color: var(--lime);
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.admin-detail-modal-head h2 {
+  margin: 6px 0 4px;
+  color: #f2f4f5;
+  font-size: 24px;
+}
+.admin-detail-modal-head p {
+  margin: 0;
+  color: #87919a;
+  font-size: 11px;
+}
+.admin-detail-modal-head button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #30383e;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  color: #c7d0d5;
+  cursor: pointer;
+}
+.admin-detail-modal-head button svg {
+  width: 16px;
+  height: 16px;
+}
+.admin-detail-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.admin-detail-section {
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 14px;
+}
+.admin-detail-section h3 {
+  margin: 0 0 10px;
+  color: #f0f3f4;
+  font-size: 13px;
+}
+.admin-detail-section p {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+  padding: 10px 0;
+}
+.admin-detail-section p:first-child {
+  border-top: 0;
+}
+.admin-detail-section span {
+  color: #78838b;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.admin-detail-section b {
+  min-width: 0;
+  color: #dce2e5;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.admin-raw-json {
+  margin-top: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 12px;
+}
+.admin-raw-json summary {
+  color: #cdd5da;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.admin-raw-json pre {
+  max-height: 280px;
+  overflow: auto;
+  margin: 12px 0 0;
+  color: #aeb6bb;
+  font-size: 10px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
 .admin-confirm-submit {
   display: inline-flex;
   align-items: center;
@@ -3244,6 +3372,13 @@ img.admin-project-logo {
 @media (max-width: 760px) {
   .public-watchlist-shell {
     width: min(100% - 20px, 1302px);
+  }
+  .admin-detail-sections {
+    grid-template-columns: 1fr;
+  }
+  .admin-detail-section p {
+    grid-template-columns: 1fr;
+    gap: 5px;
   }
 }
 .submission-icon-action {

@@ -13,6 +13,7 @@ import {
 } from '@/app/admin/dashboard/actions';
 import {
   Check,
+  Eye,
   ExternalLink,
   Megaphone,
   Pause,
@@ -57,6 +58,13 @@ export type AdminSubmissionRow = {
   submittedAt: string;
   status: string;
   flag: string;
+  details: AdminSubmissionDetailSection[];
+  rawData: string;
+};
+
+export type AdminSubmissionDetailSection = {
+  title: string;
+  rows: Array<{ label: string; value: string }>;
 };
 
 export type AdminCoinRow = {
@@ -153,94 +161,111 @@ function PendingSubmissionsTable({
   rows: AdminSubmissionRow[];
   popover: PopoverController;
 }) {
+  const [detailRow, setDetailRow] = useState<AdminSubmissionRow | null>(null);
+
   return (
-    <AdminPanel
-      eyebrow="Review queue"
-      title="Pending submissions"
-      count={`${rows.length} pending`}
-      note="Projects waiting for approval. They are not public coins until an admin approves them."
-      rows={rows}
-      searchPlaceholder="Search project, symbol, or chain"
-      search={(row) => [row.name, row.symbol, row.chain, row.contactEmail, row.contactTelegram]}
-      empty="No pending submissions right now."
-      renderTable={(visibleRows) => (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Logo</th>
-              <th>Project Name</th>
-              <th>Symbol</th>
-              <th>Chain</th>
-              <th>Submitted By</th>
-              <th>Contact Email</th>
-              <th>Contact Telegram</th>
-              <th>Date Submitted</th>
-              <th>Status</th>
-              <th>Flag</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleRows.map((row) => (
-              <tr key={row.id}>
-                <td>
-                  <LogoUrlAction logoUrl={row.logoUrl} name={row.name} />
-                </td>
-                <td>
-                  <strong>{row.name}</strong>
-                </td>
-                <td>{row.symbol ? `$${row.symbol}` : '—'}</td>
-                <td>{row.chain || '—'}</td>
-                <td>{row.submittedBy || '—'}</td>
-                <td>{row.contactEmail || '—'}</td>
-                <td>{row.contactTelegram || '—'}</td>
-                <td>{row.submittedAt}</td>
-                <td>
-                  <StatusPill tone={row.status === 'pending' ? 'warning' : 'neutral'}>
-                    {labelize(row.status)}
-                  </StatusPill>
-                </td>
-                <td>{row.flag || '—'}</td>
-                <td>
-                  <ActionGroup>
-                    <ConfirmAction
-                      popover={popover}
-                      popoverId={`submission-approve-${row.id}`}
-                      action={updateAdminSubmission}
-                      title="Approve submission"
-                      tone="success"
-                      message={`Approve ${row.name}? This will mark the submission as approved.`}
-                      fields={{
-                        submissionId: row.id,
-                        status: 'approved',
-                      }}
-                    >
-                      <Check aria-hidden="true" />
-                    </ConfirmAction>
-                    <ConfirmAction
-                      popover={popover}
-                      popoverId={`submission-reject-${row.id}`}
-                      action={updateAdminSubmission}
-                      title="Reject submission"
-                      tone="danger"
-                      message={`Reject ${row.name}? Add the reason so the review trail is clear.`}
-                      fields={{
-                        submissionId: row.id,
-                        status: 'rejected',
-                      }}
-                      reasonName="reviewReason"
-                      reasonPlaceholder="Reason required"
-                    >
-                      <X aria-hidden="true" />
-                    </ConfirmAction>
-                  </ActionGroup>
-                </td>
+    <>
+      <AdminPanel
+        eyebrow="Review queue"
+        title="Pending submissions"
+        count={`${rows.length} pending`}
+        note="Projects waiting for approval. They are not public coins until an admin approves them."
+        rows={rows}
+        searchPlaceholder="Search project, symbol, or chain"
+        search={(row) => [row.name, row.symbol, row.chain, row.contactEmail, row.contactTelegram]}
+        empty="No pending submissions right now."
+        renderTable={(visibleRows) => (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Logo</th>
+                <th>Project Name</th>
+                <th>Symbol</th>
+                <th>Chain</th>
+                <th>Submitted By</th>
+                <th>Contact Email</th>
+                <th>Contact Telegram</th>
+                <th>Date Submitted</th>
+                <th>Status</th>
+                <th>Flag</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    />
+            </thead>
+            <tbody>
+              {visibleRows.map((row) => (
+                <tr key={row.id}>
+                  <td>
+                    <LogoUrlAction logoUrl={row.logoUrl} name={row.name} />
+                  </td>
+                  <td>
+                    <strong>{row.name}</strong>
+                  </td>
+                  <td>{row.symbol ? `$${row.symbol}` : '—'}</td>
+                  <td>{row.chain || '—'}</td>
+                  <td>{row.submittedBy || '—'}</td>
+                  <td>{row.contactEmail || '—'}</td>
+                  <td>{row.contactTelegram || '—'}</td>
+                  <td>{row.submittedAt}</td>
+                  <td>
+                    <StatusPill tone={row.status === 'pending' ? 'warning' : 'neutral'}>
+                      {labelize(row.status)}
+                    </StatusPill>
+                  </td>
+                  <td>{row.flag || '—'}</td>
+                  <td>
+                    <ActionGroup>
+                      <button
+                        type="button"
+                        className="admin-icon-button neutral"
+                        title="View full submission"
+                        aria-label={`View full submission for ${row.name}`}
+                        onClick={() => {
+                          popover.setActivePopoverId(null);
+                          setDetailRow(row);
+                        }}
+                      >
+                        <Eye aria-hidden="true" />
+                      </button>
+                      <ConfirmAction
+                        popover={popover}
+                        popoverId={`submission-approve-${row.id}`}
+                        action={updateAdminSubmission}
+                        title="Approve submission"
+                        tone="success"
+                        message={`Approve ${row.name}? This will mark the submission as approved.`}
+                        fields={{
+                          submissionId: row.id,
+                          status: 'approved',
+                        }}
+                      >
+                        <Check aria-hidden="true" />
+                      </ConfirmAction>
+                      <ConfirmAction
+                        popover={popover}
+                        popoverId={`submission-reject-${row.id}`}
+                        action={updateAdminSubmission}
+                        title="Reject submission"
+                        tone="danger"
+                        message={`Reject ${row.name}? Add the reason so the review trail is clear.`}
+                        fields={{
+                          submissionId: row.id,
+                          status: 'rejected',
+                        }}
+                        reasonName="reviewReason"
+                        reasonPlaceholder="Reason required"
+                      >
+                        <X aria-hidden="true" />
+                      </ConfirmAction>
+                    </ActionGroup>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      />
+      {detailRow && <SubmissionDetailsModal row={detailRow} onClose={() => setDetailRow(null)} />}
+    </>
   );
 }
 
@@ -694,6 +719,67 @@ function UserEditAction({ row, popover }: { row: AdminUserRow; popover: PopoverC
     >
       <Pencil aria-hidden="true" />
     </ConfirmAction>
+  );
+}
+
+function SubmissionDetailsModal({
+  row,
+  onClose,
+}: {
+  row: AdminSubmissionRow;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => document.body.classList.remove('modal-open');
+  }, []);
+
+  return createPortal(
+    <div className="admin-detail-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="admin-detail-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-submission-details-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="admin-detail-modal-head">
+          <div>
+            <small>Full submission</small>
+            <h2 id="admin-submission-details-title">{row.name}</h2>
+            <p>
+              {row.symbol ? `$${row.symbol}` : 'No symbol'} · {row.chain || 'No chain'} ·{' '}
+              {row.submittedAt}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close submission details">
+            <X aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="admin-detail-sections">
+          {row.details.map((section) => (
+            <section className="admin-detail-section" key={section.title}>
+              <h3>{section.title}</h3>
+              <div>
+                {section.rows.map((item) => (
+                  <p key={`${section.title}-${item.label}`}>
+                    <span>{item.label}</span>
+                    <b>{item.value || '—'}</b>
+                  </p>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <details className="admin-raw-json">
+          <summary>Raw submission JSON</summary>
+          <pre>{row.rawData}</pre>
+        </details>
+      </section>
+    </div>,
+    document.body,
   );
 }
 

@@ -181,28 +181,26 @@ export function HomeClient({
   }, [hotspotsVisible]);
   const hotspotCoins = (() => {
     void hotspotRefresh;
-    const withLocalVotes = marketCoins.filter((coin) => !coin.promoted);
 
     return {
-      recent: [...withLocalVotes]
+      recent: [...marketCoins]
         .filter(isLaunchedRecentlyCandidate)
         .sort(sortByNewestLaunch)
         .slice(0, 4),
-      trending: [...withLocalVotes]
+      trending: [...marketCoins]
         .filter((coin) => coin.trendingScore > 0)
         .sort(sortByTrendingScore)
         .slice(0, 4),
-      presales: [...withLocalVotes]
+      presales: [...marketCoins]
         .filter((coin) => coin.lifecycle === 'presale')
         .sort(sortByPresaleEnd)
         .slice(0, 4),
-      watched: [...withLocalVotes].sort(sortByWatchCount).slice(0, 4),
+      watched: [...marketCoins].sort(sortByWatchCount).slice(0, 4),
     };
   })();
   const filtered = useMemo(() => {
     const list = marketCoins.filter(
       (c) =>
-        !c.promoted &&
         (view === 'Presale coins' ? c.lifecycle === 'presale' : true) &&
         (category === 'All' || c.category === category) &&
         (chain === 'All chains' || c.chain === chain) &&

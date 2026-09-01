@@ -91,7 +91,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
   return {
     coinId: coin.id,
     externalId: coin.externalId,
-    rank: coin.promoted.active ? coin.promoted.priority : (coin.market.marketRank ?? index + 1),
+    rank: coin.market.marketRank ?? index + 1,
     name: coin.name,
     symbol: coin.symbol,
     lifecycle: coin.lifecycle,

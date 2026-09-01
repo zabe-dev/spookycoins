@@ -48,7 +48,16 @@ export type ChartConfig =
 export type DexConfig =
   | {
       available: true;
-      provider: 'dexscreener' | 'geckoterminal' | 'custom';
+      provider:
+        | 'dexscreener'
+        | 'geckoterminal'
+        | 'uniswap'
+        | 'pancakeswap'
+        | 'raydium'
+        | 'quickswap'
+        | 'mojitoswap'
+        | 'cetus'
+        | 'custom';
       url: string;
       pairAddress?: string;
     }
