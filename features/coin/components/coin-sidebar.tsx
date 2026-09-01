@@ -2,8 +2,8 @@
 
 import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import { BoltIcon } from '@/features/coins/components';
-import Link from 'next/link';
 import { Pencil } from 'lucide-react';
+import Link from 'next/link';
 import type { CoinDetailView } from '../types';
 import { Info } from './detail-card';
 
@@ -67,7 +67,7 @@ export function CoinSidebar({
           <div className="boost-card-copy">
             <small>ACTIVE BOOST</small>
             <h3>{coin.boost}× vote boost</h3>
-            <p>This coin is getting extra vote power while the package is active.</p>
+            <p>This coin gets extra voting power while the boost is active.</p>
           </div>
         </section>
       ) : (
@@ -78,7 +78,7 @@ export function CoinSidebar({
           <div>
             <small>BOOST VISIBILITY</small>
             <h3>Boost this coin</h3>
-            <p>Put this project in front of more hunters with a voting boost package.</p>
+            <p>Boost this project and make every vote count for more.</p>
           </div>
           <Link href="/advertise">View boost packages ↗</Link>
         </section>
