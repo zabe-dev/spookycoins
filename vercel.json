@@ -2,11 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm ci",
-  "crons": [
-    {
-      "path": "/api/market/sync",
-      "schedule": "0 0 * * *"
-    }
-  ]
+  "installCommand": "npm ci"
 }
