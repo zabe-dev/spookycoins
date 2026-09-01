@@ -2,6 +2,7 @@
 
 import { VoteButton } from '@/components/ui/action-buttons';
 import { BoltIcon } from '@/features/coins/components';
+import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 import type { CoinDetailView } from '../types';
 import { Info } from './detail-card';
@@ -46,14 +47,28 @@ export function CoinSidebar({
         />
         <small className="vote-rule">Vote for each coin once every 12 hours.</small>
       </section>
-      {coin.boost && (
+      {coin.boost ? (
         <section className="detail-card boost-card-detail">
-          <BoltIcon />
-          <div>
-            <small>ACTIVE PROMOTION</small>
-            <h3>{coin.boost}× boost</h3>
+          <div className="boost-card-icon" aria-hidden="true">
+            <BoltIcon />
           </div>
-          <button>Boost coin ↗</button>
+          <div className="boost-card-copy">
+            <small>ACTIVE BOOST</small>
+            <h3>{coin.boost}× vote boost</h3>
+            <p>This coin is getting extra vote power while the package is active.</p>
+          </div>
+        </section>
+      ) : (
+        <section className="detail-card boost-cta-card">
+          <div className="boost-card-icon" aria-hidden="true">
+            <BoltIcon />
+          </div>
+          <div>
+            <small>BOOST VISIBILITY</small>
+            <h3>Boost this coin</h3>
+            <p>Put this project in front of more hunters with a voting boost package.</p>
+          </div>
+          <Link href="/advertise">View boost packages ↗</Link>
         </section>
       )}
       <section className="detail-card quick-info">

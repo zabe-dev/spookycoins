@@ -1,8 +1,8 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
-import Link from 'next/link';
 import { formatVotes, type CoinListItem as Coin } from '@/features/coins/view';
+import Link from 'next/link';
 import { BoltIcon, DiscoveryIcon } from './icons';
 
 export function DiscoveryCard({
@@ -94,7 +94,7 @@ function Metric({
                 : coin.votes,
           )}
         </b>
-        <span>{metric === 'watchlist' ? 'watches' : 'this week'}</span>
+        <span>{metric === 'watchlist' ? 'watchlists' : 'this week'}</span>
       </strong>
     );
   }
