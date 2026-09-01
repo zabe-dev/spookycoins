@@ -2,9 +2,9 @@ import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import {
   PublicWatchlistTable,
-  type AccountWatchedCoin,
+  type PublicWatchedCoin,
 } from '@/features/account/components/account-panel';
-import { NETWORKS } from '@/features/coins/networks';
+import { getPublicCoinListItems } from '@/features/coins/server/coin-list';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
 import { db } from '@/lib/db/client';
@@ -30,10 +30,6 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
   const watchedCoins = await db
     .select({
       coinId: coins.id,
-      name: coins.name,
-      symbol: coins.symbol,
-      chain: coins.chain,
-      logoUrl: coins.logoUrl,
       createdAt: coinWatchlists.createdAt,
     })
     .from(coinWatchlists)
@@ -45,11 +41,22 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
       throw error;
     });
 
-  const rows: AccountWatchedCoin[] = watchedCoins.map((coin) => ({
-    ...coin,
-    ...readChainData(coin.chain),
-    createdAt: coin.createdAt.toISOString(),
-  }));
+  const savedAtByCoinId = new Map(
+    watchedCoins.map((coin) => [coin.coinId, coin.createdAt.toISOString()]),
+  );
+  const watchedOrder = new Map(watchedCoins.map((coin, index) => [coin.coinId, index]));
+  const fullCoins = watchedCoins.length ? await getPublicCoinListItems() : [];
+  const rows: PublicWatchedCoin[] = fullCoins
+    .filter((coin) => savedAtByCoinId.has(coin.coinId))
+    .map((coin) => ({
+      ...coin,
+      savedAt: savedAtByCoinId.get(coin.coinId) || coin.submittedTimestamp,
+    }))
+    .sort(
+      (a, b) =>
+        (watchedOrder.get(a.coinId) ?? Number.MAX_SAFE_INTEGER) -
+        (watchedOrder.get(b.coinId) ?? Number.MAX_SAFE_INTEGER),
+    );
 
   return (
     <main className="market-page">
@@ -81,16 +88,4 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
       <SiteFooter />
     </main>
   );
-}
-
-function readChainData(value: string | null) {
-  if (value && value in NETWORKS) {
-    const network = NETWORKS[value as keyof typeof NETWORKS];
-    return {
-      chain: network.shortName,
-      chainIcon: network.iconUrl,
-    };
-  }
-
-  return { chain: value, chainIcon: null };
 }

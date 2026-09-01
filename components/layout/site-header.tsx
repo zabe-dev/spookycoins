@@ -1,12 +1,13 @@
-'use client';
-
+import { Suspense } from 'react';
 import { Navbar } from '@/components/layout/navbar';
-import { Topbar } from '@/components/layout/topbar';
+import { Topbar, TopbarFallback } from '@/components/layout/topbar';
 
 export function SiteHeader({ active = 'discover' }: { active?: 'discover' | 'none' }) {
   return (
     <>
-      <Topbar />
+      <Suspense fallback={<TopbarFallback />}>
+        <Topbar />
+      </Suspense>
       <Navbar active={active} />
     </>
   );

@@ -1,88 +1,69 @@
-'use client';
+import { TopbarItems, TopbarMarquee } from '@/components/layout/topbar-marquee';
+import { TopbarCoinLink } from '@/components/layout/topbar-coin-link';
+import { getTopbarSummary } from '@/features/topbar/server/summary';
+import type { TopbarSummary } from '@/features/topbar/types';
 
-import { useState } from 'react';
+const loadingSummary: TopbarSummary = {
+  prices: [
+    { symbol: 'BTC', price: null, change: null },
+    { symbol: 'ETH', price: null, change: null },
+    { symbol: 'SOL', price: null, change: null },
+    { symbol: 'BNB', price: null, change: null },
+  ],
+  users: null,
+  projects: null,
+  totalVotes: null,
+  trendingCoin: null,
+  topVotedCoin: null,
+};
 
-type MarketTicker = { symbol: string; price: number | null; change: number | null };
+export async function Topbar() {
+  const summary = await getTopbarSummary();
+  return <TopbarShell summary={summary} />;
+}
 
-const mockTickers: MarketTicker[] = [
-  { symbol: 'BTC', price: 113240.18, change: 1.42 },
-  { symbol: 'ETH', price: 4385.72, change: 2.08 },
-  { symbol: 'BNB', price: 862.34, change: -0.36 },
-];
+export function TopbarFallback() {
+  return <TopbarShell summary={loadingSummary} />;
+}
 
-export function Topbar() {
-  const [paused, setPaused] = useState(false);
-
+function TopbarShell({ summary }: { summary: TopbarSummary }) {
   return (
     <div className="topbar-band">
       <div className="container topbar">
         <div className="ticker">
-          <TickerItems tickers={mockTickers} />
+          <TopbarItems summary={summary} pricesOnly />
         </div>
         <div className="platform-stats">
-          <span>
-            Coins <b>14,892</b>
-          </span>
-          <span>
-            Users <b>84.2K</b>
-          </span>
-          <span>
-            Total votes <b>12.48M</b>
-          </span>
+          <TopbarPlatformItems summary={summary} />
         </div>
-        <div
-          className={`topbar-marquee ${paused ? 'paused' : ''}`}
-          onPointerDown={() => setPaused(true)}
-          onPointerUp={() => setPaused(false)}
-          onPointerCancel={() => setPaused(false)}
-          onPointerLeave={() => setPaused(false)}
-          aria-label="Live market and platform statistics. Hold to pause or swipe to browse."
-        >
-          <div className="topbar-marquee-track">
-            <div className="topbar-marquee-group">
-              <TickerItems tickers={mockTickers} />
-              <PlatformItems />
-            </div>
-            <div className="topbar-marquee-group" aria-hidden="true">
-              <TickerItems tickers={mockTickers} />
-              <PlatformItems />
-            </div>
-          </div>
-        </div>
+        <TopbarMarquee summary={summary} />
       </div>
     </div>
   );
 }
 
-function TickerItems({ tickers }: { tickers: MarketTicker[] }) {
-  return tickers.map((coin) => (
-    <span key={coin.symbol}>
-      {coin.symbol} <b>{formatTickerPrice(coin.price)}</b>{' '}
-      <i className={(coin.change ?? 0) < 0 ? 'down' : ''}>
-        {(coin.change ?? 0) >= 0 ? '+' : ''}
-        {(coin.change ?? 0).toFixed(2)}%
-      </i>
-    </span>
-  ));
-}
-
-function PlatformItems() {
+function TopbarPlatformItems({ summary }: { summary: TopbarSummary }) {
   return (
     <>
+      <TopbarCoinLink coin={summary.topVotedCoin} kind="top-voted" />
+      <TopbarCoinLink coin={summary.trendingCoin} kind="trending" />
       <span>
-        Coins <b>14,892</b>
+        Users <b>{formatCompactNumber(summary.users)}</b>
       </span>
       <span>
-        Users <b>84.2K</b>
+        Projects <b>{formatCompactNumber(summary.projects)}</b>
       </span>
       <span>
-        Total votes <b>12.48M</b>
+        Total votes <b>{formatCompactNumber(summary.totalVotes)}</b>
       </span>
     </>
   );
 }
 
-function formatTickerPrice(value: number | null) {
+function formatCompactNumber(value: number | null) {
   if (value === null) return '—';
-  return `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  return Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: value >= 1000 ? 1 : 0,
+  }).format(value);
 }

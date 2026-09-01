@@ -1,7 +1,6 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
-import { SiteHeader } from '@/components/layout/site-header';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import {
   BannerAd as Ad,
@@ -369,7 +368,6 @@ export function HomeClient({
   };
   return (
     <main className={adVisible ? 'market-page with-bottom-ad' : 'market-page'}>
-      <SiteHeader />
       <div className="container ad-grid">
         <Ad />
         <div className="desktop-only">

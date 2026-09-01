@@ -50,11 +50,13 @@
 .topbar-band,
 .nav-band {
   width: 100%;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
 }
 .topbar-band {
-  background: var(--page);
+  background: var(--page, #080a0c);
+}
+.nav-band {
+  background: var(--surface, #0d1013);
 }
 .topbar {
   height: 34px;
@@ -62,21 +64,67 @@
   align-items: center;
   justify-content: space-between;
   font-size: 9px;
-  color: var(--sub);
+  color: var(--sub, var(--muted));
 }
 .ticker,
 .platform-stats {
+  align-items: center;
   display: flex;
   gap: 22px;
 }
 .ticker span,
-.platform-stats span {
+.platform-stats span,
+.topbar-coin-link {
+  align-items: center;
   display: flex;
   gap: 6px;
 }
 .ticker b,
-.platform-stats b {
-  color: var(--copy);
+.platform-stats b,
+.topbar-coin-link b {
+  color: var(--copy, var(--text));
+}
+.topbar-coin-link {
+  color: var(--sub, var(--muted));
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.18s ease;
+}
+.topbar-coin-label {
+  color: var(--sub, var(--muted));
+}
+.topbar-flame-icon {
+  width: 13px;
+  height: 13px;
+  color: #ff9d28;
+  fill: rgba(255, 157, 40, 0.22);
+}
+.topbar-crown-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--gold);
+  fill: rgba(255, 197, 47, 0.2);
+}
+.topbar-coin-link:hover {
+  color: #fff;
+}
+.topbar-coin-logo {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 5px;
+  background: #161c20;
+  color: var(--lime);
+  font-size: 8px;
+  font-weight: 850;
+  object-fit: cover;
+}
+.topbar-coin-logo {
+  background: transparent;
+}
+.topbar-coin-logo-fallback {
+  background: #161c20;
 }
 .ticker i {
   font-style: normal;
@@ -111,10 +159,10 @@
   display: none;
   width: 36px;
   height: 36px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border, var(--line));
   border-radius: 8px;
-  background: var(--surface2);
-  color: var(--copy);
+  background: var(--surface2, #111519);
+  color: var(--copy, var(--text));
   cursor: pointer;
 }
 .mobile-menu-btn span {
@@ -140,10 +188,10 @@
 .theme-btn {
   width: 36px;
   height: 36px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border, var(--line));
   border-radius: 8px;
-  background: var(--surface2);
-  color: var(--copy);
+  background: var(--surface2, #111519);
+  color: var(--copy, var(--text));
   cursor: pointer;
 }
 .ad-grid {
@@ -783,10 +831,10 @@
     margin-left: 0;
     padding: 0;
     overflow: hidden;
-    border: 0 solid var(--border);
+    border: 0 solid var(--border, var(--line));
     border-radius: 12px;
     background:
-      linear-gradient(180deg, rgba(26, 31, 34, 0.98), rgba(12, 16, 18, 0.98)), var(--page);
+      linear-gradient(180deg, rgba(26, 31, 34, 0.98), rgba(12, 16, 18, 0.98)), var(--page, #080a0c);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
     transition:
       max-height 0.22s ease,
@@ -808,7 +856,7 @@
     border: 0;
     border-radius: 9px;
     background: transparent;
-    color: var(--copy);
+    color: var(--copy, var(--text));
     text-align: left;
     font: inherit;
     font-weight: 750;
@@ -857,7 +905,7 @@
     font-size: 11px;
   }
   .mobile-user-card small {
-    color: var(--sub);
+    color: var(--sub, var(--muted));
     font-size: 9px;
   }
   .mobile-menu-account .logout-action {
@@ -867,7 +915,7 @@
     color: #ff8f8f;
   }
   .navbar nav a.active {
-    background: var(--surface2);
+    background: var(--surface2, #111519);
   }
   .navbar nav a:hover,
   .mobile-menu-account button:hover {
@@ -929,12 +977,15 @@
     gap: 22px;
     padding-right: 22px;
   }
-  .topbar-marquee-group > span {
+  .topbar-marquee-group > span,
+  .topbar-marquee-group > a {
     display: flex;
+    align-items: center;
     gap: 6px;
     white-space: nowrap;
   }
-  .topbar-marquee-group b {
+  .topbar-marquee-group b,
+  .topbar-marquee-group a b {
     color: var(--copy);
   }
   .topbar-marquee-group i {

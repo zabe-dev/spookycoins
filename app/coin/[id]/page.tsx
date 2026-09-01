@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { SiteHeader } from '@/components/layout/site-header';
 import { CoinDetailPage } from '@/features/coin/components/coin-detail-page';
 import { getPublicCoinById } from '@/features/coins/server/coin-list';
 import { NETWORKS } from '@/features/coins/networks';
@@ -50,5 +51,10 @@ export default async function CoinPage({ params }: CoinPageParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
-  return <CoinDetailPage coinRecord={coin} isSignedIn={Boolean(session?.user)} />;
+  return (
+    <>
+      <SiteHeader active="none" />
+      <CoinDetailPage coinRecord={coin} isSignedIn={Boolean(session?.user)} />
+    </>
+  );
 }

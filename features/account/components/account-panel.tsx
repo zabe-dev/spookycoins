@@ -14,6 +14,8 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { CoinCells } from '@/features/coins/components/coin-table';
+import type { CoinListItem } from '@/features/coins/view';
 
 export type AccountSubmission = {
   id: string;
@@ -34,6 +36,10 @@ export type AccountWatchedCoin = {
   chainIcon: string | null;
   logoUrl: string | null;
   createdAt: string;
+};
+
+export type PublicWatchedCoin = CoinListItem & {
+  savedAt: string;
 };
 
 export function AccountPanel({
@@ -216,21 +222,41 @@ function WatchedCoinRow({ coin }: { coin: AccountWatchedCoin }) {
   );
 }
 
-export function PublicWatchlistTable({ coins }: { coins: AccountWatchedCoin[] }) {
+export function PublicWatchlistTable({ coins }: { coins: PublicWatchedCoin[] }) {
   return (
-    <div className="watchlist-table-wrap">
-      <table className="watchlist-table">
+    <div className="table-wrap public-watchlist-table-wrap">
+      <table className="coins-table public-watchlist-table">
         <thead>
           <tr>
+            <th>#</th>
             <th>Coin</th>
-            <th>Chain</th>
+            <th>Market cap</th>
+            <th>Price</th>
+            <th>24h</th>
+            <th>Launch</th>
+            <th>Boost</th>
+            <th>Weekly votes</th>
+            <th>Submitted</th>
             <th>Saved</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {coins.map((coin) => (
-            <WatchedCoinRow key={coin.coinId} coin={coin} />
+            <tr key={coin.coinId} className={coin.boost ? 'boosted-row' : ''}>
+              <CoinCells coin={coin} />
+              <td className="muted-cell">{new Date(coin.savedAt).toLocaleDateString()}</td>
+              <td>
+                <Link
+                  className="submission-icon-action"
+                  href={`/coin/${coin.coinId}`}
+                  aria-label={`View ${coin.name}`}
+                  title={`View ${coin.name}`}
+                >
+                  <ExternalLink aria-hidden="true" />
+                </Link>
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>

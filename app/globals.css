@@ -3166,9 +3166,10 @@ img.admin-project-logo {
   border: 1px solid #30383e;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.035);
-  color: #e5eaed;
-  font-size: 10px;
-  font-weight: 850;
+  color: #78838b;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
 }
 .watchlist-table-wrap {
   overflow-x: auto;
@@ -3216,6 +3217,15 @@ img.admin-project-logo {
   object-fit: contain;
 }
 .watchlist-table .submission-icon-action {
+  margin-left: auto;
+}
+.public-watchlist-table-wrap {
+  width: 100%;
+}
+.public-watchlist-table {
+  min-width: 1080px;
+}
+.public-watchlist-table .submission-icon-action {
   margin-left: auto;
 }
 .submission-icon-action {

@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
-import { SiteHeader } from '@/components/layout/site-header';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import type { Coin } from '@/features/coins/types';
 import { getBoostVoteFactor, toCoinListItem } from '@/features/coins/view';
@@ -148,8 +147,6 @@ export function CoinDetailPage({
 
   return (
     <main className="market-page coin-detail-page">
-      <SiteHeader active="none" />
-
       <div className="container coin-breadcrumb">
         <Link href="/">Coins</Link>
         <span>/</span>
