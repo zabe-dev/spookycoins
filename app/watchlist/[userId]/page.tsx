@@ -61,7 +61,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
   return (
     <main className="market-page">
       <SiteHeader active="none" />
-      <section className="container settings-shell account-shell">
+      <section className="container settings-shell account-shell public-watchlist-shell">
         <header className="account-heading">
           <h1>Public watchlist</h1>
           <p>Coins saved by {owner.email}. Anyone with this link can view this table.</p>

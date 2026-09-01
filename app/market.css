@@ -298,10 +298,30 @@
   margin-top: 18px;
 }
 .discovery-card {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   overflow: hidden;
+}
+.discovery-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--hotspot-data, #9ba5ac),
+    rgba(255, 255, 255, 0.78),
+    var(--hotspot-data, #9ba5ac),
+    transparent
+  );
+  background-size: 220% 100%;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--hotspot-data, #9ba5ac) 55%, transparent);
+  opacity: 0.88;
+  animation: hotspot-glow-sweep 5.8s ease-in-out infinite;
 }
 .discovery-card > div:first-child {
   padding: 15px 16px;
@@ -337,7 +357,7 @@
 .mini-coin {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   padding: 11px 14px;
   border-bottom: 1px solid var(--border);
   color: inherit;
@@ -385,18 +405,33 @@
   min-width: 0;
 }
 .mini-coin strong {
-  display: block;
   max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 10px;
 }
+.mini-coin-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mini-coin-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .mini-coin small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 7px;
   color: var(--sub);
 }
 .mini-coin-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
   flex: 0 0 auto;
   border: 0;
   border-radius: 0;
@@ -404,12 +439,53 @@
   padding: 0;
   font-size: 9px;
   font-weight: 850;
-  color: #9ba5ac;
+  color: var(--hotspot-data, #9ba5ac);
   white-space: nowrap;
 }
-.mini-coin:hover .mini-coin-metric,
+.mini-coin-votes b {
+  color: #cfd4d7;
+  font-size: 12px;
+  line-height: 1;
+}
+.mini-coin-votes span {
+  color: #677078;
+  font-size: 7px;
+  font-weight: 600;
+  line-height: 1;
+}
 .mini-coin:hover > span > strong {
   color: #fff;
+}
+.mini-boost.boost-badge {
+  flex: 0 0 auto;
+  padding: 2px 4px;
+  font-style: normal;
+  font-size: 7px;
+  line-height: 1;
+}
+.mini-boost .bolt-icon {
+  width: 0.7em;
+}
+.discovery-card-new {
+  --hotspot-data: #63d8ff;
+}
+.discovery-card-trend {
+  --hotspot-data: #ffc52f;
+}
+.discovery-card-presale {
+  --hotspot-data: #bfa3ff;
+}
+.discovery-card-watch {
+  --hotspot-data: #f47eac;
+}
+@keyframes hotspot-glow-sweep {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 .wide-banner {
   min-height: 92px;
@@ -1292,8 +1368,8 @@
   background: #10252b;
 }
 .trend-icon {
-  color: #f0b90b;
-  background: #241e0d;
+  color: #bfa3ff;
+  background: #211934;
 }
 .top-icon {
   color: #ffc52f;

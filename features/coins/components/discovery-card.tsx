@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { formatVotes, type CoinListItem as Coin } from '@/features/coins/view';
-import { DiscoveryIcon } from './icons';
+import { BoltIcon, DiscoveryIcon } from './icons';
 
 export function DiscoveryCard({
   icon,
@@ -23,7 +23,7 @@ export function DiscoveryCard({
   const rows = Array.from({ length: 4 }, (_, index) => coins[index] || null);
 
   return (
-    <article className="discovery-card">
+    <article className={`discovery-card discovery-card-${icon}`}>
       <div className="discovery-heading">
         <DiscoveryIcon type={icon} />
         <span>
@@ -42,14 +42,22 @@ export function DiscoveryCard({
               {coin.image ? <img src={coin.image} alt="" /> : coin.logo}
             </div>
             <span>
-              <strong>{coin.name}</strong>
+              <strong
+                className={`mini-coin-name ${coin.boost === 500 ? 'gold-name gold-name-animated' : ''}`}
+              >
+                <span>{coin.name}</span>
+                {coin.boost && (
+                  <em className={`mini-boost boost-badge boost-${coin.boost}`}>
+                    <BoltIcon />
+                    {coin.boost}×
+                  </em>
+                )}
+              </strong>
               <small>
                 {coin.symbol} · {coin.chain}
               </small>
             </span>
-            <strong className={`mini-coin-metric metric-${metric}`}>
-              {formatMetric(coin, metric)}
-            </strong>
+            <Metric coin={coin} metric={metric} />
           </Link>
         ) : (
           <div className="mini-coin mini-coin-empty" key={`empty-${index}`}>
@@ -67,6 +75,35 @@ export function DiscoveryCard({
   );
 }
 
+function Metric({
+  coin,
+  metric,
+}: {
+  coin: Coin;
+  metric: 'votes' | 'launch' | 'presaleEnd' | 'watchlist' | 'trend';
+}) {
+  if (metric === 'trend' || metric === 'votes' || metric === 'watchlist') {
+    return (
+      <strong className={`mini-coin-metric mini-coin-votes metric-${metric}`}>
+        <b>
+          {formatVotes(
+            metric === 'watchlist'
+              ? coin.watchCount
+              : metric === 'trend'
+                ? coin.recentVotes
+                : coin.votes,
+          )}
+        </b>
+        <span>{metric === 'watchlist' ? 'watches' : 'this week'}</span>
+      </strong>
+    );
+  }
+
+  return (
+    <strong className={`mini-coin-metric metric-${metric}`}>{formatMetric(coin, metric)}</strong>
+  );
+}
+
 function formatMetric(
   coin: Coin,
   metric: 'votes' | 'launch' | 'presaleEnd' | 'watchlist' | 'trend',
@@ -75,7 +112,5 @@ function formatMetric(
   if (metric === 'presaleEnd')
     return coin.presaleEnd === '—' ? 'No end date' : `${coin.presaleEnd}`;
   if (metric === 'watchlist') return `${formatVotes(coin.watchCount)} watches`;
-  if (metric === 'trend')
-    return `${formatVotes(coin.recentVotes)} votes · ${formatVotes(coin.recentWatchlistAdds)} watches`;
   return `${formatVotes(coin.votes)} votes`;
 }

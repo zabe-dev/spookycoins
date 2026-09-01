@@ -24,6 +24,7 @@ import {
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
 
@@ -93,6 +94,7 @@ export function HomeClient({
   const [categoryEdges, setCategoryEdges] = useState({ left: false, right: true });
   const [chainMenuOpen, setChainMenuOpen] = useState(false);
   const selectedChainChoice = coinChainChoices.find((choice) => choice.label === chain);
+  const router = useRouter();
   const [hotspotsVisible, setHotspotsVisible] = useState(true),
     [hotspotIndex, setHotspotIndex] = useState(0);
   useEffect(() => {
@@ -210,10 +212,10 @@ export function HomeClient({
     if (view === 'Trending coins')
       return [...list].filter((coin) => coin.trendingScore > 0).sort(sortByTrendingScore);
     if (view === 'Most watched')
-      return [...list].filter((coin) => coin.watchCount > 0).sort(sortByVotes);
+      return [...list].filter((coin) => coin.watchCount > 0).sort(sortByWatchCount);
     if (view === 'Launched recently')
-      return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByVotes);
-    if (view === 'Presale coins') return [...list].sort(sortByVotes);
+      return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByNewestLaunch);
+    if (view === 'Presale coins') return [...list].sort(sortByPresaleEnd);
     return [...list].sort(sortByVotes);
   }, [category, chain, marketCoins, search, view]);
   const displayedCoins = useMemo(
@@ -669,7 +671,15 @@ export function HomeClient({
               {rows.map((c) => {
                 const has = voted.includes(c.coinId);
                 return (
-                  <tr key={c.coinId} className={c.boost ? 'boosted-row' : ''}>
+                  <tr
+                    key={c.coinId}
+                    className={`${c.boost ? 'boosted-row' : ''} clickable-coin-row`}
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (target.closest('a, button')) return;
+                      router.push(`/coin/${c.coinId}`);
+                    }}
+                  >
                     <Cells coin={c} />
                     <td>
                       <Watch

@@ -706,7 +706,7 @@ export const TurnstileSlot = forwardRef<
               element: HTMLElement,
               options: {
                 sitekey: string;
-                size?: 'normal' | 'compact' | 'flexible' | 'invisible';
+                size?: 'normal' | 'compact' | 'flexible';
                 execution?: 'render' | 'execute';
                 callback: (token: string) => void;
                 'error-callback': () => void;
@@ -721,7 +721,7 @@ export const TurnstileSlot = forwardRef<
       if (!turnstile || !ref.current) return false;
       widgetIdRef.current = turnstile.render(ref.current, {
         sitekey: siteKey,
-        size: 'invisible',
+        size: 'normal',
         execution: 'execute',
         callback: (nextToken: string) => {
           onTokenRef.current(nextToken);

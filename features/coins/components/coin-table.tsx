@@ -1,8 +1,9 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import {
   formatVotes,
@@ -141,6 +142,14 @@ export function CoinTable({
   className,
   coinLinks = true,
 }: CoinTableProps) {
+  const router = useRouter();
+
+  function openCoinRow(event: MouseEvent<HTMLTableRowElement>, coinId: number) {
+    const target = event.target as HTMLElement;
+    if (target.closest('a, button')) return;
+    router.push(`/coin/${coinId}`);
+  }
+
   return (
     <TableScroller className={className}>
       <table className="coins-table">
@@ -165,7 +174,11 @@ export function CoinTable({
           {coins.map((coin) => {
             const hasVoted = voted.includes(coin.coinId);
             return (
-              <tr key={coin.coinId} className={coin.boost ? 'boosted-row' : ''}>
+              <tr
+                key={coin.coinId}
+                className={`${coin.boost ? 'boosted-row' : ''} clickable-coin-row`}
+                onClick={(event) => openCoinRow(event, coin.coinId)}
+              >
                 <CoinCells coin={coin} linkEnabled={coinLinks} />
                 <td>
                   <WatchlistButton

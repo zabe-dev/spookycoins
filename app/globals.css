@@ -1028,6 +1028,9 @@ tbody tr td {
 tbody tr:hover td {
   background-color: #12171a;
 }
+.clickable-coin-row {
+  cursor: pointer;
+}
 .boosted-row {
   background: linear-gradient(90deg, rgba(255, 197, 47, 0.025), transparent 30%);
 }
@@ -3221,12 +3224,27 @@ img.admin-project-logo {
 }
 .public-watchlist-table-wrap {
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 .public-watchlist-table {
-  min-width: 1080px;
+  width: 100%;
+  min-width: 1302px;
 }
 .public-watchlist-table .submission-icon-action {
   margin-left: auto;
+}
+.public-watchlist-shell {
+  max-width: 1302px;
+  width: min(1302px, calc(100% - 32px));
+}
+.public-watchlist-shell .settings-card {
+  overflow: hidden;
+}
+@media (max-width: 760px) {
+  .public-watchlist-shell {
+    width: min(100% - 20px, 1302px);
+  }
 }
 .submission-icon-action {
   display: inline-grid;

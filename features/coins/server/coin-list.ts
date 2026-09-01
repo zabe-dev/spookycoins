@@ -269,7 +269,9 @@ function buildChartEmbedUrl(provider: string, network: NetworkId, address: strin
 
   if (provider === 'dexscreener') {
     const chain = dexscreenerChainIds[network];
-    return chain ? `https://dexscreener.com/${chain}/${encodedAddress}?embed=1&theme=dark` : '';
+    return chain
+      ? `https://dexscreener.com/${chain}/${encodedAddress}?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15`
+      : '';
   }
 
   if (provider === 'geckoterminal') {
