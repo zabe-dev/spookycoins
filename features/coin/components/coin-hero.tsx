@@ -1,7 +1,6 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
-import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import { BoltIcon } from '@/features/coins/components';
 import type { CoinDetailView } from '../types';
 import { CoinSocialActions } from './coin-social-actions';
@@ -10,24 +9,12 @@ export function CoinHero({
   coin,
   contractAddress,
   contractCopied,
-  voted,
-  watched,
-  voteAnimating,
-  watchAnimating,
   onCopyContract,
-  onToggleWatch,
-  onVote,
 }: {
   coin: CoinDetailView;
   contractAddress: string;
   contractCopied: boolean;
-  voted: boolean;
-  watched: boolean;
-  voteAnimating: boolean;
-  watchAnimating: boolean;
   onCopyContract: () => void;
-  onToggleWatch: () => void;
-  onVote: () => void;
 }) {
   return (
     <section className="container coin-hero">
@@ -80,20 +67,6 @@ export function CoinHero({
                 </span>
               )}
             </div>
-          </div>
-          <div className="coin-primary-actions">
-            <WatchlistButton
-              active={watched}
-              animating={watchAnimating}
-              onClick={onToggleWatch}
-              appearance="detail"
-            />
-            <VoteButton
-              active={voted}
-              animating={voteAnimating}
-              onClick={onVote}
-              appearance="detail"
-            />
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ const fallbackPrices = symbols.map((symbol) => ({ symbol, price: null, change: n
 const providerState = globalThis as typeof globalThis & {
   spookycoinsTopbarPriceFetches?: number[];
   spookycoinsTopbarPriceInFlight?: Promise<TopbarPriceTicker[]>;
+  spookycoinsTopbarLastGoodPrices?: TopbarPriceTicker[];
 };
 
 const requestTimeoutMs = 4_000;
@@ -23,6 +24,16 @@ const cacheSeconds = Number(process.env.TOPBAR_PRICE_CACHE_SECONDS || 120);
 const binanceBaseUrl =
   process.env.TOPBAR_BINANCE_API_BASE_URL ||
   `https://${process.env.BINANCE_PROXY_HOST || 'api.binance.com'}`;
+const binanceFallbackBaseUrls = [
+  binanceBaseUrl,
+  ...(
+    process.env.TOPBAR_BINANCE_FALLBACK_BASE_URLS ||
+    'https://api.binance.com,https://data-api.binance.vision'
+  )
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean),
+].filter((url, index, list) => list.indexOf(url) === index);
 
 export const getCachedTopbarPrices = unstable_cache(
   () => getSafeTopbarPrices(),
@@ -32,9 +43,11 @@ export const getCachedTopbarPrices = unstable_cache(
 
 async function getSafeTopbarPrices(): Promise<TopbarPriceTicker[]> {
   try {
-    return await dedupeFetch('topbar-market-prices', fetchMarketPrices);
+    const prices = await dedupeFetch('topbar-market-prices', fetchMarketPrices);
+    if (hasPriceData(prices)) providerState.spookycoinsTopbarLastGoodPrices = prices;
+    return hasPriceData(prices) ? prices : getLastGoodPrices();
   } catch {
-    return fallbackPrices;
+    return getLastGoodPrices();
   }
 }
 
@@ -49,6 +62,15 @@ async function fetchMarketPrices(): Promise<TopbarPriceTicker[]> {
 async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
   if (!canUsePriceProvider()) return fallbackPrices;
 
+  for (const baseUrl of binanceFallbackBaseUrls) {
+    const prices = await fetchBinancePricesFromBaseUrl(baseUrl);
+    if (hasPriceData(prices)) return prices;
+  }
+
+  return fallbackPrices;
+}
+
+async function fetchBinancePricesFromBaseUrl(baseUrl: string): Promise<TopbarPriceTicker[]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
 
@@ -57,7 +79,7 @@ async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
       // VERCEL WAS BLOCKING API CALLS FROM SERVER TO BINANCE SO I PROXIED IT TROUGH MY VPS
       // TO NOT DELETE THIS COMMENT
       // MAYBE ADD FALLBACKS
-      `${binanceBaseUrl.replace(/\/$/, '')}/api/v3/ticker/24hr?symbols=${encodeURIComponent(
+      `${baseUrl.replace(/\/$/, '')}/api/v3/ticker/24hr?symbols=${encodeURIComponent(
         JSON.stringify(binanceSymbols),
       )}`,
       {
@@ -90,6 +112,8 @@ async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
     );
 
     return symbols.map((symbol) => tickers.get(symbol) || { symbol, price: null, change: null });
+  } catch {
+    return fallbackPrices;
   } finally {
     clearTimeout(timeout);
   }
@@ -161,4 +185,10 @@ function readNumber(value: unknown) {
 
 function hasPriceData(prices: TopbarPriceTicker[]) {
   return prices.some((price) => price.price !== null);
+}
+
+function getLastGoodPrices() {
+  return hasPriceData(providerState.spookycoinsTopbarLastGoodPrices || [])
+    ? providerState.spookycoinsTopbarLastGoodPrices!
+    : fallbackPrices;
 }

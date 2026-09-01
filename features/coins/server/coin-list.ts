@@ -12,6 +12,7 @@ import {
 import { NETWORKS } from '@/features/coins/networks';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getCoinInteractionSummaries } from '@/features/coins/server/interactions';
+import { refreshStaleMarketSnapshots } from '@/features/coins/server/market-sync';
 import type {
   BoostMultiplier,
   Coin,
@@ -64,11 +65,7 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
 
   const coinIds = coinRows.map((coin) => coin.id);
   const [snapshotRows, boostRows, promotionRows, linkRows, submissionRows] = await Promise.all([
-    db
-      .select()
-      .from(marketSnapshots)
-      .where(inArray(marketSnapshots.coinId, coinIds))
-      .orderBy(desc(marketSnapshots.recordedAt)),
+    selectLatestMarketSnapshots(coinIds),
     db
       .select()
       .from(coinBoosts)
@@ -105,6 +102,8 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
   ]);
 
   const snapshotByCoin = firstByCoinId(snapshotRows);
+  const refreshedSnapshots = await refreshStaleMarketSnapshots(coinRows, snapshotByCoin);
+  refreshedSnapshots.forEach((snapshot, coinId) => snapshotByCoin.set(coinId, snapshot));
   const boostByCoin = firstByCoinId(boostRows);
   const promotionByCoin = firstByCoinId(promotionRows);
   const linksByCoin = groupLinksByCoinId(linkRows);
@@ -190,6 +189,10 @@ function mapDbCoinToCoin({
       marketCapUsd: toNumber(snapshot?.marketCapUsd),
       volume24hUsd: toNumber(snapshot?.volume24hUsd),
       change24h: toNumber(snapshot?.change24h),
+      liquidityUsd: toNumber(snapshot?.liquidityUsd),
+      fdvUsd: toNumber(snapshot?.fdvUsd),
+      totalSupply: toNumber(snapshot?.totalSupply),
+      holdersCount: snapshot?.holdersCount ?? null,
       marketRank: snapshot?.marketRank ?? index + 1,
       lastUpdatedAt: snapshot?.recordedAt.toISOString() ?? null,
     },
@@ -238,6 +241,41 @@ function groupLinksByCoinId(rows: DbCoinLink[]) {
     map.set(row.coinId, links);
   });
   return map;
+}
+
+async function selectLatestMarketSnapshots(coinIds: number[]): Promise<DbMarketSnapshot[]> {
+  return db
+    .select()
+    .from(marketSnapshots)
+    .where(inArray(marketSnapshots.coinId, coinIds))
+    .orderBy(desc(marketSnapshots.recordedAt))
+    .catch((error) => {
+      if (!isMissingMarketSnapshotColumnError(error)) throw error;
+      return db
+        .select({
+          id: marketSnapshots.id,
+          coinId: marketSnapshots.coinId,
+          priceUsd: marketSnapshots.priceUsd,
+          marketCapUsd: marketSnapshots.marketCapUsd,
+          volume24hUsd: marketSnapshots.volume24hUsd,
+          change24h: marketSnapshots.change24h,
+          liquidityUsd: sql<null>`null`,
+          fdvUsd: sql<null>`null`,
+          totalSupply: sql<null>`null`,
+          holdersCount: sql<null>`null`,
+          marketRank: marketSnapshots.marketRank,
+          recordedAt: marketSnapshots.recordedAt,
+        })
+        .from(marketSnapshots)
+        .where(inArray(marketSnapshots.coinId, coinIds))
+        .orderBy(desc(marketSnapshots.recordedAt));
+    });
+}
+
+function isMissingMarketSnapshotColumnError(error: unknown): boolean {
+  if (!isRecord(error)) return false;
+  if (error.code === '42703') return true;
+  return isMissingMarketSnapshotColumnError(error.cause);
 }
 
 function buildChartConfig(

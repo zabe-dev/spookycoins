@@ -43,6 +43,13 @@
       "when": 1788159600000,
       "tag": "0005_persistent_votes_watchlists",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788277200000,
+      "tag": "0006_market_snapshot_mobula_fields",
+      "breakpoints": true
     }
   ]
 }

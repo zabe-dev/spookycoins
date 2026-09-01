@@ -1,0 +1,37 @@
+import { syncMobulaMarketData } from '@/features/coins/server/market-sync';
+import { NextResponse } from 'next/server';
+
+export async function GET(request: Request) {
+  if (!isAuthorizedSyncRequest(request)) {
+    return NextResponse.json(
+      {
+        status: 'error',
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Market sync is not available for this request.',
+        },
+        data: null,
+      },
+      { status: 401 },
+    );
+  }
+
+  const url = new URL(request.url);
+  const limit = Number(url.searchParams.get('limit') || process.env.MARKET_DATA_SYNC_LIMIT || 1);
+  const result = await syncMobulaMarketData(limit);
+
+  return NextResponse.json({
+    status: 'success',
+    error: null,
+    data: result,
+  });
+}
+
+function isAuthorizedSyncRequest(request: Request) {
+  const secret = process.env.MARKET_SYNC_SECRET;
+  const providedSecret = new URL(request.url).searchParams.get('secret');
+  const userAgent = request.headers.get('user-agent') || '';
+
+  if (secret) return providedSecret === secret;
+  return userAgent.toLowerCase().includes('vercel-cron');
+}

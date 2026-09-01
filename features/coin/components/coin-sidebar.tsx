@@ -1,6 +1,6 @@
 'use client';
 
-import { VoteButton } from '@/components/ui/action-buttons';
+import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import { BoltIcon } from '@/features/coins/components';
 import Link from 'next/link';
 import { Pencil } from 'lucide-react';
@@ -10,14 +10,20 @@ import { Info } from './detail-card';
 export function CoinSidebar({
   coin,
   voted,
+  watched,
   voteAnimating,
+  watchAnimating,
   onVote,
+  onToggleWatch,
   onOpenChangeRequest,
 }: {
   coin: CoinDetailView;
   voted: boolean;
+  watched: boolean;
   voteAnimating: boolean;
+  watchAnimating: boolean;
   onVote: () => void;
+  onToggleWatch: () => void;
   onOpenChangeRequest: () => void;
 }) {
   return (
@@ -44,6 +50,12 @@ export function CoinSidebar({
           onClick={onVote}
           appearance="sidebar"
           coinName={coin.symbol}
+        />
+        <WatchlistButton
+          active={watched}
+          animating={watchAnimating}
+          onClick={onToggleWatch}
+          appearance="detail"
         />
         <small className="vote-rule">Vote for each coin once every 12 hours.</small>
       </section>

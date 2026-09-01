@@ -165,13 +165,7 @@ export function CoinDetailPage({
         coin={coin}
         contractAddress={contractAddress}
         contractCopied={contractCopied}
-        voted={voted}
-        watched={watched}
-        voteAnimating={voteAnimating}
-        watchAnimating={watchAnimating}
         onCopyContract={copyContract}
-        onToggleWatch={toggleWatch}
-        onVote={vote}
       />
 
       {notice && (
@@ -191,8 +185,11 @@ export function CoinDetailPage({
         <CoinSidebar
           coin={coin}
           voted={voted}
+          watched={watched}
           voteAnimating={voteAnimating}
+          watchAnimating={watchAnimating}
           onVote={vote}
+          onToggleWatch={toggleWatch}
           onOpenChangeRequest={() => setChangeRequestOpen(true)}
         />
       </div>

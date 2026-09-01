@@ -89,6 +89,10 @@ export type CoinMarketData = {
   marketCapUsd: number | null;
   volume24hUsd: number | null;
   change24h: number | null;
+  liquidityUsd: number | null;
+  fdvUsd: number | null;
+  totalSupply: number | null;
+  holdersCount: number | null;
   marketRank: number | null;
   lastUpdatedAt: string | null;
 };

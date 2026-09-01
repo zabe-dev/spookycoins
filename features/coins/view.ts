@@ -19,6 +19,8 @@ export type CoinListItem = {
   color: string;
   cap: string;
   capN: number;
+  fdv: string;
+  liquidity: string;
   volume24h: string;
   price: string;
   change: number;
@@ -26,6 +28,8 @@ export type CoinListItem = {
   launchTimestamp: string | null;
   presaleEnd: string;
   presaleEndTimestamp: string | null;
+  totalSupply: string;
+  holders: string;
   boost?: number;
   promoted: boolean;
   rawVotes: number;
@@ -104,6 +108,8 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     color: coin.promoted.active ? 'yellow' : logoColors[coin.id % logoColors.length],
     cap: formatMoney(coin.market.marketCapUsd),
     capN: marketCap,
+    fdv: formatMoney(coin.market.fdvUsd),
+    liquidity: formatMoney(coin.market.liquidityUsd),
     volume24h: formatMoney(coin.market.volume24hUsd),
     price: formatPrice(priceUsd),
     change,
@@ -118,6 +124,8 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     launchTimestamp: coin.launchDate,
     presaleEnd: coin.presaleEndDate ? formatTimeUntil(coin.presaleEndDate) : '—',
     presaleEndTimestamp: coin.presaleEndDate,
+    totalSupply: formatTokenAmount(coin.market.totalSupply),
+    holders: formatCompactNumber(coin.market.holdersCount),
     ...(boostPackage ? { boost: boostPackage } : {}),
     promoted: coin.promoted.active,
     rawVotes,
@@ -157,6 +165,22 @@ function formatMoney(value: number | null) {
     currency: 'USD',
     notation: 'compact',
     maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatCompactNumber(value: number | null) {
+  if (value === null) return '—';
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+function formatTokenAmount(value: number | null) {
+  if (value === null) return '—';
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: value >= 1_000 ? 2 : 4,
   }).format(value);
 }
 
