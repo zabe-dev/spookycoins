@@ -37,6 +37,11 @@ export type CoinCategory =
 export type ChartConfig =
   | { source: 'market'; externalId: string }
   | { source: 'dex'; network: NetworkId; poolAddress: string }
+  | {
+      source: 'embed';
+      provider: 'dexscreener' | 'geckoterminal' | 'dextools' | 'coinbrain';
+      url: string;
+    }
   | { source: 'external'; url: string }
   | { source: 'unavailable' };
 

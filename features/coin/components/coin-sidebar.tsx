@@ -42,7 +42,7 @@ export function CoinSidebar({
           animating={voteAnimating}
           onClick={onVote}
           appearance="sidebar"
-          coinName={coin.name}
+          coinName={coin.symbol}
         />
         <small className="vote-rule">Vote for each coin once every 12 hours.</small>
       </section>

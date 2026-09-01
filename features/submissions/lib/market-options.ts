@@ -25,7 +25,8 @@ export function providerOptions(kind: 'chart' | 'dex', chain: SubmissionNetwork)
     polygon: [
       ...commonNone,
       { value: 'dexscreener', label: 'DexScreener' },
-      { value: 'polychart', label: 'Polychart' },
+      { value: 'geckoterminal', label: 'GeckoTerminal' },
+      { value: 'dextools', label: 'DEXTools' },
       { value: 'custom', label: 'Custom Link' },
     ],
     avalanche: [...commonNone, { value: 'custom', label: 'Custom Link' }],

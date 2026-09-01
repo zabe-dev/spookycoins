@@ -459,6 +459,26 @@
   position: relative;
   overflow: visible;
 }
+.coin-primary-actions .action-button,
+.sidebar-vote.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.coin-primary-actions .detail-watch > span:last-child,
+.coin-primary-actions .detail-vote .action-button__label,
+.sidebar-vote .action-button__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  line-height: 1;
+}
+.coin-primary-actions .detail-watch svg,
+.coin-primary-actions .detail-vote svg,
+.sidebar-vote svg {
+  flex: 0 0 auto;
+}
 .coin-primary-actions .detail-watch {
   width: 112px;
   min-width: 112px;
@@ -599,6 +619,15 @@
   height: 340px;
   position: relative;
   overflow: hidden;
+}
+.chart-embed-wrap {
+  background: #050708;
+}
+.chart-embed-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
 }
 .chart-grid {
   position: absolute;

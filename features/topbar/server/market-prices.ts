@@ -1,10 +1,16 @@
 import 'server-only';
 
-import { unstable_cache } from 'next/cache';
 import type { TopbarPriceTicker } from '@/features/topbar/types';
+import { unstable_cache } from 'next/cache';
 
 const symbols = ['BTC', 'ETH', 'SOL', 'BNB'] as const;
 const binanceSymbols = symbols.map((symbol) => `${symbol}USDT`);
+const coinGeckoIds = {
+  BTC: 'bitcoin',
+  ETH: 'ethereum',
+  SOL: 'solana',
+  BNB: 'binancecoin',
+} satisfies Record<(typeof symbols)[number], string>;
 const fallbackPrices = symbols.map((symbol) => ({ symbol, price: null, change: null }));
 const providerState = globalThis as typeof globalThis & {
   spookycoinsTopbarPriceFetches?: number[];
@@ -14,6 +20,7 @@ const providerState = globalThis as typeof globalThis & {
 const requestTimeoutMs = 4_000;
 const maxRequestsPerDay = Number(process.env.TOPBAR_PRICE_DAILY_LIMIT || 480);
 const cacheSeconds = Number(process.env.TOPBAR_PRICE_CACHE_SECONDS || 120);
+const binanceHost = process.env.BINANCE_PROXY_HOST || 'api.binance.com';
 
 export const getCachedTopbarPrices = unstable_cache(
   () => getSafeTopbarPrices(),
@@ -23,10 +30,18 @@ export const getCachedTopbarPrices = unstable_cache(
 
 async function getSafeTopbarPrices(): Promise<TopbarPriceTicker[]> {
   try {
-    return await dedupeFetch('binance-topbar-prices', () => fetchBinancePrices());
+    return await dedupeFetch('topbar-market-prices', fetchMarketPrices);
   } catch {
     return fallbackPrices;
   }
+}
+
+async function fetchMarketPrices(): Promise<TopbarPriceTicker[]> {
+  const binancePrices = await fetchBinancePrices();
+  if (hasPriceData(binancePrices)) return binancePrices;
+
+  const coinGeckoPrices = await fetchCoinGeckoPrices();
+  return hasPriceData(coinGeckoPrices) ? coinGeckoPrices : fallbackPrices;
 }
 
 async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
@@ -37,7 +52,7 @@ async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
 
   try {
     const response = await fetch(
-      `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(
+      `https://${binanceHost}/api/v3/ticker/24hr?symbols=${encodeURIComponent(
         JSON.stringify(binanceSymbols),
       )}`,
       {
@@ -75,6 +90,38 @@ async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
   }
 }
 
+async function fetchCoinGeckoPrices(): Promise<TopbarPriceTicker[]> {
+  if (!canUsePriceProvider()) return fallbackPrices;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
+
+  try {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${Object.values(coinGeckoIds).join(',')}&vs_currencies=usd&include_24hr_change=true`,
+      {
+        headers: { accept: 'application/json' },
+        next: { revalidate: cacheSeconds },
+        signal: controller.signal,
+      },
+    );
+
+    if (!response.ok) return fallbackPrices;
+
+    const payload = await response.json();
+    return symbols.map((symbol) => {
+      const item = payload[coinGeckoIds[symbol]];
+      return {
+        symbol,
+        price: readNumber(item?.usd),
+        change: readNumber(item?.usd_24h_change),
+      };
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function dedupeFetch(_key: string, fetcher: () => Promise<TopbarPriceTicker[]>) {
   if (providerState.spookycoinsTopbarPriceInFlight) {
     return providerState.spookycoinsTopbarPriceInFlight;
@@ -105,4 +152,8 @@ function canUsePriceProvider() {
 function readNumber(value: unknown) {
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
+}
+
+function hasPriceData(prices: TopbarPriceTicker[]) {
+  return prices.some((price) => price.price !== null);
 }

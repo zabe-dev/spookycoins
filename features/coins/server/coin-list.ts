@@ -163,7 +163,7 @@ function mapDbCoinToCoin({
     presaleEndDate: readPresaleEndDate(submission?.coinData),
     submittedAt: coin.submittedAt.toISOString(),
     populatedAt: coin.updatedAt.toISOString(),
-    chart: buildChartConfig(links),
+    chart: buildChartConfig(links, submission, network, coin.contractAddress || ''),
     dex: buildDexConfig(dexLink, websiteLink),
     boost:
       boost && isBoostMultiplier(boost.multiplier)
@@ -238,11 +238,114 @@ function groupLinksByCoinId(rows: DbCoinLink[]) {
   return map;
 }
 
-function buildChartConfig(links: Map<string, DbCoinLink>): Coin['chart'] {
+function buildChartConfig(
+  links: Map<string, DbCoinLink>,
+  submission: DbCoinSubmission | null,
+  network: NetworkId,
+  contractAddress: string,
+): Coin['chart'] {
   const chart = links.get('chart');
   if (chart?.url) return { source: 'external', url: chart.url };
+
+  const provider = readSubmissionChartProvider(submission?.coinData);
+  const chartUrl = buildChartEmbedUrl(provider, network, contractAddress);
+  if (chartUrl && isEmbeddableChartProvider(provider)) {
+    return { source: 'embed', provider, url: chartUrl };
+  }
+
   return { source: 'unavailable' };
 }
+
+function readSubmissionChartProvider(value: unknown) {
+  if (!isRecord(value)) return '';
+  const market = isRecord(value.market) ? value.market : {};
+  const chart = isRecord(market.chart) ? market.chart : {};
+  return typeof chart.provider === 'string' ? chart.provider.trim() : '';
+}
+
+function buildChartEmbedUrl(provider: string, network: NetworkId, address: string) {
+  if (!address) return '';
+  const encodedAddress = encodeURIComponent(address);
+
+  if (provider === 'dexscreener') {
+    const chain = dexscreenerChainIds[network];
+    return chain ? `https://dexscreener.com/${chain}/${encodedAddress}?embed=1&theme=dark` : '';
+  }
+
+  if (provider === 'geckoterminal') {
+    const chain = geckoTerminalChainIds[network];
+    return chain
+      ? `https://www.geckoterminal.com/${chain}/pools/${encodedAddress}?embed=1&info=0&swaps=0`
+      : '';
+  }
+
+  if (provider === 'dextools') {
+    const chain = dextoolsChainIds[network];
+    return chain
+      ? `https://www.dextools.io/widget-chart/en/${chain}/pe-light/${encodedAddress}?theme=dark&chartType=1&chartResolution=30&drawingToolbars=false&chartInUsd=true`
+      : '';
+  }
+
+  return '';
+}
+
+function isEmbeddableChartProvider(
+  provider: string,
+): provider is 'dexscreener' | 'geckoterminal' | 'dextools' | 'coinbrain' {
+  return (
+    provider === 'dexscreener' ||
+    provider === 'geckoterminal' ||
+    provider === 'dextools' ||
+    provider === 'coinbrain'
+  );
+}
+
+const dexscreenerChainIds: Partial<Record<NetworkId, string>> = {
+  ethereum: 'ethereum',
+  bsc: 'bsc',
+  solana: 'solana',
+  polygon: 'polygon',
+  avalanche: 'avalanche',
+  arbitrum: 'arbitrum',
+  base: 'base',
+  optimism: 'optimism',
+  dogecoin: 'dogechain',
+  tron: 'tron',
+  fantom: 'fantom',
+  kcc: 'kcc',
+  sui: 'sui',
+  hood: 'robinhood',
+  xrpl: 'xrpl',
+};
+
+const geckoTerminalChainIds: Partial<Record<NetworkId, string>> = {
+  ethereum: 'eth',
+  bsc: 'bsc',
+  solana: 'solana',
+  polygon: 'polygon_pos',
+  avalanche: 'avax',
+  arbitrum: 'arbitrum',
+  base: 'base',
+  optimism: 'optimism',
+  fantom: 'ftm',
+  kcc: 'kcc',
+  sui: 'sui-network',
+};
+
+const dextoolsChainIds: Partial<Record<NetworkId, string>> = {
+  ethereum: 'ether',
+  bsc: 'bnb',
+  solana: 'solana',
+  polygon: 'polygon',
+  avalanche: 'avalanche',
+  arbitrum: 'arbitrum',
+  base: 'base',
+  optimism: 'optimism',
+  tron: 'tron',
+  sui: 'sui',
+  hood: 'robinhood',
+  xrpl: 'xrpl',
+};
 
 function buildDexConfig(
   dexLink: DbCoinLink | undefined,
