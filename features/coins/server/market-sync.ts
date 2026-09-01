@@ -1,14 +1,15 @@
 import 'server-only';
 
+import type { NetworkId } from '@/features/coins/types';
 import { db } from '@/lib/db/client';
 import { coins, marketSnapshots } from '@/lib/db/schema';
-import type { NetworkId } from '@/features/coins/types';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 
 type MarketSyncCoin = Pick<
   typeof coins.$inferSelect,
   'id' | 'chain' | 'contractAddress' | 'listingStatus'
 >;
+
 type MarketSnapshotRow = typeof marketSnapshots.$inferSelect;
 
 type MobulaTokenDetails = {
@@ -51,6 +52,9 @@ const defaultSyncLimit = Number(process.env.MARKET_DATA_SYNC_LIMIT || 1);
 const requestSpacingMs = Math.max(1_050, Number(process.env.MOBULA_REQUEST_SPACING_MS || 1_050));
 const lockId = 880_550_110;
 
+// Log tag so these are easy to grep in server logs.
+const LOG_TAG = '[mobula-sync]';
+
 export async function refreshStaleMarketSnapshots(
   coinRows: MarketSyncCoin[],
   latestSnapshots: Map<number, MarketSnapshotRow>,
@@ -67,11 +71,24 @@ export async function refreshStaleMarketSnapshots(
       })
       .slice(0, defaultSyncLimit);
 
-    if (!staleCoins.length) return new Map<number, MarketSnapshotRow>();
+    if (!staleCoins.length) {
+      console.log(
+        `${LOG_TAG} nothing stale to refresh (checked ${coinRows.length} coins, all within ${cacheSeconds}s cache window or not eligible)`,
+      );
+      return new Map<number, MarketSnapshotRow>();
+    }
+
+    console.log(
+      `${LOG_TAG} refreshing ${staleCoins.length} stale coin(s): ${staleCoins.map((c) => c.id).join(', ')}`,
+    );
 
     return await runDedupeSync(() => syncCoinMarketData(staleCoins));
   } catch (error) {
-    if (isMissingMarketSnapshotColumnError(error)) return new Map<number, MarketSnapshotRow>();
+    if (isMissingMarketSnapshotColumnError(error)) {
+      console.warn(`${LOG_TAG} market_snapshots column missing, skipping sync`, error);
+      return new Map<number, MarketSnapshotRow>();
+    }
+    console.error(`${LOG_TAG} refreshStaleMarketSnapshots failed`, error);
     throw error;
   }
 }
@@ -85,7 +102,10 @@ export async function syncMobulaMarketData(limit = defaultSyncLimit) {
     .limit(Math.max(1, Math.min(60, limit)));
 
   const coinIds = coinRows.map((coin) => coin.id);
-  if (!coinIds.length) return { checked: 0, updated: 0 };
+  if (!coinIds.length) {
+    console.log(`${LOG_TAG} no active coins with a contract address found`);
+    return { checked: 0, updated: 0 };
+  }
 
   const snapshotRows = await db
     .select()
@@ -95,11 +115,16 @@ export async function syncMobulaMarketData(limit = defaultSyncLimit) {
   const latestByCoin = firstByCoinId(snapshotRows);
   const refreshed = await refreshStaleMarketSnapshots(coinRows, latestByCoin);
 
+  console.log(`${LOG_TAG} sync complete: checked ${coinRows.length}, updated ${refreshed.size}`);
+
   return { checked: coinRows.length, updated: refreshed.size };
 }
 
 async function runDedupeSync(fetcher: () => Promise<Map<number, MarketSnapshotRow>>) {
-  if (syncState.spookycoinsMobulaInFlight) return syncState.spookycoinsMobulaInFlight;
+  if (syncState.spookycoinsMobulaInFlight) {
+    console.log(`${LOG_TAG} sync already in flight, reusing existing promise`);
+    return syncState.spookycoinsMobulaInFlight;
+  }
 
   syncState.spookycoinsMobulaInFlight = withAdvisoryLock(fetcher).finally(() => {
     syncState.spookycoinsMobulaInFlight = undefined;
@@ -113,7 +138,10 @@ async function withAdvisoryLock(fetcher: () => Promise<Map<number, MarketSnapsho
     sql`select pg_try_advisory_lock(${lockId}) as locked`,
   );
   const locked = Boolean(lockRows[0]?.locked);
-  if (!locked) return new Map<number, MarketSnapshotRow>();
+  if (!locked) {
+    console.log(`${LOG_TAG} could not acquire advisory lock ${lockId}, another sync is running`);
+    return new Map<number, MarketSnapshotRow>();
+  }
 
   try {
     return await fetcher();
@@ -125,13 +153,33 @@ async function withAdvisoryLock(fetcher: () => Promise<Map<number, MarketSnapsho
 async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
   const refreshed = new Map<number, MarketSnapshotRow>();
 
+  if (!process.env.MOBULA_API_KEY) {
+    console.warn(`${LOG_TAG} MOBULA_API_KEY is not set, skipping all ${coinRows.length} coin(s)`);
+    return refreshed;
+  }
+
   for (const coin of coinRows) {
     const chainId = getMobulaChainId(coin.chain);
     const address = coin.contractAddress?.trim();
-    if (!chainId || !address) continue;
+
+    if (!chainId) {
+      console.warn(
+        `${LOG_TAG} coin ${coin.id}: no Mobula chain mapping for chain "${coin.chain}", skipping`,
+      );
+      continue;
+    }
+    if (!address) {
+      console.warn(`${LOG_TAG} coin ${coin.id}: missing contract address, skipping`);
+      continue;
+    }
 
     const details = await fetchMobulaTokenDetails(chainId, address);
-    if (!details) continue;
+    if (!details) {
+      console.warn(
+        `${LOG_TAG} coin ${coin.id}: no data returned from Mobula for ${chainId}/${address}`,
+      );
+      continue;
+    }
 
     const [snapshot] = await db
       .insert(marketSnapshots)
@@ -149,7 +197,14 @@ async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
       })
       .returning();
 
-    if (snapshot) refreshed.set(coin.id, snapshot);
+    if (snapshot) {
+      refreshed.set(coin.id, snapshot);
+      console.log(
+        `${LOG_TAG} coin ${coin.id}: snapshot inserted (price=${snapshot.priceUsd ?? 'null'})`,
+      );
+    } else {
+      console.warn(`${LOG_TAG} coin ${coin.id}: insert returned no row`);
+    }
   }
 
   return refreshed;
@@ -178,11 +233,28 @@ async function fetchMobulaTokenDetails(chainId: string, address: string) {
       cache: 'no-store',
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      console.warn(
+        `${LOG_TAG} Mobula request failed: ${response.status} ${response.statusText} for ${chainId}/${address} — ${body.slice(0, 300)}`,
+      );
+      return null;
+    }
 
     const payload = await response.json();
-    return isRecord(payload?.data) ? (payload.data as MobulaTokenDetails) : null;
-  } catch {
+    if (!isRecord(payload?.data)) {
+      console.warn(
+        `${LOG_TAG} Mobula response missing "data" for ${chainId}/${address}: ${JSON.stringify(payload).slice(0, 300)}`,
+      );
+      return null;
+    }
+    return payload.data as MobulaTokenDetails;
+  } catch (error) {
+    const isAbort = error instanceof Error && error.name === 'AbortError';
+    console.warn(
+      `${LOG_TAG} Mobula request ${isAbort ? 'timed out' : 'threw'} for ${chainId}/${address}`,
+      isAbort ? '' : error,
+    );
     return null;
   } finally {
     clearTimeout(timeout);
