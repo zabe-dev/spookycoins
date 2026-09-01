@@ -30,8 +30,11 @@ export async function GET(request: Request) {
 function isAuthorizedSyncRequest(request: Request) {
   const secret = process.env.MARKET_SYNC_SECRET;
   const providedSecret = new URL(request.url).searchParams.get('secret');
+  const authorization = request.headers.get('authorization') || '';
   const userAgent = request.headers.get('user-agent') || '';
 
-  if (secret) return providedSecret === secret;
+  if (providedSecret && secret && providedSecret === secret) return true;
+  if (secret && authorization === `Bearer ${secret}`) return true;
+  if (secret) return false;
   return userAgent.toLowerCase().includes('vercel-cron');
 }

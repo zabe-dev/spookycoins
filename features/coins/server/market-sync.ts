@@ -54,10 +54,17 @@ const lockId = 880_550_110;
 export async function refreshStaleMarketSnapshots(
   coinRows: MarketSyncCoin[],
   latestSnapshots: Map<number, MarketSnapshotRow>,
+  priorityCoinId?: number,
 ) {
   try {
     const staleCoins = coinRows
       .filter((coin) => shouldRefreshCoin(coin, latestSnapshots.get(coin.id)))
+      .sort((a, b) => {
+        if (!priorityCoinId) return 0;
+        if (a.id === priorityCoinId) return -1;
+        if (b.id === priorityCoinId) return 1;
+        return 0;
+      })
       .slice(0, defaultSyncLimit);
 
     if (!staleCoins.length) return new Map<number, MarketSnapshotRow>();

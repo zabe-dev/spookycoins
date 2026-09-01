@@ -44,12 +44,16 @@ export async function getPublicCoinListItems(userId?: string | null): Promise<Co
 }
 
 export async function getPublicCoinById(id: number, userId?: string | null): Promise<Coin | null> {
-  const coinRecords = await getPublicCoinRecords(undefined, userId);
+  const coinRecords = await getPublicCoinRecords(undefined, userId, id);
   const rankedRecords = rankCoinsByBoostedVotes(coinRecords);
   return rankedRecords.find((coin) => coin.id === id) || null;
 }
 
-async function getPublicCoinRecords(coinId?: number, userId?: string | null): Promise<Coin[]> {
+async function getPublicCoinRecords(
+  coinId?: number,
+  userId?: string | null,
+  priorityCoinId?: number,
+): Promise<Coin[]> {
   await processExpiredCoinDeletionRequests();
 
   const now = new Date();
@@ -102,7 +106,11 @@ async function getPublicCoinRecords(coinId?: number, userId?: string | null): Pr
   ]);
 
   const snapshotByCoin = firstByCoinId(snapshotRows);
-  const refreshedSnapshots = await refreshStaleMarketSnapshots(coinRows, snapshotByCoin);
+  const refreshedSnapshots = await refreshStaleMarketSnapshots(
+    coinRows,
+    snapshotByCoin,
+    priorityCoinId,
+  );
   refreshedSnapshots.forEach((snapshot, coinId) => snapshotByCoin.set(coinId, snapshot));
   const boostByCoin = firstByCoinId(boostRows);
   const promotionByCoin = firstByCoinId(promotionRows);
