@@ -194,6 +194,9 @@ function mapDbCoinToCoin({
     community: {
       weeklyVotes: interactions?.weeklyVotes || 0,
       totalVotes: interactions?.totalVotes || 0,
+      recentVotes: interactions?.recentVotes || 0,
+      recentWatchlistAdds: interactions?.recentWatchlistAdds || 0,
+      trendingScore: interactions?.trendingScore || 0,
       watchlistCount: interactions?.watchlistCount || 0,
       userHasVoted: interactions?.userHasVoted || false,
       userWatching: interactions?.userWatching || false,

@@ -13,14 +13,14 @@ export function DiscoveryCard({
   viewMoreHref,
   metric = 'votes',
 }: {
-  icon: 'new' | 'presale' | 'watch';
+  icon: 'new' | 'trend' | 'presale' | 'watch';
   title: string;
   sub: string;
   coins: Coin[];
   viewMoreHref: string;
-  metric?: 'votes' | 'launch' | 'presaleEnd' | 'watchlist';
+  metric?: 'votes' | 'launch' | 'presaleEnd' | 'watchlist' | 'trend';
 }) {
-  const rows = Array.from({ length: 5 }, (_, index) => coins[index] || null);
+  const rows = Array.from({ length: 4 }, (_, index) => coins[index] || null);
 
   return (
     <article className="discovery-card">
@@ -67,10 +67,15 @@ export function DiscoveryCard({
   );
 }
 
-function formatMetric(coin: Coin, metric: 'votes' | 'launch' | 'presaleEnd' | 'watchlist') {
+function formatMetric(
+  coin: Coin,
+  metric: 'votes' | 'launch' | 'presaleEnd' | 'watchlist' | 'trend',
+) {
   if (metric === 'launch') return coin.launch;
   if (metric === 'presaleEnd')
     return coin.presaleEnd === '—' ? 'No end date' : `${coin.presaleEnd}`;
   if (metric === 'watchlist') return formatVotes(coin.watchCount);
+  if (metric === 'trend')
+    return `${formatVotes(coin.recentVotes)} votes · ${formatVotes(coin.recentWatchlistAdds)} watches`;
   return `${formatVotes(coin.votes)} votes`;
 }

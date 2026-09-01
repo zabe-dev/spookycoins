@@ -53,7 +53,9 @@ export function CoinDetailPage({
       hasVoted: true,
       rawVotes: current.rawVotes + 1,
       votes: current.votes + getBoostVoteFactor(current.boost),
-      trend: current.trend + getBoostVoteFactor(current.boost),
+      recentVotes: current.recentVotes + 1,
+      trendingScore: current.trendingScore + 3,
+      trend: current.trend + 3,
     }));
     setVoteAnimating(true);
     window.setTimeout(() => setVoteAnimating(false), 650);
@@ -67,7 +69,9 @@ export function CoinDetailPage({
         hasVoted: false,
         rawVotes: Math.max(0, current.rawVotes - 1),
         votes: Math.max(0, current.votes - getBoostVoteFactor(current.boost)),
-        trend: Math.max(0, current.trend - getBoostVoteFactor(current.boost)),
+        recentVotes: Math.max(0, current.recentVotes - 1),
+        trendingScore: Math.max(0, current.trendingScore - 3),
+        trend: Math.max(0, current.trend - 3),
       }));
       setNotice(body.message || 'Could not record your vote.');
       return;
@@ -88,6 +92,9 @@ export function CoinDetailPage({
       ...current,
       isWatching: adding,
       watchCount: Math.max(0, current.watchCount + (adding ? 1 : -1)),
+      recentWatchlistAdds: Math.max(0, current.recentWatchlistAdds + (adding ? 1 : -1)),
+      trendingScore: Math.max(0, current.trendingScore + (adding ? 2 : -2)),
+      trend: Math.max(0, current.trend + (adding ? 2 : -2)),
     }));
     if (adding) {
       setWatchAnimating(true);
@@ -102,6 +109,9 @@ export function CoinDetailPage({
         ...current,
         isWatching: !adding,
         watchCount: Math.max(0, current.watchCount + (adding ? -1 : 1)),
+        recentWatchlistAdds: Math.max(0, current.recentWatchlistAdds + (adding ? -1 : 1)),
+        trendingScore: Math.max(0, current.trendingScore + (adding ? -2 : 2)),
+        trend: Math.max(0, current.trend + (adding ? -2 : 2)),
       }));
       setNotice(body.message || 'Could not update your watchlist.');
       return;
@@ -115,6 +125,9 @@ export function CoinDetailPage({
       | {
           weeklyVotes?: number;
           totalVotes?: number;
+          recentVotes?: number;
+          recentWatchlistAdds?: number;
+          trendingScore?: number;
           watchlistCount?: number;
           userHasVoted?: boolean;
           userWatching?: boolean;
@@ -129,7 +142,10 @@ export function CoinDetailPage({
         ...current,
         rawVotes,
         votes: boostedVotes,
-        trend: current.trend - current.votes + boostedVotes,
+        recentVotes: summary.recentVotes ?? current.recentVotes,
+        recentWatchlistAdds: summary.recentWatchlistAdds ?? current.recentWatchlistAdds,
+        trendingScore: summary.trendingScore ?? current.trendingScore,
+        trend: summary.trendingScore ?? current.trend,
         watchCount: summary.watchlistCount ?? current.watchCount,
         hasVoted: summary.userHasVoted ?? current.hasVoted,
         isWatching: summary.userWatching ?? current.isWatching,

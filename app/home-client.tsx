@@ -27,11 +27,13 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
 
-type LeaderboardView = 'Top coins' | 'Presales' | 'Most watched' | 'Launched recently';
+type LeaderboardView =
+  'Top coins' | 'Trending coins' | 'Presale coins' | 'Most watched' | 'Launched recently';
 
 const viewParams: Record<LeaderboardView, string> = {
   'Top coins': 'top',
-  Presales: 'presales',
+  'Trending coins': 'trending',
+  'Presale coins': 'presales',
   'Most watched': 'watched',
   'Launched recently': 'recent',
 };
@@ -39,6 +41,8 @@ const paramsToView = Object.fromEntries(
   Object.entries(viewParams).map(([label, value]) => [value, label]),
 ) as Record<string, LeaderboardView>;
 paramsToView['most-voted'] = 'Top coins';
+paramsToView.presale = 'Presale coins';
+paramsToView.presales = 'Presale coins';
 paramsToView.launched = 'Launched recently';
 const sortKeys: CoinSortKey[] = [
   'rank',
@@ -165,7 +169,7 @@ export function HomeClient({
   }, []);
   useEffect(() => {
     if (!hotspotsVisible) return;
-    const timer = window.setInterval(() => setHotspotIndex((i) => (i + 1) % 3), 4200);
+    const timer = window.setInterval(() => setHotspotIndex((i) => (i + 1) % 4), 4200);
     return () => window.clearInterval(timer);
   }, [hotspotsVisible]);
   useEffect(() => {
@@ -181,35 +185,45 @@ export function HomeClient({
       recent: [...withLocalVotes]
         .filter(isLaunchedRecentlyCandidate)
         .sort(sortByNewestLaunch)
-        .slice(0, 5),
+        .slice(0, 4),
+      trending: [...withLocalVotes]
+        .filter((coin) => coin.trendingScore > 0)
+        .sort(sortByTrendingScore)
+        .slice(0, 4),
       presales: [...withLocalVotes]
         .filter((coin) => coin.lifecycle === 'presale')
         .sort(sortByPresaleEnd)
-        .slice(0, 5),
-      watched: [...withLocalVotes].sort(sortByWatchCount).slice(0, 5),
+        .slice(0, 4),
+      watched: [...withLocalVotes].sort(sortByWatchCount).slice(0, 4),
     };
   })();
   const filtered = useMemo(() => {
     const list = marketCoins.filter(
       (c) =>
         !c.promoted &&
-        (view === 'Presales' ? c.lifecycle === 'presale' : true) &&
+        (view === 'Presale coins' ? c.lifecycle === 'presale' : true) &&
         (category === 'All' || c.category === category) &&
         (chain === 'All chains' || c.chain === chain) &&
         (!search ||
           `${c.name} ${c.symbol} ${c.chain}`.toLowerCase().includes(search.toLowerCase())),
     );
+    if (view === 'Trending coins')
+      return [...list].filter((coin) => coin.trendingScore > 0).sort(sortByTrendingScore);
     if (view === 'Most watched')
       return [...list].filter((coin) => coin.watchCount > 0).sort(sortByVotes);
     if (view === 'Launched recently')
       return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByVotes);
-    if (view === 'Presales') return [...list].sort(sortByVotes);
+    if (view === 'Presale coins') return [...list].sort(sortByVotes);
     return [...list].sort(sortByVotes);
   }, [category, chain, marketCoins, search, view]);
-  const rows = filtered
+  const displayedCoins = useMemo(
+    () => (isDefaultSort(sort) ? filtered : [...filtered].sort((a, b) => sortCoins(a, b, sort))),
+    [filtered, sort],
+  );
+  const rows = displayedCoins
       .slice((page - 1) * 25, page * 25)
       .map((coin, index) => ({ ...coin, rank: (page - 1) * 25 + index + 1 })),
-    pages = Math.max(1, Math.ceil(filtered.length / 25));
+    pages = Math.max(1, Math.ceil(displayedCoins.length / 25));
   const sortBy = (key: CoinSortKey) => {
     setSort((s) => ({
       key,
@@ -233,7 +247,9 @@ export function HomeClient({
               hasVoted: true,
               rawVotes: coin.rawVotes + 1,
               votes: coin.votes + getBoostVoteFactor(coin.boost),
-              trend: coin.trend + getBoostVoteFactor(coin.boost),
+              recentVotes: coin.recentVotes + 1,
+              trendingScore: coin.trendingScore + 3,
+              trend: coin.trend + 3,
             }
           : coin,
       ),
@@ -253,7 +269,9 @@ export function HomeClient({
                 hasVoted: false,
                 rawVotes: Math.max(0, coin.rawVotes - 1),
                 votes: Math.max(0, coin.votes - getBoostVoteFactor(coin.boost)),
-                trend: Math.max(0, coin.trend - getBoostVoteFactor(coin.boost)),
+                recentVotes: Math.max(0, coin.recentVotes - 1),
+                trendingScore: Math.max(0, coin.trendingScore - 3),
+                trend: Math.max(0, coin.trend - 3),
               }
             : coin,
         ),
@@ -282,6 +300,9 @@ export function HomeClient({
               ...coin,
               isWatching: !removing,
               watchCount: Math.max(0, coin.watchCount + (removing ? -1 : 1)),
+              recentWatchlistAdds: Math.max(0, coin.recentWatchlistAdds + (removing ? -1 : 1)),
+              trendingScore: Math.max(0, coin.trendingScore + (removing ? -2 : 2)),
+              trend: Math.max(0, coin.trend + (removing ? -2 : 2)),
             }
           : coin,
       ),
@@ -305,6 +326,9 @@ export function HomeClient({
                 ...coin,
                 isWatching: removing,
                 watchCount: Math.max(0, coin.watchCount + (removing ? 1 : -1)),
+                recentWatchlistAdds: Math.max(0, coin.recentWatchlistAdds + (removing ? 1 : -1)),
+                trendingScore: Math.max(0, coin.trendingScore + (removing ? 2 : -2)),
+                trend: Math.max(0, coin.trend + (removing ? 2 : -2)),
               }
             : coin,
         ),
@@ -322,6 +346,9 @@ export function HomeClient({
     summary: {
       weeklyVotes?: number;
       totalVotes?: number;
+      recentVotes?: number;
+      recentWatchlistAdds?: number;
+      trendingScore?: number;
       watchlistCount?: number;
       userHasVoted?: boolean;
       userWatching?: boolean;
@@ -337,7 +364,10 @@ export function HomeClient({
                 ...coin,
                 rawVotes,
                 votes: boostedVotes,
-                trend: coin.trend - coin.votes + boostedVotes,
+                recentVotes: summary.recentVotes ?? coin.recentVotes,
+                recentWatchlistAdds: summary.recentWatchlistAdds ?? coin.recentWatchlistAdds,
+                trendingScore: summary.trendingScore ?? coin.trendingScore,
+                trend: summary.trendingScore ?? coin.trend,
                 watchCount: summary.watchlistCount ?? coin.watchCount,
                 hasVoted: summary.userHasVoted ?? coin.hasVoted,
                 isWatching: summary.userWatching ?? coin.isWatching,
@@ -364,7 +394,7 @@ export function HomeClient({
     if (start === null) return;
     const delta = start - x;
     if (Math.abs(delta) < 42) return;
-    setHotspotIndex((i) => (delta > 0 ? i + 1 : i + 2) % 3);
+    setHotspotIndex((i) => (delta > 0 ? i + 1 : i + 3) % 4);
   };
   return (
     <main className={adVisible ? 'market-page with-bottom-ad' : 'market-page'}>
@@ -409,15 +439,23 @@ export function HomeClient({
               <Discovery
                 icon="new"
                 title="Launched recently"
-                sub="Fresh community listings"
+                sub="Projects ordered by their latest launch date."
                 coins={hotspotCoins.recent}
                 viewMoreHref="/?coins=recent#leaderboard"
                 metric="launch"
               />
               <Discovery
+                icon="trend"
+                title="Trending coins"
+                sub="Most active in 24h."
+                coins={hotspotCoins.trending}
+                viewMoreHref="/?coins=trending#leaderboard"
+                metric="trend"
+              />
+              <Discovery
                 icon="presale"
-                title="Presales"
-                sub="Ending soon"
+                title="Presale coins"
+                sub="Presales closest to their end date."
                 coins={hotspotCoins.presales}
                 viewMoreHref="/?coins=presales#leaderboard"
                 metric="presaleEnd"
@@ -425,7 +463,7 @@ export function HomeClient({
               <Discovery
                 icon="watch"
                 title="Most watched"
-                sub="Saved to portfolios"
+                sub="Projects saved by the most coin hunters."
                 coins={hotspotCoins.watched}
                 viewMoreHref="/?coins=watched#leaderboard"
                 metric="watchlist"
@@ -433,7 +471,7 @@ export function HomeClient({
             </div>
             <div className="hotspot-controls">
               <div className="hotspot-dots">
-                {[0, 1, 2].map((i) => (
+                {[0, 1, 2, 3].map((i) => (
                   <button
                     key={i}
                     className={hotspotIndex === i ? 'active' : ''}
@@ -491,7 +529,13 @@ export function HomeClient({
         </div>
         <div className="leader-tabs">
           {(
-            ['Top coins', 'Presales', 'Most watched', 'Launched recently'] as LeaderboardView[]
+            [
+              'Top coins',
+              'Trending coins',
+              'Presale coins',
+              'Most watched',
+              'Launched recently',
+            ] as LeaderboardView[]
           ).map((x) => (
             <button
               key={x}
@@ -659,8 +703,8 @@ export function HomeClient({
         </TableScroller>
         <div className="pagination">
           <span>
-            Showing {(page - 1) * 25 + 1}–{Math.min(page * 25, filtered.length)} of{' '}
-            {filtered.length}
+            Showing {(page - 1) * 25 + 1}–{Math.min(page * 25, displayedCoins.length)} of{' '}
+            {displayedCoins.length}
           </span>
           <div>
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
@@ -766,12 +810,54 @@ function sortByWatchCount(a: CoinListItem, b: CoinListItem) {
   return b.watchCount - a.watchCount || b.votes - a.votes || a.name.localeCompare(b.name);
 }
 
+function sortByTrendingScore(a: CoinListItem, b: CoinListItem) {
+  return b.trendingScore - a.trendingScore || b.votes - a.votes || a.name.localeCompare(b.name);
+}
+
 function sortByVotes(a: CoinListItem, b: CoinListItem) {
   return b.votes - a.votes || a.name.localeCompare(b.name);
 }
 
+function isDefaultSort(sort: { key: CoinSortKey; dir: 1 | -1 }) {
+  return sort.key === defaultSort.key && sort.dir === defaultSort.dir;
+}
+
+function sortCoins(a: CoinListItem, b: CoinListItem, sort: { key: CoinSortKey; dir: 1 | -1 }) {
+  const direction = sort.dir;
+  let result = 0;
+
+  if (sort.key === 'name') result = a.name.localeCompare(b.name);
+  else if (sort.key === 'capN') result = a.capN - b.capN;
+  else if (sort.key === 'price') result = moneyValue(a.price) - moneyValue(b.price);
+  else if (sort.key === 'change') result = a.change - b.change;
+  else if (sort.key === 'launch')
+    result = dateValue(a.launchTimestamp) - dateValue(b.launchTimestamp);
+  else if (sort.key === 'boost') result = (a.boost || 0) - (b.boost || 0);
+  else if (sort.key === 'votes') result = a.votes - b.votes;
+  else if (sort.key === 'age')
+    result = dateValue(a.submittedTimestamp) - dateValue(b.submittedTimestamp);
+  else result = a.rank - b.rank;
+
+  return result * direction || a.name.localeCompare(b.name);
+}
+
 function rankCoins(coins: CoinListItem[]) {
   return coins.map((coin, index) => ({ ...coin, rank: index + 1 }));
+}
+
+function moneyValue(value: string) {
+  if (value === '—') return 0;
+  const normalized = value.replace(/[$,]/g, '').trim().toUpperCase();
+  const multiplier = normalized.endsWith('T')
+    ? 1_000_000_000_000
+    : normalized.endsWith('B')
+      ? 1_000_000_000
+      : normalized.endsWith('M')
+        ? 1_000_000
+        : normalized.endsWith('K')
+          ? 1_000
+          : 1;
+  return Number.parseFloat(normalized) * multiplier || 0;
 }
 
 function futureDateValue(value: string | null | undefined) {

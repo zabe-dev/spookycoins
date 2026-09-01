@@ -9,6 +9,9 @@ export const voteCooldownHours = 12;
 type InteractionSummary = {
   weeklyVotes: number;
   totalVotes: number;
+  recentVotes: number;
+  recentWatchlistAdds: number;
+  trendingScore: number;
   watchlistCount: number;
   userHasVoted: boolean;
   userWatching: boolean;
@@ -23,6 +26,9 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
     summaries.set(coinId, {
       weeklyVotes: 0,
       totalVotes: 0,
+      recentVotes: 0,
+      recentWatchlistAdds: 0,
+      trendingScore: 0,
       watchlistCount: 0,
       userHasVoted: false,
       userWatching: false,
@@ -32,6 +38,7 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
   const cooldownStart = addHours(new Date(), -voteCooldownHours);
   const cooldownStartIso = cooldownStart.toISOString();
   const weekStartIso = getCurrentVoteWeekStart().toISOString();
+  const dayAgoIso = addHours(new Date(), -24).toISOString();
   const interactionRows = await Promise.all([
     db
       .select({ coinId: coinVotes.coinId, count: sql<number>`count(*)::int` })
@@ -49,9 +56,29 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
       .where(inArray(coinVotes.coinId, uniqueIds))
       .groupBy(coinVotes.coinId),
     db
+      .select({ coinId: coinVotes.coinId, count: sql<number>`count(*)::int` })
+      .from(coinVotes)
+      .where(
+        and(
+          inArray(coinVotes.coinId, uniqueIds),
+          sql`${coinVotes.createdAt} >= ${dayAgoIso}::timestamptz`,
+        ),
+      )
+      .groupBy(coinVotes.coinId),
+    db
       .select({ coinId: coinWatchlists.coinId, count: sql<number>`count(*)::int` })
       .from(coinWatchlists)
       .where(inArray(coinWatchlists.coinId, uniqueIds))
+      .groupBy(coinWatchlists.coinId),
+    db
+      .select({ coinId: coinWatchlists.coinId, count: sql<number>`count(*)::int` })
+      .from(coinWatchlists)
+      .where(
+        and(
+          inArray(coinWatchlists.coinId, uniqueIds),
+          sql`${coinWatchlists.createdAt} >= ${dayAgoIso}::timestamptz`,
+        ),
+      )
       .groupBy(coinWatchlists.coinId),
     userId
       ? db
@@ -73,16 +100,33 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
       : Promise.resolve([]),
   ]).catch((error) => {
     if (isMissingInteractionTableError(error)) {
-      return [[], [], [], [], []] as const;
+      return [[], [], [], [], [], [], []] as const;
     }
     throw error;
   });
 
-  const [weeklyVotes, totalVotes, watchCounts, userVotes, userWatchlist] = interactionRows;
+  const [
+    weeklyVotes,
+    totalVotes,
+    recentVotes,
+    watchCounts,
+    recentWatchAdds,
+    userVotes,
+    userWatchlist,
+  ] = interactionRows;
 
   weeklyVotes.forEach((row) => setSummaryValue(summaries, row.coinId, 'weeklyVotes', row.count));
   totalVotes.forEach((row) => setSummaryValue(summaries, row.coinId, 'totalVotes', row.count));
+  recentVotes.forEach((row) =>
+    setRecentActivityValue(summaries, row.coinId, 'recentVotes', row.count),
+  );
   watchCounts.forEach((row) => setSummaryValue(summaries, row.coinId, 'watchlistCount', row.count));
+  recentWatchAdds.forEach((row) =>
+    setRecentActivityValue(summaries, row.coinId, 'recentWatchlistAdds', row.count),
+  );
+  summaries.forEach((summary) => {
+    summary.trendingScore = summary.recentVotes * 3 + summary.recentWatchlistAdds * 2;
+  });
   userVotes.forEach((row) => setSummaryValue(summaries, row.coinId, 'userHasVoted', true));
   userWatchlist.forEach((row) => setSummaryValue(summaries, row.coinId, 'userWatching', true));
 
@@ -200,6 +244,16 @@ function setSummaryValue<K extends keyof InteractionSummary>(
   coinId: number,
   key: K,
   value: InteractionSummary[K],
+) {
+  const summary = summaries.get(coinId);
+  if (summary) summary[key] = value;
+}
+
+function setRecentActivityValue(
+  summaries: Map<number, InteractionSummary>,
+  coinId: number,
+  key: 'recentVotes' | 'recentWatchlistAdds',
+  value: number,
 ) {
   const summary = summaries.get(coinId);
   if (summary) summary[key] = value;

@@ -30,6 +30,9 @@ export type CoinListItem = {
   promoted: boolean;
   rawVotes: number;
   votes: number;
+  recentVotes: number;
+  recentWatchlistAdds: number;
+  trendingScore: number;
   watchCount: number;
   hasVoted: boolean;
   isWatching: boolean;
@@ -119,13 +122,16 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     promoted: coin.promoted.active,
     rawVotes,
     votes: boostedVotes,
+    recentVotes: coin.community.recentVotes,
+    recentWatchlistAdds: coin.community.recentWatchlistAdds,
+    trendingScore: coin.community.trendingScore,
     watchCount: coin.community.watchlistCount,
     hasVoted: Boolean(coin.community.userHasVoted),
     isWatching: Boolean(coin.community.userWatching),
     age: formatTimeAgo(coin.submittedAt),
     submittedTimestamp: coin.submittedAt,
     category: coin.category,
-    trend: Math.abs(change) + Math.log10(Math.max(coin.market.volume24hUsd ?? 1, 1)) + boostedVotes,
+    trend: coin.community.trendingScore,
     contractAddress: coin.contractAddress,
     ...(coin.dex.available ? { buyUrl: coin.dex.url } : {}),
   };

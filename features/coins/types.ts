@@ -82,6 +82,9 @@ export type CoinMarketData = {
 export type CoinCommunityData = {
   weeklyVotes: number;
   totalVotes: number;
+  recentVotes: number;
+  recentWatchlistAdds: number;
+  trendingScore: number;
   watchlistCount: number;
   userHasVoted?: boolean;
   userWatching?: boolean;

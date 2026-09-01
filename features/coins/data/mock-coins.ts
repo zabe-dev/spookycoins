@@ -394,6 +394,9 @@ function toMockCoin(project: MockCoinInput): Coin {
     community: {
       weeklyVotes: project.votes,
       totalVotes: project.votes * 8,
+      recentVotes: project.votes,
+      recentWatchlistAdds: project.watchers,
+      trendingScore: project.votes * 3 + project.watchers * 2,
       watchlistCount: project.watchers,
     },
   };
