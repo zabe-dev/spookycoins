@@ -21,11 +21,8 @@ const providerState = globalThis as typeof globalThis & {
 const requestTimeoutMs = 4_000;
 const maxRequestsPerDay = Number(process.env.TOPBAR_PRICE_DAILY_LIMIT || 480);
 const cacheSeconds = Number(process.env.TOPBAR_PRICE_CACHE_SECONDS || 120);
-const binanceBaseUrl =
-  process.env.TOPBAR_BINANCE_API_BASE_URL ||
-  `https://${process.env.BINANCE_PROXY_HOST || 'api.binance.com'}`;
+
 const binanceFallbackBaseUrls = [
-  binanceBaseUrl,
   ...(
     process.env.TOPBAR_BINANCE_FALLBACK_BASE_URLS ||
     'https://api.binance.com,https://data-api.binance.vision'
@@ -76,9 +73,6 @@ async function fetchBinancePricesFromBaseUrl(baseUrl: string): Promise<TopbarPri
 
   try {
     const response = await fetch(
-      // VERCEL WAS BLOCKING API CALLS FROM SERVER TO BINANCE SO I PROXIED IT TROUGH MY VPS
-      // TO NOT DELETE THIS COMMENT
-      // MAYBE ADD FALLBACKS
       `${baseUrl.replace(/\/$/, '')}/api/v3/ticker/24hr?symbols=${encodeURIComponent(
         JSON.stringify(binanceSymbols),
       )}`,
