@@ -366,7 +366,7 @@
   border: 0;
   background: transparent;
   box-shadow: none;
-  color: var(--copy);
+  color: #8a949b;
   font-size: 9px;
   font-weight: 850;
   text-shadow: none;
@@ -404,7 +404,7 @@
   padding: 0;
   font-size: 9px;
   font-weight: 850;
-  color: var(--copy);
+  color: #9ba5ac;
   white-space: nowrap;
 }
 .mini-coin:hover .mini-coin-metric,

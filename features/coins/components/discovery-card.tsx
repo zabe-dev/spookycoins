@@ -74,7 +74,7 @@ function formatMetric(
   if (metric === 'launch') return coin.launch;
   if (metric === 'presaleEnd')
     return coin.presaleEnd === '—' ? 'No end date' : `${coin.presaleEnd}`;
-  if (metric === 'watchlist') return formatVotes(coin.watchCount);
+  if (metric === 'watchlist') return `${formatVotes(coin.watchCount)} watches`;
   if (metric === 'trend')
     return `${formatVotes(coin.recentVotes)} votes · ${formatVotes(coin.recentWatchlistAdds)} watches`;
   return `${formatVotes(coin.votes)} votes`;

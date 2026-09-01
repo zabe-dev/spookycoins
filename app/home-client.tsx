@@ -439,7 +439,7 @@ export function HomeClient({
               <Discovery
                 icon="new"
                 title="Launched recently"
-                sub="Projects ordered by their latest launch date."
+                sub="Newest coins in the market."
                 coins={hotspotCoins.recent}
                 viewMoreHref="/?coins=recent#leaderboard"
                 metric="launch"
@@ -447,7 +447,7 @@ export function HomeClient({
               <Discovery
                 icon="trend"
                 title="Trending coins"
-                sub="Most active in 24h."
+                sub="Getting attention today."
                 coins={hotspotCoins.trending}
                 viewMoreHref="/?coins=trending#leaderboard"
                 metric="trend"
@@ -455,7 +455,7 @@ export function HomeClient({
               <Discovery
                 icon="presale"
                 title="Presale coins"
-                sub="Presales closest to their end date."
+                sub="Ending soon, moving fast."
                 coins={hotspotCoins.presales}
                 viewMoreHref="/?coins=presales#leaderboard"
                 metric="presaleEnd"
@@ -463,7 +463,7 @@ export function HomeClient({
               <Discovery
                 icon="watch"
                 title="Most watched"
-                sub="Projects saved by the most coin hunters."
+                sub="Most saved by hunters."
                 coins={hotspotCoins.watched}
                 viewMoreHref="/?coins=watched#leaderboard"
                 metric="watchlist"
