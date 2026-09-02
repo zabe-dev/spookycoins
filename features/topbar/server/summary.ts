@@ -9,7 +9,7 @@ import type { TopbarCoinLink, TopbarSummary } from '@/features/topbar/types';
 
 const summaryCacheSeconds = Number(process.env.TOPBAR_SUMMARY_CACHE_SECONDS || 60);
 
-export const getTopbarSummary = unstable_cache(() => readTopbarSummary(), ['topbar-summary-v1'], {
+export const getTopbarSummary = unstable_cache(() => readTopbarSummary(), ['topbar-summary-v2'], {
   revalidate: summaryCacheSeconds,
 });
 
@@ -100,8 +100,15 @@ async function readTrendingCoin(dayAgoIso: string): Promise<TopbarCoinLink> {
       .from(coins)
       .where(and(inArray(coins.id, rankedCoinIds), eq(coins.listingStatus, 'active')));
 
+    const boostByCoin = await readActiveBoosts(rankedCoinIds);
     const coinById = new Map(coinRows.map((coin) => [coin.id, coin]));
-    const topCoin = rankedCoinIds.map((coinId) => coinById.get(coinId)).find(Boolean);
+    const topCoin = rankedCoinIds
+      .map((coinId) => {
+        const coin = coinById.get(coinId);
+        if (!coin) return null;
+        return { ...coin, boost: boostByCoin.get(coin.id) || null };
+      })
+      .find(Boolean);
     return topCoin || null;
   } catch (error) {
     if (isMissingInteractionTableError(error)) return null;
@@ -159,6 +166,7 @@ async function readTopVotedCoin(): Promise<TopbarCoinLink> {
     const topCoin = coinRows
       .map((coin) => ({
         ...coin,
+        boost: boostByCoin.get(coin.id) || null,
         effectiveVotes:
           (votesByCoin.get(coin.id) || 0) * getBoostVoteFactor(boostByCoin.get(coin.id)),
       }))
@@ -168,6 +176,32 @@ async function readTopVotedCoin(): Promise<TopbarCoinLink> {
     return topCoin || null;
   } catch (error) {
     if (isMissingInteractionTableError(error) || isMissingBoostTableError(error)) return null;
+    throw error;
+  }
+}
+
+async function readActiveBoosts(coinIds: number[]) {
+  if (!coinIds.length) return new Map<number, number>();
+
+  try {
+    const nowIso = new Date().toISOString();
+    const boostRows = await db
+      .select({
+        coinId: coinBoosts.coinId,
+        multiplier: coinBoosts.multiplier,
+      })
+      .from(coinBoosts)
+      .where(
+        and(
+          inArray(coinBoosts.coinId, coinIds),
+          eq(coinBoosts.status, 'active'),
+          sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
+        ),
+      );
+
+    return new Map(boostRows.map((row) => [row.coinId, row.multiplier]));
+  } catch (error) {
+    if (isMissingBoostTableError(error)) return new Map<number, number>();
     throw error;
   }
 }

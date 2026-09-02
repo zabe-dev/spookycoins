@@ -3,7 +3,7 @@ import 'server-only';
 import type { NetworkId } from '@/features/coins/types';
 import { db } from '@/lib/db/client';
 import { coins, marketSnapshots } from '@/lib/db/schema';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { desc, inArray, sql } from 'drizzle-orm';
 
 type MarketSyncCoin = Pick<
   typeof coins.$inferSelect,
@@ -48,7 +48,8 @@ const syncState = globalThis as typeof globalThis & {
 const apiBaseUrl = process.env.MOBULA_API_BASE_URL || 'https://api.mobula.io';
 const requestTimeoutMs = Number(process.env.MOBULA_REQUEST_TIMEOUT_MS || 8_000);
 const cacheSeconds = Number(process.env.MARKET_DATA_CACHE_SECONDS || 900);
-const defaultSyncLimit = Number(process.env.MARKET_DATA_SYNC_LIMIT || 1);
+const defaultSyncLimit = Number(process.env.MARKET_DATA_SYNC_LIMIT || 7);
+const maxSyncLimit = Number(process.env.MARKET_DATA_MAX_SYNC_LIMIT || 120);
 const requestSpacingMs = Math.max(1_050, Number(process.env.MOBULA_REQUEST_SPACING_MS || 1_050));
 const lockId = 880_550_110;
 
@@ -94,16 +95,13 @@ export async function refreshStaleMarketSnapshots(
 }
 
 export async function syncMobulaMarketData(limit = defaultSyncLimit) {
-  const coinRows = await db
-    .select()
-    .from(coins)
-    .where(and(eq(coins.listingStatus, 'active'), sql`${coins.contractAddress} is not null`))
-    .orderBy(asc(coins.updatedAt))
-    .limit(Math.max(1, Math.min(60, limit)));
+  const requestedLimit = Number.isFinite(limit) ? limit : defaultSyncLimit;
+  const safeLimit = Math.max(1, Math.min(maxSyncLimit, requestedLimit));
+  const coinRows = await selectStaleSyncCoins(safeLimit);
 
   const coinIds = coinRows.map((coin) => coin.id);
   if (!coinIds.length) {
-    console.log(`${LOG_TAG} no active coins with a contract address found`);
+    console.log(`${LOG_TAG} no stale active coins with supported chain/address found`);
     return { checked: 0, updated: 0 };
   }
 
@@ -272,6 +270,41 @@ function shouldRefreshCoin(coin: MarketSyncCoin, snapshot: MarketSnapshotRow | u
 function getMobulaChainId(chain: string | null) {
   if (!chain || !(chain in mobulaChainIds)) return '';
   return mobulaChainIds[chain as NetworkId] || '';
+}
+
+async function selectStaleSyncCoins(limit: number): Promise<MarketSyncCoin[]> {
+  const supportedChains = Object.keys(mobulaChainIds);
+  const staleBeforeIso = new Date(Date.now() - cacheSeconds * 1_000).toISOString();
+  const supportedChainSql = sql.join(
+    supportedChains.map((chain) => sql`${chain}`),
+    sql`, `,
+  );
+
+  return db.execute<MarketSyncCoin>(sql`
+    select
+      c.id,
+      c.chain,
+      c.contract_address as "contractAddress",
+      c.listing_status as "listingStatus"
+    from ${coins} c
+    left join lateral (
+      select ms.recorded_at
+      from ${marketSnapshots} ms
+      where ms.coin_id = c.id
+      order by ms.recorded_at desc
+      limit 1
+    ) latest_snapshot on true
+    where c.listing_status = 'active'
+      and c.contract_address is not null
+      and btrim(c.contract_address) <> ''
+      and c.chain in (${supportedChainSql})
+      and (
+        latest_snapshot.recorded_at is null
+        or latest_snapshot.recorded_at < ${staleBeforeIso}::timestamptz
+      )
+    order by latest_snapshot.recorded_at asc nulls first, c.id asc
+    limit ${limit}
+  `);
 }
 
 async function waitForMobulaSlot() {

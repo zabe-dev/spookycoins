@@ -9,6 +9,14 @@
   --gold: #ffc52f;
   --cyan: #37d9ff;
   --font-geist-mono: var(--font-fira-mono);
+  --button-radius: 12px;
+  --button-min-height: 44px;
+  --button-padding: 12px 18px;
+  --button-font-size: 10px;
+  --button-font-weight: 850;
+  --button-transition:
+    transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease,
+    opacity 0.16s ease;
 }
 * {
   box-sizing: border-box;
@@ -552,11 +560,16 @@ nav a.active {
   background: var(--lime);
   color: #0a0c0c;
   border: 0;
-  padding: 14px 18px;
-  border-radius: 8px;
+  min-height: var(--button-min-height);
+  padding: var(--button-padding);
+  border-radius: var(--button-radius);
   font-weight: 780;
   cursor: pointer;
   box-shadow: 0 0 40px rgba(203, 255, 74, 0.1);
+  transition: var(--button-transition);
+}
+.primary-btn:hover {
+  transform: translateY(-1px);
 }
 .primary-btn span {
   margin-left: 16px;
@@ -1223,18 +1236,16 @@ tbody tr:hover td {
 .system-state-primary,
 .system-state-secondary {
   display: inline-flex;
-  min-height: 42px;
+  min-height: var(--button-min-height);
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 12px;
-  padding: 0 16px;
-  font-size: 11px;
-  font-weight: 900;
-  transition:
-    transform 0.16s ease,
-    background 0.16s ease,
-    border-color 0.16s ease;
+  border-radius: var(--button-radius);
+  padding: var(--button-padding);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
+  line-height: 1;
+  transition: var(--button-transition);
 }
 .system-state-primary {
   border: 1px solid var(--lime);
@@ -2155,15 +2166,20 @@ body.modal-open {
   color: #f0b90b;
 }
 .auth-submit {
-  min-height: 43px;
+  min-height: var(--button-min-height);
   margin-top: 2px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   background: var(--lime);
+  padding: var(--button-padding);
   color: #0a0d0b;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
   cursor: pointer;
+  transition: var(--button-transition);
+}
+.auth-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 .auth-secondary-action {
   width: fit-content;
@@ -3172,13 +3188,21 @@ img.admin-project-logo {
 .edit-request-form button {
   justify-self: start;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--button-radius);
   background: var(--lime);
-  padding: 10px 14px;
+  min-height: var(--button-min-height);
+  padding: var(--button-padding);
   color: #10130c;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
+  line-height: 1;
   cursor: pointer;
+  transition: var(--button-transition);
+}
+.settings-form > button:hover:not(:disabled),
+.settings-form-actions > button:hover:not(:disabled),
+.edit-request-form button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 .settings-form-actions {
   display: flex;

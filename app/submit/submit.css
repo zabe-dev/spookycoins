@@ -1091,21 +1091,18 @@
   justify-content: center;
   gap: 7px;
   border: 0;
-  min-height: 36px;
-  border-radius: 8px;
+  min-height: var(--button-min-height);
+  border-radius: var(--button-radius);
   background: var(--lime);
-  padding: 12px 16px;
+  padding: var(--button-padding);
   color: #10130c;
-  font-size: 10px;
-  font-weight: 800;
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
   line-height: 1;
   text-transform: none;
   letter-spacing: 0;
   cursor: pointer;
-  min-height: 42px;
-  transition:
-    opacity 0.16s ease,
-    background 0.16s ease;
+  transition: var(--button-transition);
 }
 
 .submission-flow .submission-primary,
@@ -1126,15 +1123,16 @@
 }
 
 .submission-flow .submission-primary:hover:not(:disabled),
-.submission-flow .submission-secondary:hover:not(:disabled),
 .submission-modal .submission-primary:hover:not(:disabled),
-.submission-modal .submission-secondary:hover:not(:disabled),
-.submission-success .submission-primary:hover:not(:disabled),
-.submission-success .submission-secondary:hover:not(:disabled) {
+.submission-success .submission-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
   background: #d9ff64;
 }
 
+.submission-flow .submission-secondary:hover:not(:disabled),
+.submission-modal .submission-secondary:hover:not(:disabled),
 .submission-success .submission-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
   border-color: rgba(203, 255, 74, 0.28);
   background: rgba(203, 255, 74, 0.08);
   color: var(--lime);

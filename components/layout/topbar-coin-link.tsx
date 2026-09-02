@@ -18,6 +18,7 @@ export function TopbarCoinLink({ coin, kind }: TopbarCoinLinkProps) {
   if (!coin) return null;
 
   const Icon = kind === 'trending' ? Flame : Crown;
+  const isGolden = coin.boost === 500;
 
   return (
     <Link className="topbar-coin-link" href={`/coin/${coin.id}`}>
@@ -33,7 +34,26 @@ export function TopbarCoinLink({ coin, kind }: TopbarCoinLinkProps) {
           {coin.symbol.slice(0, 1)}
         </span>
       )}
-      <b>{coin.name}</b>
+      <b className={`topbar-coin-name ${isGolden ? 'gold-name gold-name-animated' : ''}`}>
+        {coin.name}
+      </b>
+      {isGolden && (
+        <span className="topbar-boost-badge boost-badge boost-500">
+          <TopbarBoltIcon />
+          500×
+        </span>
+      )}
     </Link>
+  );
+}
+
+function TopbarBoltIcon() {
+  return (
+    <svg className="bolt-icon" aria-hidden="true" viewBox="0 0 448 512">
+      <path
+        fill="currentColor"
+        d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288h111.5L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3S397.3 224 384 224H272.5l76.9-179.4z"
+      />
+    </svg>
   );
 }

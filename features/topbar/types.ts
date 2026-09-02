@@ -9,6 +9,7 @@ export type TopbarCoinLink = {
   name: string;
   symbol: string;
   logoUrl: string | null;
+  boost: number | null;
 } | null;
 
 export type TopbarSummary = {

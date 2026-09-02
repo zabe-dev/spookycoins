@@ -11,11 +11,12 @@ const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const resendApiKey = process.env.RESEND_API_KEY;
 const authEmailFrom = process.env.AUTH_EMAIL_FROM || 'SpookyCoins <onboarding@resend.dev>';
-const isVercel = Boolean(process.env.VERCEL);
 const authSecret =
   process.env.BETTER_AUTH_SECRET ||
-  (isVercel ? undefined : 'spookycoins-local-dev-secret-change-me');
-const authUrl = process.env.BETTER_AUTH_URL || (isVercel ? undefined : 'http://localhost:3000');
+  (process.env.NODE_ENV === 'production' ? undefined : 'spookycoins-local-dev-secret-change-me');
+const authUrl =
+  process.env.BETTER_AUTH_URL ||
+  (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3000');
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 type AuthEmailType = 'sign-in' | 'email-verification' | 'forget-password' | 'change-email';
@@ -172,13 +173,9 @@ async function validateSettingsUpdates(ctx: unknown): Promise<void> {
 function getAuthRequestDetails(request?: Request) {
   const headers = request?.headers;
   const ip = (headers && getClientIp(headers)) || 'Unknown IP';
-  const city =
-    decodeHeader(headers?.get('x-vercel-ip-city')) || decodeHeader(headers?.get('cf-ipcity')) || '';
+  const city = decodeHeader(headers?.get('cf-ipcity')) || '';
   const country = formatCountry(
-    decodeHeader(headers?.get('x-vercel-ip-country')) ||
-      decodeHeader(headers?.get('cf-ipcountry')) ||
-      decodeHeader(headers?.get('x-country')) ||
-      '',
+    decodeHeader(headers?.get('cf-ipcountry')) || decodeHeader(headers?.get('x-country')) || '',
   );
   const now = new Date();
 

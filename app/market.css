@@ -84,6 +84,12 @@
 .topbar-coin-link b {
   color: var(--copy, var(--text));
 }
+.topbar-coin-name {
+  font:
+    700 9px/1 var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.01em;
+}
 .topbar-coin-link {
   color: var(--sub, var(--muted));
   text-decoration: none;
@@ -125,6 +131,17 @@
 }
 .topbar-coin-logo-fallback {
   background: #161c20;
+}
+.topbar-boost-badge {
+  min-height: 17px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-size: 8px;
+  line-height: 1;
+}
+.topbar-boost-badge .bolt-icon {
+  width: 0.7em;
+  height: 0.9em;
 }
 .ticker i {
   font-style: normal;
@@ -1068,6 +1085,9 @@
   .topbar-marquee-group b,
   .topbar-marquee-group a b {
     color: var(--copy);
+  }
+  .topbar-marquee-group .gold-name {
+    color: transparent !important;
   }
   .topbar-marquee-group i {
     color: #68da88;

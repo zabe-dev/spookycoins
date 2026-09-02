@@ -181,7 +181,9 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
         return {
           ...current,
           contracts,
-          ...defaultMarketLinks(chain as SubmissionNetwork),
+          ...(current.isPresale
+            ? { chart: { provider: '', customUrl: '' }, dex: { provider: '', customUrl: '' } }
+            : defaultMarketLinks(chain as SubmissionNetwork)),
         };
       }
       return { ...current, contracts };
@@ -804,6 +806,7 @@ function buildSubmissionRequest(payload: CoinSubmissionPayload) {
     chain: contract.chain,
     address: contract.address,
   }));
+  const requestType = payload.isPresale ? 'presale' : 'launched';
 
   return {
     basic: {
@@ -822,21 +825,22 @@ function buildSubmissionRequest(payload: CoinSubmissionPayload) {
       github: payload.github,
       whitepaper: payload.whitepaper,
     },
-    market: payload.isPresale
-      ? {
-          type: 'presale',
-          primaryChain: contracts[0]?.chain || 'ethereum',
-          contracts,
-          presale: payload.presale,
-        }
-      : {
-          type: 'launched',
-          primaryChain: contracts[0]?.chain || 'ethereum',
-          contracts,
-          launchDate: payload.launchDate,
-          chart: payload.chart,
-          dex: payload.dex,
-        },
+    market:
+      requestType === 'presale'
+        ? {
+            type: requestType,
+            primaryChain: contracts[0]?.chain || 'ethereum',
+            contracts,
+            presale: payload.presale,
+          }
+        : {
+            type: requestType,
+            primaryChain: contracts[0]?.chain || 'ethereum',
+            contracts,
+            launchDate: payload.launchDate,
+            chart: payload.chart,
+            dex: payload.dex,
+          },
     security: {
       kycUrl: payload.kycUrl,
       auditUrl: payload.auditUrl,
