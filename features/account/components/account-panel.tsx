@@ -115,7 +115,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
           <span>●</span> User area
         </p>
         <h1>Dashboard</h1>
-        <p>Manage your submitted projects and deletion requests from one place.</p>
+        <p>Manage your submitted projects.</p>
       </header>
 
       <section className="settings-card submissions-card watchlist-page-card">
