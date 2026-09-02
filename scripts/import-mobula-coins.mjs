@@ -70,6 +70,15 @@ const chainAliases = {
   solana: (name) => name === 'solana',
 };
 
+const mobulaAssetBlockchains = {
+  ethereum: 'ethereum',
+  bsc: 'bsc',
+  polygon: 'polygon',
+  arbitrum: 'arbitrum',
+  base: 'base',
+  solana: 'solana',
+};
+
 const dexSwapUrlBuilders = {
   solana: (address) => `https://raydium.io/swap/?inputMint=sol&outputMint=${address}`,
   ethereum: (address) => `https://app.uniswap.org/swap?outputCurrency=${address}&chain=mainnet`,
@@ -218,15 +227,11 @@ async function enrichTokensWithMobulaDetails(tokens) {
 }
 
 async function fetchMobulaAssetDetailsBatch(tokens) {
-  const body = tokens.map((token) =>
-    token.mobulaId
-      ? { id: token.mobulaId, tokensLimit: 1 }
-      : {
-          blockchain: token.contract.blockchain,
-          address: token.contract.address,
-          tokensLimit: 1,
-        },
-  );
+  const body = tokens.map((token) => ({
+    blockchain: mobulaAssetBlockchains[token.contract.chain] || token.contract.blockchain,
+    address: token.contract.address,
+    tokensLimit: 1,
+  }));
 
   try {
     const response = await fetch(MOBULA_DETAILS_URL, {
@@ -239,7 +244,12 @@ async function fetchMobulaAssetDetailsBatch(tokens) {
     });
 
     if (!response.ok) {
-      throw new Error(`Mobula details request failed: ${response.status} ${response.statusText}`);
+      const errorText = await response.text().catch(() => '');
+      throw new Error(
+        `Mobula details request failed: ${response.status} ${response.statusText}${
+          errorText ? ` — ${errorText.slice(0, 500)}` : ''
+        }`,
+      );
     }
 
     const json = await response.json();
@@ -260,8 +270,51 @@ async function fetchMobulaAssetDetailsBatch(tokens) {
       }`,
     );
     if (DEBUG) console.warn(error);
-    return [];
+    return fetchMobulaAssetDetailsIndividually(tokens);
   }
+}
+
+async function fetchMobulaAssetDetailsIndividually(tokens) {
+  const details = [];
+
+  for (const token of tokens) {
+    const url = new URL(MOBULA_DETAILS_URL);
+    url.searchParams.set(
+      'blockchain',
+      mobulaAssetBlockchains[token.contract.chain] || token.contract.blockchain,
+    );
+    url.searchParams.set('address', token.contract.address);
+    url.searchParams.set('tokensLimit', '1');
+
+    try {
+      const response = await fetch(url, {
+        headers: MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {},
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        if (DEBUG) {
+          console.warn(
+            `Mobula details single request failed for ${token.symbol}: ${response.status} ${response.statusText}${
+              errorText ? ` — ${errorText.slice(0, 500)}` : ''
+            }`,
+          );
+        }
+        details.push(null);
+        continue;
+      }
+
+      const json = await response.json();
+      details.push(json?.data || null);
+    } catch (error) {
+      if (DEBUG) console.warn(`Mobula details single request failed for ${token.symbol}:`, error);
+      details.push(null);
+    }
+
+    await sleep(1100);
+  }
+
+  return details;
 }
 
 function applyMobulaAssetDetails(token, detail) {

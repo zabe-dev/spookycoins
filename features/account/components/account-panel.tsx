@@ -118,7 +118,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
         <p>Manage your submitted projects and deletion requests from one place.</p>
       </header>
 
-      <section className="settings-card submissions-card">
+      <section className="settings-card submissions-card watchlist-page-card">
         <div className="watchlist-page-toolbar">
           <span>{submissions.length}</span>
         </div>
