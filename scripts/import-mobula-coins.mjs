@@ -35,9 +35,9 @@ const RANDOMIZE = !args.includes('--no-random');
 const DETAILS_BATCH_SIZE = Math.min(
   readPositiveInteger(
     args.find((arg) => arg.startsWith('--details-batch-size='))?.split('=')[1],
-    50,
+    10,
   ),
-  50,
+  10,
 );
 const EXCLUDE_TOP_RANK = readPositiveInteger(
   args.find((arg) => arg.startsWith('--exclude-top-rank='))?.split('=')[1],
