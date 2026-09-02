@@ -140,6 +140,8 @@ async function fetchMobulaAssets() {
       'contracts',
       'logo',
       'rank',
+      'listed_at',
+      'listedAt',
       'total_supply',
       'holders_count',
       'description',
@@ -217,7 +219,7 @@ function buildToken(item) {
     contract,
     chartUrl: chartUrlBuilders[contract.chain](contract.address),
     dexUrl: dexSwapUrlBuilders[contract.chain](contract.address),
-    launchDate: null,
+    launchDate: pickDate(item, ['listed_at', 'listedAt', 'launch_date', 'launchDate']),
   };
 }
 
@@ -388,6 +390,14 @@ function pickInteger(obj, keys) {
 function pickString(obj, keys) {
   const value = pick(obj, keys);
   return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function pickDate(obj, keys) {
+  const value = pick(obj, keys);
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+
+  const date = typeof value === 'number' ? new Date(value) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function pickStringArray(obj, keys) {

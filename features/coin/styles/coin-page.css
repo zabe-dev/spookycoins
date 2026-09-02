@@ -202,27 +202,41 @@
 }
 .request-change-card h3 {
   margin: 0;
-  font-size: 12px;
+  color: var(--copy);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 .request-change-card p {
   margin: 4px 0 0;
   color: var(--sub);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .request-change-card button {
   grid-column: 1 / -1;
-  height: 34px;
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 10px;
   background: var(--surface2);
+  padding: 11px 14px;
   color: var(--copy);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 750;
   cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
 }
 .request-change-card button:hover {
+  transform: translateY(-1px);
   border-color: rgba(196, 255, 68, 0.42);
+  background: rgba(203, 255, 74, 0.07);
   color: var(--lime);
 }
 .change-modal-backdrop {
@@ -271,8 +285,10 @@
 .change-modal-heading small,
 .change-request-success small {
   color: var(--lime);
-  font-size: 8px;
+  font-size: 10px;
+  font-weight: 750;
   letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 .change-modal-heading h2,
 .change-request-success h2 {
@@ -286,8 +302,8 @@
 .change-request-success p {
   margin: 8px 0 0;
   color: var(--sub);
-  font-size: 10px;
-  line-height: 1.65;
+  font-size: 12px;
+  line-height: 1.6;
 }
 .change-modal-heading p b {
   color: var(--copy);
@@ -295,44 +311,48 @@
 .change-request-form {
   padding: 20px 25px 25px;
   display: grid;
-  gap: 14px;
+  gap: 15px;
 }
 .change-request-form label {
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 .change-request-form label > span {
   color: #c6cdd1;
-  font-size: 9px;
-  font-weight: 650;
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
 }
 .change-request-form label i {
   color: var(--sub);
-  font-size: 8px;
+  font-size: 9px;
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .change-request-form input,
 .change-request-form select,
 .change-request-form textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 10px;
   outline: none;
   background: #0d1113;
   color: var(--copy);
   font:
-    10px var(--font-inter),
+    12px var(--font-poppins),
     sans-serif;
 }
 .change-request-form input,
 .change-request-form select {
-  height: 40px;
-  padding: 0 11px;
+  min-height: 44px;
+  padding: 0 13px;
 }
 .change-request-form textarea {
-  min-height: 104px;
-  padding: 11px;
+  min-height: 116px;
+  padding: 13px;
   resize: vertical;
 }
 .change-request-form input:focus,
@@ -343,7 +363,7 @@
 .change-form-note {
   margin: 0;
   color: var(--sub);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.5;
 }
 .change-form-actions {
@@ -353,13 +373,14 @@
 }
 .change-form-actions button,
 .change-request-success > button {
-  height: 40px;
+  min-height: 42px;
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: 10px;
   background: var(--surface2);
+  padding: 11px 14px;
   color: var(--copy);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 750;
   cursor: pointer;
 }
 .change-form-actions button[type='submit'],
