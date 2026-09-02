@@ -6,7 +6,6 @@ import Link from 'next/link';
 import {
   AlertCircle,
   CheckCircle2,
-  CircleHelp,
   Clock3,
   Copy,
   ExternalLink,
@@ -35,46 +34,19 @@ export type AccountSubmission = {
   scheduledDeleteAt?: string;
 };
 
-export type AccountWatchedCoin = {
-  coinId: number;
-  name: string;
-  symbol: string;
-  chain: string | null;
-  chainIcon: string | null;
-  logoUrl: string | null;
-  createdAt: string;
-};
-
 export type PublicWatchedCoin = CoinListItem & {
   savedAt: string;
 };
 
-export function AccountPanel({
+export function WatchlistPanel({
   userId,
-  watchedCoins,
-  submissions,
+  coins,
 }: {
-  email: string;
   userId: string;
-  watchedCoins: AccountWatchedCoin[];
-  submissions: AccountSubmission[];
+  coins: PublicWatchedCoin[];
 }) {
   const [watchlistNotice, setWatchlistNotice] = useState<InlineNotice | null>(null);
-  const [submissionNotice, setSubmissionNotice] = useState<InlineNotice | null>(null);
-  const [deleteModal, setDeleteModal] = useState<AccountSubmission | null>(null);
-  const [deletionOverrides, setDeletionOverrides] = useState<Record<string, string | null>>({});
   const watchlistPath = `/watchlist/${userId}`;
-  const listingRows = submissions.map((submission) => {
-    if (!(submission.id in deletionOverrides)) return submission;
-    const scheduledDeleteAt = deletionOverrides[submission.id];
-    return scheduledDeleteAt
-      ? { ...submission, status: 'suspended', scheduledDeleteAt }
-      : {
-          ...submission,
-          status: submission.baseStatus || 'approved',
-          scheduledDeleteAt: undefined,
-        };
-  });
 
   async function copyWatchlistUrl() {
     try {
@@ -87,48 +59,32 @@ export function AccountPanel({
   }
 
   return (
-    <section className="container settings-shell account-shell">
+    <section className="container settings-shell account-shell public-watchlist-shell">
       <header className="account-heading">
         <p className="eyebrow">
           <span>●</span> User area
         </p>
-        <h1>Dashboard</h1>
-        <p>Track your watchlist, public share link, and submitted projects from one place.</p>
+        <h1>Watchlist</h1>
+        <p>Review your saved coins and share the full public table with anyone.</p>
       </header>
 
       <section className="settings-card submissions-card">
         <div className="settings-card-title">
           <div>
             <small>Watchlist</small>
-            <h2>Watched coins</h2>
+            <h2>Saved coins</h2>
           </div>
           <div className="settings-card-actions">
             <button type="button" onClick={() => void copyWatchlistUrl()}>
               <Copy aria-hidden="true" />
               Copy public link
             </button>
-            <span>{watchedCoins.length}</span>
+            <span>{coins.length}</span>
           </div>
         </div>
         <InlineFeedback notice={watchlistNotice} />
-        {watchedCoins.length ? (
-          <div className="watchlist-table-wrap">
-            <table className="watchlist-table">
-              <thead>
-                <tr>
-                  <th>Coin</th>
-                  <th>Chain</th>
-                  <th>Saved</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {watchedCoins.map((coin) => (
-                  <WatchedCoinRow key={coin.coinId} coin={coin} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {coins.length ? (
+          <PublicWatchlistTable coins={coins} />
         ) : (
           <div className="settings-empty">
             <strong>No watched coins yet</strong>
@@ -136,6 +92,40 @@ export function AccountPanel({
           </div>
         )}
       </section>
+    </section>
+  );
+}
+
+export function AccountPanel({
+  submissions,
+}: {
+  email: string;
+  submissions: AccountSubmission[];
+}) {
+  const [submissionNotice, setSubmissionNotice] = useState<InlineNotice | null>(null);
+  const [deleteModal, setDeleteModal] = useState<AccountSubmission | null>(null);
+  const [deletionOverrides, setDeletionOverrides] = useState<Record<string, string | null>>({});
+  const listingRows = submissions.map((submission) => {
+    if (!(submission.id in deletionOverrides)) return submission;
+    const scheduledDeleteAt = deletionOverrides[submission.id];
+    return scheduledDeleteAt
+      ? { ...submission, status: 'suspended', scheduledDeleteAt }
+      : {
+          ...submission,
+          status: submission.baseStatus || 'approved',
+          scheduledDeleteAt: undefined,
+        };
+  });
+
+  return (
+    <section className="container settings-shell account-shell">
+      <header className="account-heading">
+        <p className="eyebrow">
+          <span>●</span> User area
+        </p>
+        <h1>Dashboard</h1>
+        <p>Manage your submitted projects and deletion requests from one place.</p>
+      </header>
 
       <section className="settings-card submissions-card">
         <div className="settings-card-title">
@@ -205,44 +195,6 @@ function InlineFeedback({ notice }: { notice: InlineNotice | null }) {
       <Icon aria-hidden="true" />
       {notice.message}
     </p>
-  );
-}
-
-function WatchedCoinRow({ coin }: { coin: AccountWatchedCoin }) {
-  const initials =
-    (coin.symbol || coin.name)
-      .replace(/[^a-z0-9]/gi, '')
-      .slice(0, 2)
-      .toUpperCase() || 'SC';
-
-  return (
-    <tr>
-      <td>
-        <div className="submission-coin">
-          <span>{coin.logoUrl ? <img src={coin.logoUrl} alt="" /> : initials}</span>
-          <div>
-            <strong>{coin.name}</strong>
-            <small>{coin.symbol || '—'}</small>
-          </div>
-        </div>
-      </td>
-      <td>
-        <span className="watchlist-chain-logo" title={coin.chain || 'Chain not set'}>
-          {coin.chainIcon ? <img src={coin.chainIcon} alt="" /> : <CircleHelp aria-hidden="true" />}
-        </span>
-      </td>
-      <td>{new Date(coin.createdAt).toLocaleDateString()}</td>
-      <td>
-        <Link
-          className="submission-icon-action"
-          href={`/coin/${coin.coinId}`}
-          aria-label={`View ${coin.name}`}
-          title={`View ${coin.name}`}
-        >
-          <ExternalLink aria-hidden="true" />
-        </Link>
-      </td>
-    </tr>
   );
 }
 

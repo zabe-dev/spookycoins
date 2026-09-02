@@ -2,14 +2,12 @@ import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import {
   PublicWatchlistTable,
-  type PublicWatchedCoin,
 } from '@/features/account/components/account-panel';
-import { getPublicCoinListItems } from '@/features/coins/server/coin-list';
+import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
-import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
 import { db } from '@/lib/db/client';
-import { coinWatchlists, coins, users } from '@/lib/db/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { users } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -27,36 +25,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
   const [owner] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!owner) notFound();
 
-  const watchedCoins = await db
-    .select({
-      coinId: coins.id,
-      createdAt: coinWatchlists.createdAt,
-    })
-    .from(coinWatchlists)
-    .innerJoin(coins, eq(coins.id, coinWatchlists.coinId))
-    .where(and(eq(coinWatchlists.userId, userId), eq(coins.listingStatus, 'active')))
-    .orderBy(desc(coinWatchlists.createdAt))
-    .catch((error) => {
-      if (isMissingInteractionTableError(error)) return [];
-      throw error;
-    });
-
-  const savedAtByCoinId = new Map(
-    watchedCoins.map((coin) => [coin.coinId, coin.createdAt.toISOString()]),
-  );
-  const watchedOrder = new Map(watchedCoins.map((coin, index) => [coin.coinId, index]));
-  const fullCoins = watchedCoins.length ? await getPublicCoinListItems() : [];
-  const rows: PublicWatchedCoin[] = fullCoins
-    .filter((coin) => savedAtByCoinId.has(coin.coinId))
-    .map((coin) => ({
-      ...coin,
-      savedAt: savedAtByCoinId.get(coin.coinId) || coin.submittedTimestamp,
-    }))
-    .sort(
-      (a, b) =>
-        (watchedOrder.get(a.coinId) ?? Number.MAX_SAFE_INTEGER) -
-        (watchedOrder.get(b.coinId) ?? Number.MAX_SAFE_INTEGER),
-    );
+  const rows = await getWatchlistTableRows(userId);
 
   return (
     <main className="market-page">

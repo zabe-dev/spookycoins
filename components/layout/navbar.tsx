@@ -10,8 +10,8 @@ import {
   CircleUserRound,
   Compass,
   Handshake,
+  Heart,
   LogOut,
-  Package,
   Plus,
   Settings,
   Shield,
@@ -91,9 +91,9 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                   <Link href="/dashboard" onClick={closeMenu}>
                     <MenuIcon type="account" /> Dashboard
                   </Link>
-                  <button className="menu-disabled" disabled>
-                    <MenuIcon type="orders" /> Orders <small>Soon</small>
-                  </button>
+                  <Link href="/watchlist" onClick={closeMenu}>
+                    <MenuIcon type="watchlist" /> Watchlist
+                  </Link>
                   {canOpenAdmin && (
                     <Link href="/admin/dashboard" onClick={closeMenu}>
                       <MenuIcon type="admin" /> Admin Panel
@@ -151,9 +151,9 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                       <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}>
                         <MenuIcon type="account" /> Dashboard
                       </Link>
-                      <button className="menu-disabled" disabled>
-                        <MenuIcon type="orders" /> Orders <small>Soon</small>
-                      </button>
+                      <Link href="/watchlist" onClick={() => setUserMenuOpen(false)}>
+                        <MenuIcon type="watchlist" /> Watchlist
+                      </Link>
                       {canOpenAdmin && (
                         <Link href="/admin/dashboard" onClick={() => setUserMenuOpen(false)}>
                           <MenuIcon type="admin" /> Admin Panel
@@ -226,7 +226,7 @@ function MenuIcon({
     | 'partners'
     | 'advertise'
     | 'account'
-    | 'orders'
+    | 'watchlist'
     | 'settings'
     | 'admin'
     | 'logout';
@@ -237,7 +237,7 @@ function MenuIcon({
   if (type === 'advertise')
     return <BadgeDollarSign className="menu-item-icon" aria-hidden="true" />;
   if (type === 'account') return <CircleUserRound className="menu-item-icon" aria-hidden="true" />;
-  if (type === 'orders') return <Package className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'watchlist') return <Heart className="menu-item-icon" aria-hidden="true" />;
   if (type === 'settings') return <Settings className="menu-item-icon" aria-hidden="true" />;
   if (type === 'admin') return <Shield className="menu-item-icon" aria-hidden="true" />;
 

@@ -1,12 +1,10 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { AccountPanel } from '@/features/account/components/account-panel';
-import { NETWORKS } from '@/features/coins/networks';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
-import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
-import { coinSubmissions, coinWatchlists, coins } from '@/lib/db/schema';
+import { coinSubmissions } from '@/lib/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
@@ -69,35 +67,11 @@ export default async function DashboardPage() {
     }
   });
 
-  const watchedCoins = await db
-    .select({
-      coinId: coins.id,
-      name: coins.name,
-      symbol: coins.symbol,
-      chain: coins.chain,
-      logoUrl: coins.logoUrl,
-      createdAt: coinWatchlists.createdAt,
-    })
-    .from(coinWatchlists)
-    .innerJoin(coins, eq(coins.id, coinWatchlists.coinId))
-    .where(and(eq(coinWatchlists.userId, session.user.id), eq(coins.listingStatus, 'active')))
-    .orderBy(desc(coinWatchlists.createdAt))
-    .catch((error) => {
-      if (isMissingInteractionTableError(error)) return [];
-      throw error;
-    });
-
   return (
     <main className="market-page">
       <SiteHeader active="none" />
       <AccountPanel
         email={session.user.email}
-        userId={session.user.id}
-        watchedCoins={watchedCoins.map((coin) => ({
-          ...coin,
-          ...readChainData(coin.chain),
-          createdAt: coin.createdAt.toISOString(),
-        }))}
         submissions={submissions.map((submission) => ({
           ...submission,
           baseStatus: submission.status,
@@ -140,18 +114,6 @@ function readDeleteRequestData(value: unknown) {
     sourceSubmissionId: readString(value.sourceSubmissionId),
     scheduledDeleteAt: readString(value.scheduledDeleteAt),
   };
-}
-
-function readChainData(value: string | null) {
-  if (value && value in NETWORKS) {
-    const network = NETWORKS[value as keyof typeof NETWORKS];
-    return {
-      chain: network.shortName,
-      chainIcon: network.iconUrl,
-    };
-  }
-
-  return { chain: value, chainIcon: null };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

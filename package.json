@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "db:generate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
-    "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio"
+    "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
+    "import:mobula": "node --env-file=.env.local scripts/import-mobula-coins.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1121.0",
