@@ -1,14 +1,5 @@
 import 'server-only';
 
-import { db } from '@/lib/db/client';
-import {
-  coinBoosts,
-  coinLinks,
-  coinPromotions,
-  coins,
-  coinSubmissions,
-  marketSnapshots,
-} from '@/lib/db/schema';
 import { NETWORKS } from '@/features/coins/networks';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getCoinInteractionSummaries } from '@/features/coins/server/interactions';
@@ -21,6 +12,15 @@ import type {
   NetworkId,
 } from '@/features/coins/types';
 import { toCoinListItem, type CoinListItem } from '@/features/coins/view';
+import { db } from '@/lib/db/client';
+import {
+  coinBoosts,
+  coinLinks,
+  coinPromotions,
+  coins,
+  coinSubmissions,
+  marketSnapshots,
+} from '@/lib/db/schema';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
@@ -173,7 +173,7 @@ function mapDbCoinToCoin({
     submittedAt: coin.submittedAt.toISOString(),
     populatedAt: coin.updatedAt.toISOString(),
     chart: buildChartConfig(links, submission, network, coin.contractAddress || ''),
-    dex: buildDexConfig(dexLink, websiteLink, submission),
+    dex: buildDexConfig(dexLink, websiteLink, submission, network),
     boost:
       boost && isBoostMultiplier(boost.multiplier)
         ? {
@@ -293,15 +293,34 @@ function buildChartConfig(
   contractAddress: string,
 ): Coin['chart'] {
   const chart = links.get('chart');
-  if (chart?.url) return { source: 'external', url: chart.url };
 
-  const provider = readSubmissionChartProvider(submission?.coinData);
-  const chartUrl = buildChartEmbedUrl(provider, network, contractAddress);
-  if (chartUrl && isEmbeddableChartProvider(provider)) {
-    return { source: 'embed', provider, url: chartUrl };
+  // Submitted coins pick a provider via dropdown (chart.provider in the
+  // submission data). Imported coins (Mobula import script) have no
+  // submission row, so we fall back to guessing the provider from the
+  // stored chart URL's hostname. This is what makes imported DexScreener
+  // (and now CoinBrain) links render as an embed instead of always
+  // showing "Custom chart link".
+  const submissionProvider = readSubmissionChartProvider(submission?.coinData);
+  const provider = submissionProvider || inferChartProviderFromUrl(chart?.url);
+
+  if (provider && isEmbeddableChartProvider(provider)) {
+    const chartUrl = buildChartEmbedUrl(provider, network, contractAddress);
+    if (chartUrl) return { source: 'embed', provider, url: chartUrl };
   }
 
+  if (chart?.url) return { source: 'external', url: chart.url };
   return { source: 'unavailable' };
+}
+
+// Infer chart provider from the URL's hostname when there's no submission
+// to tell us explicitly. Used for imported coins only.
+function inferChartProviderFromUrl(url: string | undefined): string {
+  if (!url) return '';
+  if (url.includes('dexscreener.com')) return 'dexscreener';
+  if (url.includes('geckoterminal.com')) return 'geckoterminal';
+  if (url.includes('dextools.io')) return 'dextools';
+  if (url.includes('coinbrain.com')) return 'coinbrain';
+  return '';
 }
 
 function readSubmissionChartProvider(value: unknown) {
@@ -333,6 +352,17 @@ function buildChartEmbedUrl(provider: string, network: NetworkId, address: strin
     const chain = dextoolsChainIds[network];
     return chain
       ? `https://www.dextools.io/widget-chart/en/${chain}/pe-light/${encodedAddress}?theme=dark&chartType=1&chartResolution=30&drawingToolbars=false&chartInUsd=true`
+      : '';
+  }
+
+  if (provider === 'coinbrain') {
+    // CoinBrain's docs only list these 8 chains — notably no Solana.
+    // Format: https://coinbrain.com/embed/<chain>-<pairAddress>?...
+    // Note: like DEXTools above, this technically wants a pool/pair address,
+    // not a bare token contract address — we only have the latter here.
+    const chain = coinbrainChainIds[network];
+    return chain
+      ? `https://coinbrain.com/embed/${chain}-${encodedAddress}?theme=dark&chart=1&trades=1`
       : '';
   }
 
@@ -397,15 +427,51 @@ const dextoolsChainIds: Partial<Record<NetworkId, string>> = {
   xrpl: 'xrpl',
 };
 
+const coinbrainChainIds: Partial<Record<NetworkId, string>> = {
+  ethereum: 'eth',
+  bsc: 'bnb',
+  polygon: 'poly',
+  optimism: 'opti',
+  avalanche: 'aval',
+  arbitrum: 'arbi',
+  fantom: 'fant',
+};
+
 function buildDexConfig(
   dexLink: DbCoinLink | undefined,
   websiteLink: DbCoinLink | undefined,
   submission: DbCoinSubmission | null,
+  network: NetworkId,
 ): DexConfig {
-  const provider = readSubmissionDexProvider(submission?.coinData);
-  if (dexLink?.url) return { available: true, provider, url: dexLink.url };
+  // Submitted coins: unchanged from original — always trust the submission's
+  // chosen provider (including a genuine 'custom' choice) when one exists.
+  if (submission) {
+    const provider = readSubmissionDexProvider(submission.coinData);
+    if (dexLink?.url) return { available: true, provider, url: dexLink.url };
+    if (websiteLink?.url) return { available: true, provider: 'custom', url: websiteLink.url };
+    return { available: false };
+  }
+
+  // Imported coins (no submission row): infer provider from chain, since
+  // readSubmissionDexProvider would otherwise default to 'custom' for these.
+  if (dexLink?.url) {
+    return { available: true, provider: inferDexProviderFromNetwork(network), url: dexLink.url };
+  }
   if (websiteLink?.url) return { available: true, provider: 'custom', url: websiteLink.url };
   return { available: false };
+}
+
+// Default DEX per chain, mirrored from the import script's DEX_SWAP_URL_BUILDERS.
+// Only used for imported coins, which have no submission to read a provider from.
+function inferDexProviderFromNetwork(network: NetworkId): DexProvider {
+  if (network === 'ethereum' || network === 'arbitrum' || network === 'base' || network === 'hood')
+    return 'uniswap';
+  if (network === 'bsc') return 'pancakeswap';
+  if (network === 'solana') return 'raydium';
+  if (network === 'polygon') return 'quickswap';
+  if (network === 'kcc') return 'mojitoswap';
+  if (network === 'sui') return 'cetus';
+  return 'custom';
 }
 
 function readSubmissionDexProvider(value: unknown): DexProvider {
