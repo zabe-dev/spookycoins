@@ -1,6 +1,7 @@
 import { recordCoinVote } from '@/features/coins/server/interactions';
 import { apiError, apiSuccess } from '@/lib/api/responses';
 import { auth } from '@/lib/auth/server';
+import { getClientIp } from '@/lib/http/client-ip';
 import { headers } from 'next/headers';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -14,7 +15,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) return apiError('AUTH_REQUIRED', 'Sign in required.', 401);
 
-  const ipAddress = getIpAddress(requestHeaders);
+  const ipAddress = getClientIp(requestHeaders);
   if (isRateLimited(`${session.user.id}:${ipAddress || 'unknown'}`)) {
     return apiError('RATE_LIMITED', 'Too many vote attempts. Please slow down.', 429);
   }
@@ -61,12 +62,4 @@ function isRateLimited(key: string) {
   );
   voteAttempts.set(key, [...activeAttempts, now]);
   return activeAttempts.length >= maxVotesPerWindow;
-}
-
-function getIpAddress(requestHeaders: Headers) {
-  return (
-    requestHeaders.get('cf-connecting-ip') ||
-    requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    null
-  );
 }

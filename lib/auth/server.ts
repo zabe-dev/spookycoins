@@ -1,5 +1,6 @@
 import { db } from '@/lib/db/client';
 import * as schema from '@/lib/db/schema';
+import { getClientIp } from '@/lib/http/client-ip';
 import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
@@ -144,8 +145,10 @@ async function validateSettingsUpdates(ctx: unknown): Promise<void> {
   }
 
   if (request.path === '/change-password') {
-    const currentPassword = typeof request.body?.currentPassword === 'string' ? request.body.currentPassword : '';
-    const newPassword = typeof request.body?.newPassword === 'string' ? request.body.newPassword : '';
+    const currentPassword =
+      typeof request.body?.currentPassword === 'string' ? request.body.currentPassword : '';
+    const newPassword =
+      typeof request.body?.newPassword === 'string' ? request.body.newPassword : '';
 
     if (newPassword && newPassword === currentPassword) {
       throw APIError.fromStatus('BAD_REQUEST', {
@@ -157,8 +160,7 @@ async function validateSettingsUpdates(ctx: unknown): Promise<void> {
 
 function getAuthRequestDetails(request?: Request) {
   const headers = request?.headers;
-  const forwardedFor = headers?.get('x-forwarded-for')?.split(',')[0]?.trim();
-  const ip = forwardedFor || headers?.get('x-real-ip') || 'Unknown IP';
+  const ip = (headers && getClientIp(headers)) || 'Unknown IP';
   const city =
     decodeHeader(headers?.get('x-vercel-ip-city')) || decodeHeader(headers?.get('cf-ipcity')) || '';
   const country = formatCountry(

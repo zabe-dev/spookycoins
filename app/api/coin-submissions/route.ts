@@ -1,3 +1,8 @@
+import {
+  coinSubmissionPayloadSchema,
+  type CoinSubmissionPayload,
+} from '@/features/submissions/schemas/coin-submission';
+import { apiError, apiSuccess } from '@/lib/api/responses';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
 import {
@@ -6,13 +11,9 @@ import {
   coinSubmissionLinks,
   coinSubmissions,
 } from '@/lib/db/schema';
-import {
-  coinSubmissionPayloadSchema,
-  type CoinSubmissionPayload,
-} from '@/features/submissions/schemas/coin-submission';
-import { apiError, apiSuccess } from '@/lib/api/responses';
-import { headers } from 'next/headers';
+import { getClientIp } from '@/lib/http/client-ip';
 import { uploadSubmissionLogo } from '@/lib/storage/s3';
+import { headers } from 'next/headers';
 
 const maxSubmissionBodyBytes = 3_200_000;
 const rateLimitWindowMs = 60_000;
@@ -256,10 +257,7 @@ function byteLength(value: string) {
 }
 
 function buildRequesterKey(userId: string, requestHeaders: Headers) {
-  const ip =
-    requestHeaders.get('cf-connecting-ip') ||
-    requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown-ip';
+  const ip = getClientIp(requestHeaders) || 'unknown-ip';
   return `${userId}:${ip}`;
 }
 
@@ -281,9 +279,7 @@ async function verifyTurnstile(token: string, requestHeaders: Headers) {
   if (!secret) return { ok: true };
   if (!token) return { ok: false, error: 'Please complete the verification before submitting.' };
 
-  const remoteip =
-    requestHeaders.get('cf-connecting-ip') ||
-    requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const remoteip = getClientIp(requestHeaders);
   const formData = new FormData();
   formData.append('secret', secret);
   formData.append('response', token);
