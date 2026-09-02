@@ -85,9 +85,11 @@
   color: var(--copy, var(--text));
 }
 .topbar-coin-name {
-  font:
-    700 9px/1 var(--font-space-grotesk),
-    sans-serif;
+  color: var(--copy, var(--text));
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
   letter-spacing: -0.01em;
 }
 .topbar-coin-link {

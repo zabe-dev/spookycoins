@@ -19,6 +19,7 @@ export function TopbarCoinLink({ coin, kind }: TopbarCoinLinkProps) {
 
   const Icon = kind === 'trending' ? Flame : Crown;
   const isGolden = coin.boost === 500;
+  const hasBoost = Boolean(coin.boost);
 
   return (
     <Link className="topbar-coin-link" href={`/coin/${coin.id}`}>
@@ -37,10 +38,10 @@ export function TopbarCoinLink({ coin, kind }: TopbarCoinLinkProps) {
       <b className={`topbar-coin-name ${isGolden ? 'gold-name gold-name-animated' : ''}`}>
         {coin.name}
       </b>
-      {isGolden && (
-        <span className="topbar-boost-badge boost-badge boost-500">
+      {hasBoost && (
+        <span className={`topbar-boost-badge boost-badge boost-${coin.boost}`}>
           <TopbarBoltIcon />
-          500×
+          {coin.boost}×
         </span>
       )}
     </Link>
