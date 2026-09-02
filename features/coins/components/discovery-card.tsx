@@ -90,7 +90,7 @@ function Metric({
             metric === 'watchlist'
               ? coin.watchCount
               : metric === 'trend'
-                ? coin.recentVotes
+                ? coin.totalVotes
                 : coin.votes,
           )}
         </b>

@@ -34,6 +34,7 @@ export type CoinListItem = {
   promoted: boolean;
   rawVotes: number;
   votes: number;
+  totalVotes: number;
   recentVotes: number;
   recentWatchlistAdds: number;
   trendingScore: number;
@@ -130,6 +131,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     promoted: coin.promoted.active,
     rawVotes,
     votes: boostedVotes,
+    totalVotes: coin.community.totalVotes,
     recentVotes: coin.community.recentVotes,
     recentWatchlistAdds: coin.community.recentWatchlistAdds,
     trendingScore: coin.community.trendingScore,
@@ -203,22 +205,22 @@ function formatCompactRelativeTime(deltaMs: number, direction: 'ago' | 'in') {
   const prefix = direction === 'in' ? 'in ' : '';
   const suffix = direction === 'ago' ? ' ago' : '';
 
-  if (seconds < 60) return `${prefix}${seconds}s${suffix}`;
+  if (seconds < 60) return `${prefix}${formatTimeUnit(seconds, 'second')}${suffix}`;
 
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${prefix}${minutes}m${suffix}`;
+  if (minutes < 60) return `${prefix}${formatTimeUnit(minutes, 'minute')}${suffix}`;
 
   const hours = Math.round(seconds / 3_600);
-  if (hours < 24) return `${prefix}${hours}h${suffix}`;
+  if (hours < 24) return `${prefix}${formatTimeUnit(hours, 'hour')}${suffix}`;
 
   const days = Math.round(seconds / 86_400);
-  if (days < 30) return `${prefix}${days}d${suffix}`;
+  if (days < 30) return `${prefix}${formatTimeUnit(days, 'day')}${suffix}`;
 
   const months = Math.round(days / 30);
-  if (months < 12) return `${prefix}${months}m${suffix}`;
+  if (months < 12) return `${prefix}${formatTimeUnit(months, 'month')}${suffix}`;
 
   const years = Math.round(months / 12);
-  return `${prefix}${years}y${suffix}`;
+  return `${prefix}${formatTimeUnit(years, 'year')}${suffix}`;
 }
 
 function formatLongRelativeTime(deltaMs: number) {
@@ -237,4 +239,8 @@ function formatLongRelativeTime(deltaMs: number) {
               : [Math.round(seconds / 31_104_000), 'year'];
 
   return `in ${value} ${unit}${value === 1 ? '' : 's'}`;
+}
+
+function formatTimeUnit(value: number, unit: string) {
+  return `${value} ${unit}${value === 1 ? '' : 's'}`;
 }
