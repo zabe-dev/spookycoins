@@ -119,11 +119,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
       </header>
 
       <section className="settings-card submissions-card">
-        <div className="settings-card-title">
-          <div>
-            <small>Listings</small>
-            <h2>Coins you submitted</h2>
-          </div>
+        <div className="watchlist-page-toolbar">
           <span>{submissions.length}</span>
         </div>
         <InlineFeedback notice={submissionNotice} />

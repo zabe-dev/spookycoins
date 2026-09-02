@@ -154,7 +154,7 @@ h3,
 }
 .nav-band .navbar {
   position: relative;
-  z-index: 3;
+  z-index: 120;
 }
 .brand {
   display: flex;
@@ -1635,7 +1635,7 @@ tbody tr:hover td {
     top: calc(100% + 8px);
     right: 15px;
     left: auto;
-    z-index: 40;
+    z-index: 1200;
     display: grid;
     width: min(320px, calc(100vw - 30px));
     max-height: calc(100dvh - 90px);
@@ -3496,6 +3496,8 @@ img.admin-project-logo {
   min-width: 0;
 }
 .public-watchlist-frame {
+  position: relative;
+  z-index: 0;
   overflow: visible;
 }
 .public-watchlist-table .submission-icon-action {

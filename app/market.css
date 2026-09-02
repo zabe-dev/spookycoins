@@ -57,6 +57,8 @@
 }
 .nav-band {
   background: var(--surface, #0d1013);
+  position: relative;
+  z-index: 120;
 }
 .topbar {
   height: 34px;
@@ -167,7 +169,7 @@
   display: flex;
   align-items: center;
   position: relative;
-  z-index: 20;
+  z-index: 120;
 }
 .navbar nav {
   margin-left: 54px;
@@ -949,6 +951,7 @@
       border-width 0.22s ease;
   }
   .navbar nav.open {
+    z-index: 1200;
     max-height: 460px;
     padding: 10px;
     border-width: 1px;
