@@ -69,6 +69,17 @@ export const auth = betterAuth({
   appName: 'SpookyCoins',
   secret: authSecret,
   baseURL: authUrl,
+  advanced: {
+    // Behind Cloudflare (proxied) + Traefik with forwardedHeaders.trustedIPs locked to
+    // Cloudflare's edge ranges, and the Vultr firewall restricting 80/443 to Cloudflare
+    // only, cf-connecting-ip cannot be spoofed by end users. This governs the IP better-auth
+    // stores on sessions (surfaced in the admin dashboard's "Last IP Used" column) and any
+    // built-in rate limiting. Without this, better-auth falls back to its own default IP
+    // detection, which does not trust cf-connecting-ip or forwarded chains automatically.
+    ipAddress: {
+      ipAddressHeaders: ['cf-connecting-ip'],
+    },
+  },
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema,
