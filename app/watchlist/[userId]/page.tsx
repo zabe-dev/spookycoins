@@ -29,7 +29,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
   if (!owner) notFound();
 
   const rows = await getWatchlistTableRows(userId, session?.user.id);
-  const ownerName = owner.email.split('@')[0] || 'Hunter';
+  const ownerName = owner.name.trim() || 'Hunter';
 
   return (
     <main className="market-page">
