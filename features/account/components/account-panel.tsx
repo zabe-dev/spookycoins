@@ -4,6 +4,8 @@
 
 import Link from 'next/link';
 import {
+  AlertCircle,
+  CheckCircle2,
   CircleHelp,
   Clock3,
   Copy,
@@ -16,6 +18,11 @@ import {
 import { useEffect, useState } from 'react';
 import { CoinCells } from '@/features/coins/components/coin-table';
 import type { CoinListItem } from '@/features/coins/view';
+
+type InlineNotice = {
+  tone: 'success' | 'error' | 'info';
+  message: string;
+};
 
 export type AccountSubmission = {
   id: string;
@@ -43,7 +50,6 @@ export type PublicWatchedCoin = CoinListItem & {
 };
 
 export function AccountPanel({
-  email,
   userId,
   watchedCoins,
   submissions,
@@ -53,7 +59,8 @@ export function AccountPanel({
   watchedCoins: AccountWatchedCoin[];
   submissions: AccountSubmission[];
 }) {
-  const [notice, setNotice] = useState('');
+  const [watchlistNotice, setWatchlistNotice] = useState<InlineNotice | null>(null);
+  const [submissionNotice, setSubmissionNotice] = useState<InlineNotice | null>(null);
   const [deleteModal, setDeleteModal] = useState<AccountSubmission | null>(null);
   const [deletionOverrides, setDeletionOverrides] = useState<Record<string, string | null>>({});
   const watchlistPath = `/watchlist/${userId}`;
@@ -70,9 +77,13 @@ export function AccountPanel({
   });
 
   async function copyWatchlistUrl() {
-    const watchlistUrl = `${window.location.origin}${watchlistPath}`;
-    await navigator.clipboard.writeText(watchlistUrl);
-    setNotice('Watchlist link copied.');
+    try {
+      const watchlistUrl = `${window.location.origin}${watchlistPath}`;
+      await navigator.clipboard.writeText(watchlistUrl);
+      setWatchlistNotice({ tone: 'success', message: 'Public watchlist link copied.' });
+    } catch {
+      setWatchlistNotice({ tone: 'error', message: 'Could not copy the link. Please try again.' });
+    }
   }
 
   return (
@@ -82,17 +93,8 @@ export function AccountPanel({
           <span>●</span> User area
         </p>
         <h1>Dashboard</h1>
-        <p>
-          Hello, {email}. Your watched coins and submitted projects will live here as the account
-          area grows.
-        </p>
+        <p>Track your watchlist, public share link, and submitted projects from one place.</p>
       </header>
-
-      {notice && (
-        <div className="settings-notice account-notice" role="status">
-          {notice}
-        </div>
-      )}
 
       <section className="settings-card submissions-card">
         <div className="settings-card-title">
@@ -108,6 +110,7 @@ export function AccountPanel({
             <span>{watchedCoins.length}</span>
           </div>
         </div>
+        <InlineFeedback notice={watchlistNotice} />
         {watchedCoins.length ? (
           <div className="watchlist-table-wrap">
             <table className="watchlist-table">
@@ -142,6 +145,7 @@ export function AccountPanel({
           </div>
           <span>{submissions.length}</span>
         </div>
+        <InlineFeedback notice={submissionNotice} />
         {submissions.length ? (
           <div className="submission-list">
             {listingRows.map((submission) => (
@@ -163,7 +167,7 @@ export function AccountPanel({
         <DeleteSubmissionModal
           submission={deleteModal}
           onClose={() => setDeleteModal(null)}
-          onNotice={setNotice}
+          onNotice={setSubmissionNotice}
           onScheduled={(scheduledDeleteAt) => {
             setDeletionOverrides((current) => ({
               ...current,
@@ -176,11 +180,31 @@ export function AccountPanel({
           onCancelled={() => {
             setDeletionOverrides((current) => ({ ...current, [deleteModal.id]: null }));
             setDeleteModal(null);
-            setNotice('Deletion request cancelled. The coin is active again.');
+            setSubmissionNotice({
+              tone: 'success',
+              message: 'Deletion request cancelled. The coin is active again.',
+            });
           }}
         />
       )}
     </section>
+  );
+}
+
+function InlineFeedback({ notice }: { notice: InlineNotice | null }) {
+  if (!notice) return null;
+
+  const Icon = notice.tone === 'success' ? CheckCircle2 : AlertCircle;
+
+  return (
+    <p
+      className={`inline-feedback ${notice.tone}`}
+      role={notice.tone === 'error' ? 'alert' : 'status'}
+      aria-live="polite"
+    >
+      <Icon aria-hidden="true" />
+      {notice.message}
+    </p>
   );
 }
 
@@ -325,19 +349,20 @@ function DeleteSubmissionModal({
 }: {
   submission: AccountSubmission;
   onClose: () => void;
-  onNotice: (message: string) => void;
+  onNotice: (notice: InlineNotice) => void;
   onScheduled: (scheduledDeleteAt: string) => void;
   onCancelled: () => void;
 }) {
   const [deleting, setDeleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [modalNotice, setModalNotice] = useState<InlineNotice | null>(null);
   const scheduledDeleteAt = submission.scheduledDeleteAt || '';
   const countdown = useCountdown(scheduledDeleteAt);
   const name = submission.coinData.name || `Submission ${submission.id.slice(0, 8)}`;
   const alreadyScheduled = Boolean(scheduledDeleteAt);
 
   async function requestDelete() {
-    onNotice('Sending request…');
+    setModalNotice({ tone: 'info', message: 'Scheduling deletion request…' });
     setDeleting(true);
     const response = await fetch(`/api/coin-submissions/${submission.id}/request`, {
       method: 'POST',
@@ -351,15 +376,23 @@ function DeleteSubmissionModal({
       const nextScheduledDeleteAt =
         body.data?.scheduledDeleteAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       onScheduled(nextScheduledDeleteAt);
-      onNotice('Deletion request sent. The coin is suspended and will be deleted in 24 hours.');
+      const notice = {
+        tone: 'success' as const,
+        message: 'Deletion request sent. The coin is suspended and will be deleted in 24 hours.',
+      };
+      setModalNotice(notice);
+      onNotice(notice);
       return;
     }
 
-    onNotice(body.message || body.errorMessage || 'Could not send the deletion request.');
+    setModalNotice({
+      tone: 'error',
+      message: body.message || body.errorMessage || 'Could not send the deletion request.',
+    });
   }
 
   async function cancelDelete() {
-    onNotice('Cancelling deletion…');
+    setModalNotice({ tone: 'info', message: 'Cancelling deletion request…' });
     setCancelling(true);
     const response = await fetch(`/api/coin-submissions/${submission.id}/request`, {
       method: 'POST',
@@ -374,7 +407,10 @@ function DeleteSubmissionModal({
       return;
     }
 
-    onNotice(body.message || body.errorMessage || 'Could not cancel the deletion request.');
+    setModalNotice({
+      tone: 'error',
+      message: body.message || body.errorMessage || 'Could not cancel the deletion request.',
+    });
   }
 
   return (
@@ -407,6 +443,7 @@ function DeleteSubmissionModal({
           <span>{alreadyScheduled ? 'Time before deletion' : 'Deletion window'}</span>
           <strong>{alreadyScheduled ? countdown : '24 hours'}</strong>
         </div>
+        <InlineFeedback notice={modalNotice} />
         <div className="account-modal-actions">
           <button type="button" className="account-secondary-action" onClick={onClose}>
             Close

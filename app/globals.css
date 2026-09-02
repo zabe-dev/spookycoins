@@ -3055,11 +3055,11 @@ img.admin-project-logo {
   letter-spacing: -0.04em;
 }
 .account-heading h1 {
-  margin: 12px 0 8px;
+  margin: 8px 0 6px;
   font:
-    760 clamp(42px, 6vw, 68px) var(--font-space-grotesk),
+    680 clamp(30px, 5vw, 42px) / 1.05 var(--font-space-grotesk),
     sans-serif;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
 }
 .settings-heading > p:last-child {
   max-width: 520px;
@@ -3069,9 +3069,11 @@ img.admin-project-logo {
   line-height: 1.55;
 }
 .account-heading > p:last-child {
+  max-width: 520px;
   margin: 0;
-  color: #89939a;
+  color: var(--sub);
   font-size: 13px;
+  line-height: 1.55;
 }
 .settings-notice {
   margin-top: 24px;
@@ -3084,6 +3086,45 @@ img.admin-project-logo {
 }
 .account-notice {
   width: auto;
+}
+.inline-feedback {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 7px;
+  margin: -8px 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 8px 11px;
+  color: #cfd6da;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.inline-feedback svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+.inline-feedback.success {
+  border-color: rgba(203, 255, 74, 0.22);
+  background: rgba(203, 255, 74, 0.07);
+  color: #dcedb4;
+}
+.inline-feedback.error {
+  border-color: rgba(255, 157, 157, 0.24);
+  background: rgba(255, 157, 157, 0.08);
+  color: #ffc1c1;
+}
+.inline-feedback.info {
+  border-color: rgba(55, 217, 255, 0.22);
+  background: rgba(55, 217, 255, 0.07);
+  color: #bceeff;
+}
+.account-confirm-modal .inline-feedback {
+  margin: 14px 0 0;
 }
 .settings-grid {
   display: grid;
@@ -3290,6 +3331,7 @@ img.admin-project-logo {
 }
 .submissions-card {
   margin-top: 16px;
+  overflow: hidden;
 }
 .settings-card-actions {
   display: flex;
@@ -3308,6 +3350,15 @@ img.admin-project-logo {
   font-size: 9px;
   font-weight: 800;
   cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+.settings-card-actions button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(203, 255, 74, 0.42);
+  background: rgba(203, 255, 74, 0.12);
 }
 .settings-card-actions button svg {
   width: 13px;
@@ -3329,8 +3380,10 @@ img.admin-project-logo {
 .watchlist-table-wrap {
   overflow-x: auto;
   border: 1px solid #262e33;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.012);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(203, 255, 74, 0.035), transparent 28%),
+    rgba(255, 255, 255, 0.012);
 }
 .watchlist-table {
   width: 100%;
@@ -3341,7 +3394,7 @@ img.admin-project-logo {
 .watchlist-table th,
 .watchlist-table td {
   border-top: 1px solid rgba(255, 255, 255, 0.055);
-  padding: 13px 14px;
+  padding: 14px 16px;
   color: #aeb6bb;
   font-size: 11px;
   text-align: left;
@@ -3360,8 +3413,8 @@ img.admin-project-logo {
 }
 .watchlist-chain-logo {
   display: inline-grid;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   place-items: center;
   color: #88939a;
 }
@@ -3422,7 +3475,7 @@ img.admin-project-logo {
 }
 .submission-list {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 .submission-row {
   display: grid;
@@ -3430,9 +3483,20 @@ img.admin-project-logo {
   align-items: center;
   gap: 16px;
   border: 1px solid #262e33;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.018);
-  padding: 12px;
+  border-radius: 15px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.012);
+  padding: 13px;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+.submission-row:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(90deg, rgba(203, 255, 74, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.016);
 }
 .submission-coin {
   display: flex;
@@ -3442,12 +3506,12 @@ img.admin-project-logo {
 }
 .submission-coin > span {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 10px;
-  background: #252d31;
+  border-radius: 12px;
+  background: #1a2024;
   color: var(--lime);
   font-size: 10px;
   font-weight: 800;
@@ -3466,17 +3530,21 @@ img.admin-project-logo {
 .submission-coin strong {
   overflow: hidden;
   color: #eef1f2;
-  font-size: 11px;
+  font:
+    700 12px/1.15 var(--font-space-grotesk),
+    sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .submission-status {
   border-radius: 999px;
   background: #262e33;
-  padding: 5px 8px;
+  padding: 6px 9px;
   color: #a9b2b7;
   font-size: 8px;
+  font-weight: 800;
   text-transform: capitalize;
+  letter-spacing: 0.04em;
 }
 .submission-status.status-approved,
 .submission-status.status-active {
@@ -3504,6 +3572,19 @@ img.admin-project-logo {
   padding: 0;
   color: #bec5c9;
   cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+.submission-actions a:hover,
+.submission-actions button:hover,
+.submission-icon-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(203, 255, 74, 0.3);
+  background: rgba(203, 255, 74, 0.06);
+  color: var(--lime);
 }
 .submission-actions svg {
   width: 15px;
@@ -3600,6 +3681,7 @@ img.admin-project-logo {
 }
 .account-modal-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 9px;
   margin-top: 20px;
