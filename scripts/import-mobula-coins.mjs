@@ -22,6 +22,7 @@
 import postgres from 'postgres';
 
 const MOBULA_BASE_URL = 'https://api.mobula.io/api/1/all';
+const MOBULA_DETAILS_URL = 'https://api.mobula.io/api/2/asset/details';
 const MOBULA_API_KEY = process.env.MOBULA_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -31,6 +32,13 @@ const TARGET_COUNT = readPositiveInteger(limitArg?.split('=')[1], 250);
 const DRY_RUN = args.includes('--dry-run');
 const DEBUG = args.includes('--debug');
 const RANDOMIZE = !args.includes('--no-random');
+const DETAILS_BATCH_SIZE = Math.min(
+  readPositiveInteger(
+    args.find((arg) => arg.startsWith('--details-batch-size='))?.split('=')[1],
+    50,
+  ),
+  50,
+);
 const EXCLUDE_TOP_RANK = readPositiveInteger(
   args.find((arg) => arg.startsWith('--exclude-top-rank='))?.split('=')[1],
   150,
@@ -125,6 +133,10 @@ function matchChain(blockchainName) {
   return chainKeys.find((chain) => chainAliases[chain](normalized));
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function fetchMobulaAssets() {
   const url = new URL(MOBULA_BASE_URL);
   url.searchParams.set(
@@ -170,6 +182,109 @@ async function fetchMobulaAssets() {
   }
 
   return list;
+}
+
+async function enrichTokensWithMobulaDetails(tokens) {
+  if (!tokens.length) return tokens;
+
+  console.log(
+    `Fetching Mobula asset details for listed dates in ${Math.ceil(
+      tokens.length / DETAILS_BATCH_SIZE,
+    )} batch request(s)...`,
+  );
+
+  let enrichedCount = 0;
+
+  for (let index = 0; index < tokens.length; index += DETAILS_BATCH_SIZE) {
+    const batch = tokens.slice(index, index + DETAILS_BATCH_SIZE);
+    const details = await fetchMobulaAssetDetailsBatch(batch);
+
+    details.forEach((detail, detailIndex) => {
+      const token = batch[detailIndex];
+      if (!token || !detail) return;
+
+      if (applyMobulaAssetDetails(token, detail)) enrichedCount += 1;
+    });
+
+    if (index + DETAILS_BATCH_SIZE < tokens.length) {
+      await sleep(1100);
+    }
+  }
+
+  console.log(
+    `Applied listed dates from Mobula details to ${enrichedCount}/${tokens.length} token(s).`,
+  );
+  return tokens;
+}
+
+async function fetchMobulaAssetDetailsBatch(tokens) {
+  const body = tokens.map((token) =>
+    token.mobulaId
+      ? { id: token.mobulaId, tokensLimit: 1 }
+      : {
+          blockchain: token.contract.blockchain,
+          address: token.contract.address,
+          tokensLimit: 1,
+        },
+  );
+
+  try {
+    const response = await fetch(MOBULA_DETAILS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Mobula details request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    const payload = Array.isArray(json?.payload)
+      ? json.payload
+      : Array.isArray(json?.data)
+        ? json.data
+        : Array.isArray(json?.data?.payload)
+          ? json.data.payload
+          : [];
+
+    if (!Array.isArray(payload)) return [];
+    return payload;
+  } catch (error) {
+    console.warn(
+      `Mobula details batch failed; selected tokens will keep any list-level date data. ${
+        error instanceof Error ? error.message : ''
+      }`,
+    );
+    if (DEBUG) console.warn(error);
+    return [];
+  }
+}
+
+function applyMobulaAssetDetails(token, detail) {
+  const asset = detail?.asset || detail?.data?.asset;
+  if (!asset || typeof asset !== 'object') return false;
+
+  token.name = pickString(asset, ['name']) || token.name;
+  token.symbol = pickString(asset, ['symbol']) || token.symbol;
+  token.logo = pickString(asset, ['logo', 'logoUrl', 'logo_url']) || token.logo;
+  token.description = pickString(asset, ['description']) || token.description;
+  token.rank = pickNumber(asset, ['rank']) ?? token.rank;
+  token.price = pickNumber(asset, ['priceUSD', 'price_usd']) ?? token.price;
+  token.marketCap = pickNumber(asset, ['marketCapUSD', 'market_cap_usd']) ?? token.marketCap;
+  token.fdv = pickNumber(asset, ['marketCapDilutedUSD', 'market_cap_diluted_usd']) ?? token.fdv;
+  token.totalSupply = pickNumber(asset, ['totalSupply', 'total_supply']) ?? token.totalSupply;
+
+  const listedAt = pickDate(asset, ['listedAt', 'listed_at']);
+  const createdAt = pickDate(asset, ['createdAt', 'created_at']);
+  const nextLaunchDate = listedAt || createdAt || token.launchDate;
+  const hadLaunchDate = Boolean(token.launchDate);
+  token.launchDate = nextLaunchDate;
+
+  return !hadLaunchDate && Boolean(nextLaunchDate);
 }
 
 function findTargetContract(item) {
@@ -448,6 +563,7 @@ async function main() {
   );
 
   console.log('Chart and DEX links will be generated as best-effort defaults.');
+  await enrichTokensWithMobulaDetails(tokens);
 
   if (DRY_RUN) {
     console.table(

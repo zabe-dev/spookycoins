@@ -20,12 +20,12 @@ export default async function WatchlistPage() {
   if (!session) redirect('/');
 
   await processExpiredCoinDeletionRequests();
-  const rows = await getWatchlistTableRows(session.user.id);
+  const rows = await getWatchlistTableRows(session.user.id, session.user.id);
 
   return (
     <main className="market-page">
       <SiteHeader active="none" />
-      <WatchlistPanel userId={session.user.id} coins={rows} />
+      <WatchlistPanel userId={session.user.id} coins={rows} isSignedIn={true} />
       <SiteFooter />
     </main>
   );

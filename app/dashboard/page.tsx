@@ -2,6 +2,8 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { AccountPanel } from '@/features/account/components/account-panel';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
+import { getPublicCoinById } from '@/features/coins/server/coin-list';
+import { toCoinListItem } from '@/features/coins/view';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
 import { coinSubmissions } from '@/lib/db/schema';
@@ -69,6 +71,22 @@ export default async function DashboardPage() {
     }
   });
 
+  const listedCoinIds = Array.from(
+    new Set(
+      submissions
+        .map((submission) => submission.coinId)
+        .filter((coinId): coinId is number => typeof coinId === 'number'),
+    ),
+  );
+  const listedCoinRows = await Promise.all(
+    listedCoinIds.map(async (coinId) => getPublicCoinById(coinId, session.user.id)),
+  );
+  const coinById = new Map(
+    listedCoinRows
+      .filter((coin): coin is NonNullable<(typeof listedCoinRows)[number]> => Boolean(coin))
+      .map((coin, index) => [coin.id, toCoinListItem(coin, index)]),
+  );
+
   return (
     <main className="market-page">
       <SiteHeader active="none" />
@@ -84,6 +102,8 @@ export default async function DashboardPage() {
               : submission.status,
           createdAt: submission.createdAt.toISOString(),
           coinData: readCoinData(submission.coinData),
+          coin:
+            typeof submission.coinId === 'number' ? coinById.get(submission.coinId) || null : null,
           scheduledDeleteAt:
             pendingDeletionBySubmissionId.get(submission.id) ||
             (typeof submission.coinId === 'number'

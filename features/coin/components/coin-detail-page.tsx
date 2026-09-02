@@ -23,6 +23,7 @@ export function CoinDetailPage({
   const canonicalCoin = coinRecord;
   const [coin, setCoin] = useState(() => toCoinListItem(canonicalCoin, 0));
   const contractAddress = coin.contractAddress || 'Contract address unavailable';
+  const isSuspended = canonicalCoin.listingStatus !== 'active';
   const [voted, setVoted] = useState(coin.hasVoted);
   const [watched, setWatched] = useState(coin.isWatching);
   const [notice, setNotice] = useState('');
@@ -34,6 +35,10 @@ export function CoinDetailPage({
 
   async function vote() {
     if (voted) return;
+    if (isSuspended) {
+      setNotice('Voting is paused while this coin is suspended.');
+      return;
+    }
     if (!isSignedIn) {
       setAuthOpen(true);
       return;
@@ -73,6 +78,10 @@ export function CoinDetailPage({
   }
 
   async function toggleWatch() {
+    if (isSuspended) {
+      setNotice('Watchlist actions are paused while this coin is suspended.');
+      return;
+    }
     if (!isSignedIn) {
       setAuthOpen(true);
       return;
@@ -168,6 +177,19 @@ export function CoinDetailPage({
         onCopyContract={copyContract}
       />
 
+      {isSuspended && (
+        <div className="container coin-status-notice" role="status">
+          <span aria-hidden="true">!</span>
+          <div>
+            <b>This coin is currently suspended.</b>
+            <p>
+              Voting and watchlist actions are disabled while the listing is under review or queued
+              for removal.
+            </p>
+          </div>
+        </div>
+      )}
+
       {notice && (
         <div className="container interaction-notice" role="status">
           {notice}
@@ -188,6 +210,7 @@ export function CoinDetailPage({
           watched={watched}
           voteAnimating={voteAnimating}
           watchAnimating={watchAnimating}
+          actionsDisabled={isSuspended}
           onVote={vote}
           onToggleWatch={toggleWatch}
           onOpenChangeRequest={() => setChangeRequestOpen(true)}

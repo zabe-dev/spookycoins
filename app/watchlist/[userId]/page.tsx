@@ -5,8 +5,10 @@ import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { db } from '@/lib/db/client';
 import { users } from '@/lib/db/schema';
+import { auth } from '@/lib/auth/server';
 import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import '../../market.css';
 import '../../scroll-fix.css';
@@ -20,32 +22,30 @@ export const metadata: Metadata = {
 
 export default async function PublicWatchlistPage({ params }: WatchlistPageParams) {
   const { userId } = await params;
+  const session = await auth.api.getSession({ headers: await headers() });
   await processExpiredCoinDeletionRequests();
 
   const [owner] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!owner) notFound();
 
-  const rows = await getWatchlistTableRows(userId);
+  const rows = await getWatchlistTableRows(userId, session?.user.id);
+  const ownerName = owner.email.split('@')[0] || 'Hunter';
 
   return (
     <main className="market-page">
       <SiteHeader active="none" />
       <section className="container settings-shell account-shell public-watchlist-shell">
         <header className="account-heading">
-          <h1>Public watchlist</h1>
-          <p>Coins saved by {owner.email}. Anyone with this link can view this table.</p>
+          <h1>{ownerName}&apos;s Watchlist</h1>
+          <p>Viewing a shared watchlist.</p>
         </header>
 
         <section className="settings-card submissions-card watchlist-page-card">
-          <div className="settings-card-title">
-            <div>
-              <small>Watchlist</small>
-              <h2>Watched coins</h2>
-            </div>
+          <div className="watchlist-page-toolbar">
             <span>{rows.length}</span>
           </div>
           {rows.length ? (
-            <PublicWatchlistTable coins={rows} />
+            <PublicWatchlistTable coins={rows} isSignedIn={Boolean(session?.user)} />
           ) : (
             <div className="settings-empty">
               <strong>No watched coins yet</strong>

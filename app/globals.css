@@ -3087,6 +3087,14 @@ img.admin-project-logo {
 .account-notice {
   width: auto;
 }
+.account-shell:not(.public-watchlist-shell),
+.container.settings-shell.account-shell:not(.public-watchlist-shell) {
+  width: min(1320px, calc(100% - 40px));
+}
+.account-shell:not(.public-watchlist-shell) .settings-card {
+  border-color: var(--border, #252c31);
+  background: var(--surface, rgba(13, 16, 19, 0.98));
+}
 .inline-feedback {
   display: inline-flex;
   width: fit-content;
@@ -3339,8 +3347,51 @@ img.admin-project-logo {
   padding: 0;
   overflow: visible;
 }
-.watchlist-page-card .settings-card-title {
-  margin-bottom: 18px;
+.watchlist-page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.watchlist-page-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(203, 255, 74, 0.26);
+  border-radius: 999px;
+  background: rgba(203, 255, 74, 0.08);
+  padding: 8px 11px;
+  color: var(--lime);
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+.watchlist-page-toolbar button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(203, 255, 74, 0.42);
+  background: rgba(203, 255, 74, 0.12);
+}
+.watchlist-page-toolbar button svg {
+  width: 13px;
+  height: 13px;
+}
+.watchlist-page-toolbar > span {
+  display: inline-grid;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #30383e;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #78838b;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
 }
 .settings-card-actions {
   display: flex;
@@ -3450,14 +3501,39 @@ img.admin-project-logo {
 .public-watchlist-table .submission-icon-action {
   margin-left: auto;
 }
+.dashboard-submissions-table th:nth-last-child(2),
+.dashboard-submissions-table td:nth-last-child(2) {
+  width: 96px;
+  min-width: 96px;
+  max-width: 96px;
+  text-align: center;
+}
+.dashboard-submissions-table th:last-child,
+.dashboard-submissions-table td:last-child {
+  width: 82px;
+  min-width: 82px;
+  max-width: 82px;
+  text-align: center;
+}
+.dashboard-submissions-table .table-actions {
+  justify-content: center;
+}
 .public-watchlist-shell {
+  max-width: 1320px;
+  width: min(1320px, calc(100% - 40px));
+}
+.container.settings-shell.public-watchlist-shell {
   max-width: 1320px;
   width: min(1320px, calc(100% - 40px));
 }
 .public-watchlist-shell .settings-card {
   overflow: hidden;
 }
+.public-watchlist-shell .watchlist-page-card {
+  overflow: visible;
+}
 @media (max-width: 760px) {
+  .container.settings-shell.public-watchlist-shell,
   .public-watchlist-shell {
     width: calc(100% - 24px);
   }
@@ -3500,21 +3576,17 @@ img.admin-project-logo {
   grid-template-columns: minmax(200px, 1fr) auto auto;
   align-items: center;
   gap: 16px;
-  border: 1px solid #262e33;
-  border-radius: 15px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.012)),
-    rgba(255, 255, 255, 0.012);
-  padding: 13px;
+  border: 1px solid var(--border, #252c31);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 14px;
   transition:
     border-color 0.16s ease,
     background 0.16s ease;
 }
 .submission-row:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  background:
-    linear-gradient(90deg, rgba(203, 255, 74, 0.035), rgba(255, 255, 255, 0.012)),
-    rgba(255, 255, 255, 0.016);
+  border-color: rgba(203, 255, 74, 0.2);
+  background: rgba(255, 255, 255, 0.028);
 }
 .submission-coin {
   display: flex;
@@ -3528,8 +3600,8 @@ img.admin-project-logo {
   height: 40px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 12px;
-  background: #1a2024;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
   color: var(--lime);
   font-size: 10px;
   font-weight: 800;

@@ -116,6 +116,7 @@ export type Coin = {
   slug: string;
   assetType: 'token';
   lifecycle: 'launched' | 'presale';
+  listingStatus: string;
   network: NetworkId;
   contractAddress: string;
   logoUrl: string | null;

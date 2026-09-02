@@ -13,6 +13,7 @@ export function CoinSidebar({
   watched,
   voteAnimating,
   watchAnimating,
+  actionsDisabled = false,
   onVote,
   onToggleWatch,
   onOpenChangeRequest,
@@ -22,6 +23,7 @@ export function CoinSidebar({
   watched: boolean;
   voteAnimating: boolean;
   watchAnimating: boolean;
+  actionsDisabled?: boolean;
   onVote: () => void;
   onToggleWatch: () => void;
   onOpenChangeRequest: () => void;
@@ -50,14 +52,20 @@ export function CoinSidebar({
           onClick={onVote}
           appearance="sidebar"
           coinName={coin.symbol}
+          disabled={actionsDisabled}
         />
         <WatchlistButton
           active={watched}
           animating={watchAnimating}
           onClick={onToggleWatch}
           appearance="detail"
+          disabled={actionsDisabled}
         />
-        <small className="vote-rule">Vote for each coin once every 12 hours.</small>
+        <small className="vote-rule">
+          {actionsDisabled
+            ? 'Voting and watchlist actions are paused for this coin.'
+            : 'Vote for each coin once every 12 hours.'}
+        </small>
       </section>
       {coin.boost ? (
         <section className="detail-card boost-card-detail">
@@ -88,7 +96,16 @@ export function CoinSidebar({
         <Info label="Network" value={coin.chain} />
         <Info label="Category" value={coin.category} />
         <Info label="Submitted" value={coin.age} />
-        <Info label="Status" value="Launched" />
+        <Info
+          label="Status"
+          value={
+            coin.listingStatus === 'active'
+              ? coin.lifecycle === 'presale'
+                ? 'Presale'
+                : 'Launched'
+              : 'Suspended'
+          }
+        />
       </section>
       <section className="detail-card request-change-card">
         <div className="request-change-icon" aria-hidden="true">

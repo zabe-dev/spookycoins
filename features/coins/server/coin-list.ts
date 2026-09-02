@@ -46,7 +46,11 @@ export async function getPublicCoinListItems(userId?: string | null): Promise<Co
 export async function getPublicCoinById(id: number, userId?: string | null): Promise<Coin | null> {
   const coinRecords = await getPublicCoinRecords(undefined, userId, id);
   const rankedRecords = rankCoinsByBoostedVotes(coinRecords);
-  return rankedRecords.find((coin) => coin.id === id) || null;
+  const activeCoin = rankedRecords.find((coin) => coin.id === id);
+  if (activeCoin) return activeCoin;
+
+  const suspendedRecords = await getPublicCoinRecords(id, userId, id);
+  return suspendedRecords.find((coin) => coin.id === id) || null;
 }
 
 async function getPublicCoinRecords(
@@ -163,6 +167,7 @@ function mapDbCoinToCoin({
     slug: coin.slug,
     assetType: 'token',
     lifecycle: coin.isPresale ? 'presale' : 'launched',
+    listingStatus: coin.listingStatus,
     network,
     contractAddress: coin.contractAddress || '',
     logoUrl: coin.logoUrl,

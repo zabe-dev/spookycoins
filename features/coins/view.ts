@@ -10,6 +10,7 @@ export type CoinListItem = {
   name: string;
   symbol: string;
   lifecycle: 'launched' | 'presale';
+  listingStatus: string;
   chain: string;
   networkName: string;
   chainIcon: string | null;
@@ -100,6 +101,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     name: coin.name,
     symbol: coin.symbol,
     lifecycle: coin.lifecycle,
+    listingStatus: coin.listingStatus,
     chain: NETWORKS[coin.network].shortName,
     networkName: NETWORKS[coin.network].name,
     chainIcon: NETWORKS[coin.network].iconUrl,

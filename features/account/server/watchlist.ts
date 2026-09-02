@@ -5,7 +5,10 @@ import { db } from '@/lib/db/client';
 import { coinWatchlists, coins } from '@/lib/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
-export async function getWatchlistTableRows(userId: string): Promise<PublicWatchedCoin[]> {
+export async function getWatchlistTableRows(
+  userId: string,
+  viewerId?: string | null,
+): Promise<PublicWatchedCoin[]> {
   const watchedCoins = await db
     .select({
       coinId: coins.id,
@@ -26,7 +29,7 @@ export async function getWatchlistTableRows(userId: string): Promise<PublicWatch
     watchedCoins.map((coin) => [coin.coinId, coin.createdAt.toISOString()]),
   );
   const watchedOrder = new Map(watchedCoins.map((coin, index) => [coin.coinId, index]));
-  const fullCoins = await getPublicCoinListItems();
+  const fullCoins = await getPublicCoinListItems(viewerId);
 
   return fullCoins
     .filter((coin) => savedAtByCoinId.has(coin.coinId))

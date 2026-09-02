@@ -20,11 +20,13 @@ function StarIcon({ filled }: { filled: boolean }) {
 export function WatchlistButton({
   active,
   animating = false,
+  disabled = false,
   onClick,
   appearance = 'table',
 }: {
   active: boolean;
   animating?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   appearance?: 'table' | 'detail';
 }) {
@@ -32,6 +34,7 @@ export function WatchlistButton({
     <button
       className={`${appearance === 'table' ? 'watch-btn' : 'detail-watch'} action-button action-button--watch ${active ? (appearance === 'table' ? 'watched' : 'active') : ''} ${animating ? 'just-watched' : ''}`}
       onClick={onClick}
+      disabled={disabled}
       aria-label={active ? 'Remove from watchlist' : 'Add to watchlist'}
     >
       <ActionBurst />
@@ -46,12 +49,14 @@ export function WatchlistButton({
 export function VoteButton({
   active,
   animating = false,
+  disabled = false,
   onClick,
   appearance = 'table',
   coinName,
 }: {
   active: boolean;
   animating?: boolean;
+  disabled?: boolean;
   onClick: () => void;
   appearance?: 'table' | 'detail' | 'sidebar';
   coinName?: string;
@@ -71,6 +76,7 @@ export function VoteButton({
     <button
       className={`${baseClass} action-button action-button--vote ${active ? (appearance === 'table' ? 'voted' : 'active') : ''} ${animating ? 'just-voted' : ''}`}
       onClick={onClick}
+      disabled={disabled}
     >
       <ActionBurst />
       <span className="action-button__label">

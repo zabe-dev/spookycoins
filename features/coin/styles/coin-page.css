@@ -520,6 +520,13 @@
   color: #ffc83d;
   border-color: rgba(255, 200, 61, 0.35);
 }
+.detail-watch:disabled,
+.detail-vote:disabled,
+.sidebar-vote:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
 .detail-vote,
 .sidebar-vote {
   background: var(--lime);
@@ -829,6 +836,40 @@
   padding: 12px 18px;
   color: var(--sub);
   font-size: 9px;
+}
+.coin-status-notice {
+  margin-top: 18px;
+  border: 1px solid rgba(255, 157, 157, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 157, 157, 0.075);
+  padding: 13px 15px;
+  color: #ffc7c7;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.coin-status-notice > span {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 157, 157, 0.14);
+  color: #ffb3b3;
+  font: 800 11px var(--font-fira-mono);
+}
+.coin-status-notice b {
+  display: block;
+  margin-bottom: 2px;
+  color: #fff0f0;
+  font-size: 12px;
+}
+.coin-status-notice p {
+  margin: 0;
+  color: #e4b8b8;
 }
 .voting-card {
   padding: 20px;

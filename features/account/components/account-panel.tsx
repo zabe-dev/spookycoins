@@ -1,20 +1,21 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   CheckCircle2,
   Clock3,
   Copy,
-  ExternalLink,
   LoaderCircle,
   RotateCcw,
   Trash2,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type MouseEvent, useEffect, useState } from 'react';
 import { CoinCells } from '@/features/coins/components/coin-table';
-import type { CoinListItem } from '@/features/coins/view';
+import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
+import { AuthModal } from '@/features/auth/components/auth-modal';
+import { getBoostVoteFactor, type CoinListItem } from '@/features/coins/view';
 
 type InlineNotice = {
   tone: 'success' | 'error' | 'info';
@@ -29,6 +30,7 @@ export type AccountSubmission = {
   submissionType: string;
   createdAt: string;
   coinData: { name?: string; symbol?: string; chain?: string };
+  coin?: CoinListItem | null;
   scheduledDeleteAt?: string;
 };
 
@@ -36,7 +38,15 @@ export type PublicWatchedCoin = CoinListItem & {
   savedAt: string;
 };
 
-export function WatchlistPanel({ userId, coins }: { userId: string; coins: PublicWatchedCoin[] }) {
+export function WatchlistPanel({
+  userId,
+  coins,
+  isSignedIn,
+}: {
+  userId: string;
+  coins: PublicWatchedCoin[];
+  isSignedIn: boolean;
+}) {
   const [watchlistNotice, setWatchlistNotice] = useState<InlineNotice | null>(null);
   const watchlistPath = `/watchlist/${userId}`;
 
@@ -57,26 +67,22 @@ export function WatchlistPanel({ userId, coins }: { userId: string; coins: Publi
           <span>●</span> User area
         </p>
         <h1>Watchlist</h1>
-        <p>Review your saved coins and share the full public table with anyone.</p>
+        <p>
+          Keep your favorite coins close, vote from here, and share your picks with other hunters.
+        </p>
       </header>
 
       <section className="settings-card submissions-card watchlist-page-card">
-        <div className="settings-card-title">
-          <div>
-            <small>Watchlist</small>
-            <h2>Saved coins</h2>
-          </div>
-          <div className="settings-card-actions">
-            <button type="button" onClick={() => void copyWatchlistUrl()}>
-              <Copy aria-hidden="true" />
-              Copy public link
-            </button>
-            <span>{coins.length}</span>
-          </div>
+        <div className="watchlist-page-toolbar">
+          <button type="button" onClick={() => void copyWatchlistUrl()}>
+            <Copy aria-hidden="true" />
+            Copy public link
+          </button>
+          <span>{coins.length}</span>
         </div>
         <InlineFeedback notice={watchlistNotice} />
         {coins.length ? (
-          <PublicWatchlistTable coins={coins} />
+          <PublicWatchlistTable coins={coins} isSignedIn={isSignedIn} />
         ) : (
           <div className="settings-empty">
             <strong>No watched coins yet</strong>
@@ -124,15 +130,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
         </div>
         <InlineFeedback notice={submissionNotice} />
         {submissions.length ? (
-          <div className="submission-list">
-            {listingRows.map((submission) => (
-              <SubmissionRow
-                key={submission.id}
-                submission={submission}
-                onRequestDelete={setDeleteModal}
-              />
-            ))}
-          </div>
+          <SubmissionTable submissions={listingRows} onRequestDelete={setDeleteModal} />
         ) : (
           <div className="settings-empty">
             <strong>No coin submissions yet</strong>
@@ -185,11 +183,278 @@ function InlineFeedback({ notice }: { notice: InlineNotice | null }) {
   );
 }
 
-export function PublicWatchlistTable({ coins }: { coins: PublicWatchedCoin[] }) {
+export function PublicWatchlistTable({
+  coins,
+  isSignedIn = false,
+}: {
+  coins: PublicWatchedCoin[];
+  isSignedIn?: boolean;
+}) {
+  const router = useRouter();
+  const [rows, setRows] = useState(coins);
+  const [voted, setVoted] = useState<number[]>(() =>
+    coins.filter((coin) => coin.hasVoted).map((coin) => coin.coinId),
+  );
+  const [watchlist, setWatchlist] = useState<number[]>(() =>
+    coins.filter((coin) => coin.isWatching).map((coin) => coin.coinId),
+  );
+  const [animating, setAnimating] = useState<number | null>(null);
+  const [watchAnimating, setWatchAnimating] = useState<number | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [interactionNotice, setInteractionNotice] = useState<InlineNotice | null>(null);
+
+  function openCoinRow(event: MouseEvent<HTMLTableRowElement>, coinId: number) {
+    const target = event.target as HTMLElement;
+    if (target.closest('a, button')) return;
+    router.push(`/coin/${coinId}`);
+  }
+
+  async function vote(coinId: number) {
+    if (voted.includes(coinId)) return;
+    if (!isSignedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    setInteractionNotice(null);
+    setVoted((current) => [...current, coinId]);
+    setRows((currentRows) =>
+      currentRows.map((coin) =>
+        coin.coinId === coinId
+          ? {
+              ...coin,
+              hasVoted: true,
+              rawVotes: coin.rawVotes + 1,
+              votes: coin.votes + getBoostVoteFactor(coin.boost),
+              totalVotes: coin.totalVotes + 1,
+              recentVotes: coin.recentVotes + 1,
+              trendingScore: coin.trendingScore + 3,
+              trend: coin.trend + 3,
+            }
+          : coin,
+      ),
+    );
+    setAnimating(coinId);
+    window.setTimeout(() => setAnimating(null), 700);
+
+    const response = await fetch(`/api/coins/${coinId}/vote`, { method: 'POST' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setVoted((current) => current.filter((id) => id !== coinId));
+      setRows((currentRows) =>
+        currentRows.map((coin) =>
+          coin.coinId === coinId
+            ? {
+                ...coin,
+                hasVoted: false,
+                rawVotes: Math.max(0, coin.rawVotes - 1),
+                votes: Math.max(0, coin.votes - getBoostVoteFactor(coin.boost)),
+                totalVotes: Math.max(0, coin.totalVotes - 1),
+                recentVotes: Math.max(0, coin.recentVotes - 1),
+                trendingScore: Math.max(0, coin.trendingScore - 3),
+                trend: Math.max(0, coin.trend - 3),
+              }
+            : coin,
+        ),
+      );
+      setInteractionNotice({
+        tone: 'error',
+        message: body.message || body.errorMessage || 'Could not record your vote.',
+      });
+      return;
+    }
+
+    updateCoinInteractionSummary(coinId, body.data?.summary);
+  }
+
+  async function toggleWatch(coinId: number) {
+    if (!isSignedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    const removing = watchlist.includes(coinId);
+    setInteractionNotice(null);
+    setWatchlist((current) =>
+      removing ? current.filter((id) => id !== coinId) : [...current, coinId],
+    );
+    setRows((currentRows) =>
+      currentRows.map((coin) =>
+        coin.coinId === coinId
+          ? {
+              ...coin,
+              isWatching: !removing,
+              watchCount: Math.max(0, coin.watchCount + (removing ? -1 : 1)),
+              recentWatchlistAdds: Math.max(0, coin.recentWatchlistAdds + (removing ? -1 : 1)),
+              trendingScore: Math.max(0, coin.trendingScore + (removing ? -2 : 2)),
+              trend: Math.max(0, coin.trend + (removing ? -2 : 2)),
+            }
+          : coin,
+      ),
+    );
+    if (removing) setWatchAnimating(null);
+    else {
+      setWatchAnimating(coinId);
+      window.setTimeout(() => setWatchAnimating(null), 600);
+    }
+
+    const response = await fetch(`/api/coins/${coinId}/watchlist`, { method: 'POST' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setWatchlist((current) =>
+        removing ? [...current, coinId] : current.filter((id) => id !== coinId),
+      );
+      setRows((currentRows) =>
+        currentRows.map((coin) =>
+          coin.coinId === coinId
+            ? {
+                ...coin,
+                isWatching: removing,
+                watchCount: Math.max(0, coin.watchCount + (removing ? 1 : -1)),
+                recentWatchlistAdds: Math.max(0, coin.recentWatchlistAdds + (removing ? 1 : -1)),
+                trendingScore: Math.max(0, coin.trendingScore + (removing ? 2 : -2)),
+                trend: Math.max(0, coin.trend + (removing ? 2 : -2)),
+              }
+            : coin,
+        ),
+      );
+      setInteractionNotice({
+        tone: 'error',
+        message: body.message || body.errorMessage || 'Could not update your watchlist.',
+      });
+      return;
+    }
+
+    updateCoinInteractionSummary(coinId, body.data?.summary);
+  }
+
+  function updateCoinInteractionSummary(
+    coinId: number,
+    summary:
+      | {
+          weeklyVotes?: number;
+          totalVotes?: number;
+          recentVotes?: number;
+          recentWatchlistAdds?: number;
+          trendingScore?: number;
+          watchlistCount?: number;
+          userHasVoted?: boolean;
+          userWatching?: boolean;
+        }
+      | undefined,
+  ) {
+    if (!summary) return;
+    setRows((currentRows) =>
+      currentRows.map((coin) =>
+        coin.coinId === coinId
+          ? (() => {
+              const rawVotes = summary.weeklyVotes ?? coin.rawVotes;
+              return {
+                ...coin,
+                rawVotes,
+                votes: rawVotes * getBoostVoteFactor(coin.boost),
+                totalVotes: summary.totalVotes ?? coin.totalVotes,
+                recentVotes: summary.recentVotes ?? coin.recentVotes,
+                recentWatchlistAdds: summary.recentWatchlistAdds ?? coin.recentWatchlistAdds,
+                trendingScore: summary.trendingScore ?? coin.trendingScore,
+                trend: summary.trendingScore ?? coin.trend,
+                watchCount: summary.watchlistCount ?? coin.watchCount,
+                hasVoted: summary.userHasVoted ?? coin.hasVoted,
+                isWatching: summary.userWatching ?? coin.isWatching,
+              };
+            })()
+          : coin,
+      ),
+    );
+    if (summary.userHasVoted === true)
+      setVoted((current) => (current.includes(coinId) ? current : [...current, coinId]));
+    if (summary.userHasVoted === false)
+      setVoted((current) => current.filter((id) => id !== coinId));
+    setWatchlist((current) => {
+      if (summary.userWatching === true)
+        return current.includes(coinId) ? current : [...current, coinId];
+      if (summary.userWatching === false) return current.filter((id) => id !== coinId);
+      return current;
+    });
+  }
+
   return (
-    <div className="table-frame public-watchlist-frame">
+    <>
+      <InlineFeedback notice={interactionNotice} />
+      <div className="table-frame public-watchlist-frame">
+        <div className="table-wrap public-watchlist-table-wrap">
+          <table className="coins-table public-watchlist-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Coin</th>
+                <th>Market cap</th>
+                <th>Price</th>
+                <th>24h</th>
+                <th>Launch</th>
+                <th>Boost</th>
+                <th>Weekly votes</th>
+                <th>Submitted</th>
+                <th>Saved</th>
+                <th>Watch</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((coin) => {
+                const hasVoted = voted.includes(coin.coinId);
+                return (
+                  <tr
+                    key={coin.coinId}
+                    className={`${coin.boost ? 'boosted-row' : ''} clickable-coin-row`}
+                    onClick={(event) => openCoinRow(event, coin.coinId)}
+                  >
+                    <CoinCells coin={coin} />
+                    <td className="muted-cell">{new Date(coin.savedAt).toLocaleDateString()}</td>
+                    <td>
+                      <WatchlistButton
+                        active={watchlist.includes(coin.coinId)}
+                        animating={watchAnimating === coin.coinId}
+                        onClick={() => toggleWatch(coin.coinId)}
+                      />
+                    </td>
+                    <td>
+                      <VoteButton
+                        active={hasVoted}
+                        animating={animating === coin.coinId}
+                        onClick={() => vote(coin.coinId)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+    </>
+  );
+}
+
+function SubmissionTable({
+  submissions,
+  onRequestDelete,
+}: {
+  submissions: AccountSubmission[];
+  onRequestDelete: (submission: AccountSubmission) => void;
+}) {
+  const router = useRouter();
+
+  function openCoinRow(event: MouseEvent<HTMLTableRowElement>, coinId: number | null) {
+    if (!coinId) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('a, button')) return;
+    router.push(`/coin/${coinId}`);
+  }
+
+  return (
+    <div className="table-frame public-watchlist-frame dashboard-submissions-frame">
       <div className="table-wrap public-watchlist-table-wrap">
-        <table className="coins-table public-watchlist-table">
+        <table className="coins-table public-watchlist-table dashboard-submissions-table">
           <thead>
             <tr>
               <th>#</th>
@@ -201,27 +466,60 @@ export function PublicWatchlistTable({ coins }: { coins: PublicWatchedCoin[] }) 
               <th>Boost</th>
               <th>Weekly votes</th>
               <th>Submitted</th>
-              <th>Saved</th>
-              <th></th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {coins.map((coin) => (
-              <tr key={coin.coinId} className={coin.boost ? 'boosted-row' : ''}>
-                <CoinCells coin={coin} />
-                <td className="muted-cell">{new Date(coin.savedAt).toLocaleDateString()}</td>
-                <td>
-                  <Link
-                    className="submission-icon-action"
-                    href={`/coin/${coin.coinId}`}
-                    aria-label={`View ${coin.name}`}
-                    title={`View ${coin.name}`}
-                  >
-                    <ExternalLink aria-hidden="true" />
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {submissions.map((submission, index) => {
+              const coin = submission.coin;
+              const deleteRequested = Boolean(submission.scheduledDeleteAt);
+              const name =
+                coin?.name || submission.coinData.name || `Submission ${submission.id.slice(0, 8)}`;
+              return (
+                <tr
+                  key={submission.id}
+                  className={`${coin?.boost ? 'boosted-row' : ''} ${submission.coinId ? 'clickable-coin-row' : ''}`}
+                  onClick={(event) => openCoinRow(event, submission.coinId)}
+                >
+                  {coin ? (
+                    <CoinCells coin={coin} />
+                  ) : (
+                    <SubmissionFallbackCells submission={submission} rank={index + 1} />
+                  )}
+                  <td>
+                    <span className={`submission-status status-${submission.status}`}>
+                      {submission.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="submission-actions table-actions">
+                      <button
+                        className="delete-request submission-icon-action"
+                        type="button"
+                        onClick={() => onRequestDelete(submission)}
+                        aria-label={
+                          deleteRequested
+                            ? `View deletion countdown for ${name}`
+                            : `Request deletion for ${name}`
+                        }
+                        title={
+                          deleteRequested
+                            ? `View deletion countdown for ${name}`
+                            : `Request deletion for ${name}`
+                        }
+                      >
+                        {deleteRequested ? (
+                          <Clock3 aria-hidden="true" />
+                        ) : (
+                          <Trash2 aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -229,55 +527,49 @@ export function PublicWatchlistTable({ coins }: { coins: PublicWatchedCoin[] }) 
   );
 }
 
-function SubmissionRow({
+function SubmissionFallbackCells({
   submission,
-  onRequestDelete,
+  rank,
 }: {
   submission: AccountSubmission;
-  onRequestDelete: (submission: AccountSubmission) => void;
+  rank: number;
 }) {
   const name = submission.coinData.name || `Submission ${submission.id.slice(0, 8)}`;
-  const deleteRequested = Boolean(submission.scheduledDeleteAt);
+  const symbol = submission.coinData.symbol || '—';
 
   return (
-    <article className="submission-row">
-      <div className="submission-coin">
-        <span>{(submission.coinData.symbol || name).slice(0, 2).toUpperCase()}</span>
-        <div>
-          <strong>{name}</strong>
-          <small>
-            {submission.coinData.symbol || '—'} · {submission.coinData.chain || 'Chain not set'} ·{' '}
-            {new Date(submission.createdAt).toLocaleDateString()}
-          </small>
+    <>
+      <td>
+        <span className={`rank-number ${rank < 4 ? 'top' : ''}`}>{rank}</span>
+      </td>
+      <td>
+        <div className="coin-cell">
+          <div className="coin-logo">{symbol.slice(0, 1)}</div>
+          <div>
+            <span className="coin-name-static" title={name}>
+              <b>{name}</b>
+            </span>
+            <span>
+              {symbol} · {submission.coinData.chain || 'Chain not set'}
+            </span>
+          </div>
         </div>
-      </div>
-      <span className={`submission-status status-${submission.status}`}>{submission.status}</span>
-      <div className="submission-actions">
-        {submission.coinId && (
-          <Link
-            className="submission-icon-action"
-            href={`/coin/${submission.coinId}`}
-            aria-label={`View ${name}`}
-            title={`View ${name}`}
-          >
-            <ExternalLink aria-hidden="true" />
-          </Link>
-        )}
-        <button
-          className="delete-request submission-icon-action"
-          type="button"
-          onClick={() => onRequestDelete(submission)}
-          aria-label={
-            deleteRequested ? `View deletion countdown for ${name}` : `Request deletion for ${name}`
-          }
-          title={
-            deleteRequested ? `View deletion countdown for ${name}` : `Request deletion for ${name}`
-          }
-        >
-          {deleteRequested ? <Clock3 aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
-        </button>
-      </div>
-    </article>
+      </td>
+      <td className="numeric">—</td>
+      <td className="numeric">—</td>
+      <td className="muted-cell">—</td>
+      <td className="muted-cell">—</td>
+      <td>
+        <span className="no-boost">—</span>
+      </td>
+      <td>
+        <div className="vote-total">
+          <b>—</b>
+          <span>this week</span>
+        </div>
+      </td>
+      <td className="muted-cell">{new Date(submission.createdAt).toLocaleDateString()}</td>
+    </>
   );
 }
 
