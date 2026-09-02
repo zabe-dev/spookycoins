@@ -9,6 +9,6 @@ export function GET() {
       service: 'spookycoins',
       checkedAt: new Date().toISOString(),
     },
-    'Service is healthy.',
+    'Service is running.',
   );
 }
