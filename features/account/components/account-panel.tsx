@@ -119,7 +119,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
       </header>
 
       <section className="settings-card submissions-card watchlist-page-card">
-        <div className="dashboard-page-toolbar">
+        <div className="watchlist-page-toolbar">
           <span>{submissions.length}</span>
         </div>
         <InlineFeedback notice={submissionNotice} />
