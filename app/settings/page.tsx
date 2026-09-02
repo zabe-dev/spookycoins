@@ -4,6 +4,7 @@ import { SettingsPanel } from '@/features/settings/components/settings-panel';
 import { auth } from '@/lib/auth/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import '../market.css';
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });

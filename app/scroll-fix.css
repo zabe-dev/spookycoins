@@ -10,6 +10,26 @@
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
+.public-watchlist-frame,
+.public-watchlist-table-wrap {
+  overflow: visible;
+}
+.public-watchlist-table {
+  min-width: 0;
+}
+@media (max-width: 1050px) {
+  .public-watchlist-frame {
+    overflow: hidden;
+  }
+  .public-watchlist-table-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-gutter: stable;
+  }
+  .public-watchlist-table {
+    min-width: 1020px;
+  }
+}
 .category-strip .category-scroll {
   width: 100%;
   max-width: 100%;

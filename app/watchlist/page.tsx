@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import '../market.css';
+import '../scroll-fix.css';
 
 export const metadata: Metadata = {
   title: 'Watchlist',

@@ -60,7 +60,7 @@ export function WatchlistPanel({ userId, coins }: { userId: string; coins: Publi
         <p>Review your saved coins and share the full public table with anyone.</p>
       </header>
 
-      <section className="settings-card submissions-card">
+      <section className="settings-card submissions-card watchlist-page-card">
         <div className="settings-card-title">
           <div>
             <small>Watchlist</small>
@@ -187,42 +187,44 @@ function InlineFeedback({ notice }: { notice: InlineNotice | null }) {
 
 export function PublicWatchlistTable({ coins }: { coins: PublicWatchedCoin[] }) {
   return (
-    <div className="table-wrap public-watchlist-table-wrap">
-      <table className="coins-table public-watchlist-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Coin</th>
-            <th>Market cap</th>
-            <th>Price</th>
-            <th>24h</th>
-            <th>Launch</th>
-            <th>Boost</th>
-            <th>Weekly votes</th>
-            <th>Submitted</th>
-            <th>Saved</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {coins.map((coin) => (
-            <tr key={coin.coinId} className={coin.boost ? 'boosted-row' : ''}>
-              <CoinCells coin={coin} />
-              <td className="muted-cell">{new Date(coin.savedAt).toLocaleDateString()}</td>
-              <td>
-                <Link
-                  className="submission-icon-action"
-                  href={`/coin/${coin.coinId}`}
-                  aria-label={`View ${coin.name}`}
-                  title={`View ${coin.name}`}
-                >
-                  <ExternalLink aria-hidden="true" />
-                </Link>
-              </td>
+    <div className="table-frame public-watchlist-frame">
+      <div className="table-wrap public-watchlist-table-wrap">
+        <table className="coins-table public-watchlist-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Coin</th>
+              <th>Market cap</th>
+              <th>Price</th>
+              <th>24h</th>
+              <th>Launch</th>
+              <th>Boost</th>
+              <th>Weekly votes</th>
+              <th>Submitted</th>
+              <th>Saved</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {coins.map((coin) => (
+              <tr key={coin.coinId} className={coin.boost ? 'boosted-row' : ''}>
+                <CoinCells coin={coin} />
+                <td className="muted-cell">{new Date(coin.savedAt).toLocaleDateString()}</td>
+                <td>
+                  <Link
+                    className="submission-icon-action"
+                    href={`/coin/${coin.coinId}`}
+                    aria-label={`View ${coin.name}`}
+                    title={`View ${coin.name}`}
+                  >
+                    <ExternalLink aria-hidden="true" />
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

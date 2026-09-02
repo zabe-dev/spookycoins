@@ -3134,11 +3134,11 @@ img.admin-project-logo {
   margin-top: 30px;
 }
 .settings-card {
-  border: 1px solid #252c31;
-  border-radius: 16px;
-  background: rgba(13, 16, 19, 0.98);
+  border: 1px solid var(--border, #252c31);
+  border-radius: 12px;
+  background: var(--surface, rgba(13, 16, 19, 0.98));
   padding: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  box-shadow: none;
 }
 .settings-card-title {
   display: flex;
@@ -3190,10 +3190,10 @@ img.admin-project-logo {
 }
 .settings-form input {
   width: 100%;
-  border: 1px solid #2a3136;
-  border-radius: 12px;
+  border: 1px solid var(--border, #2a3136);
+  border-radius: 8px;
   outline: 0;
-  background: rgba(6, 8, 10, 0.76);
+  background: var(--page, rgba(6, 8, 10, 0.76));
   padding: 12px 13px;
   color: #eef1f2;
   font:
@@ -3333,6 +3333,15 @@ img.admin-project-logo {
   margin-top: 16px;
   overflow: hidden;
 }
+.watchlist-page-card {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+}
+.watchlist-page-card .settings-card-title {
+  margin-bottom: 18px;
+}
 .settings-card-actions {
   display: flex;
   align-items: center;
@@ -3429,10 +3438,14 @@ img.admin-project-logo {
   width: 100%;
   max-width: 100%;
   overflow-x: visible;
+  scrollbar-gutter: auto;
 }
 .public-watchlist-table {
   width: 100%;
   min-width: 0;
+}
+.public-watchlist-frame {
+  overflow: visible;
 }
 .public-watchlist-table .submission-icon-action {
   margin-left: auto;
@@ -3453,6 +3466,7 @@ img.admin-project-logo {
   }
   .public-watchlist-table-wrap {
     overflow-x: auto;
+    scrollbar-gutter: stable;
   }
   .admin-detail-sections {
     grid-template-columns: 1fr;

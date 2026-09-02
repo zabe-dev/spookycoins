@@ -9,6 +9,7 @@ import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import '../../market.css';
+import '../../scroll-fix.css';
 
 type WatchlistPageParams = { params: Promise<{ userId: string }> };
 
@@ -35,7 +36,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
           <p>Coins saved by {owner.email}. Anyone with this link can view this table.</p>
         </header>
 
-        <section className="settings-card submissions-card">
+        <section className="settings-card submissions-card watchlist-page-card">
           <div className="settings-card-title">
             <div>
               <small>Watchlist</small>
