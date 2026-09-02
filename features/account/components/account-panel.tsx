@@ -1,6 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
+import { AuthModal } from '@/features/auth/components/auth-modal';
+import { CoinCells } from '@/features/coins/components/coin-table';
+import { getBoostVoteFactor, type CoinListItem } from '@/features/coins/view';
 import {
   AlertCircle,
   CheckCircle2,
@@ -11,11 +14,8 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { type MouseEvent, useEffect, useState } from 'react';
-import { CoinCells } from '@/features/coins/components/coin-table';
-import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
-import { AuthModal } from '@/features/auth/components/auth-modal';
-import { getBoostVoteFactor, type CoinListItem } from '@/features/coins/view';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, type MouseEvent } from 'react';
 
 type InlineNotice = {
   tone: 'success' | 'error' | 'info';
@@ -67,9 +67,7 @@ export function WatchlistPanel({
           <span>●</span> User area
         </p>
         <h1>Watchlist</h1>
-        <p>
-          Keep your favorite coins close, vote from here, and share your picks with other hunters.
-        </p>
+        <p>Add coins to your watchlist and watch their performance.</p>
       </header>
 
       <section className="settings-card submissions-card watchlist-page-card">
