@@ -1094,7 +1094,7 @@
   min-height: var(--button-min-height);
   border-radius: var(--button-radius);
   background: var(--lime);
-  padding: var(--button-padding);
+  padding: 13px 22px;
   color: #10130c;
   font-size: var(--button-font-size);
   font-weight: var(--button-font-weight);
@@ -1158,6 +1158,12 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.submission-actions .submission-primary,
+.submission-actions .submission-secondary {
+  min-height: 46px;
+  padding: 13px 24px;
 }
 
 .submission-success {

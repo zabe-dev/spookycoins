@@ -1,7 +1,5 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
-
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -38,13 +36,7 @@ export type PublicWatchedCoin = CoinListItem & {
   savedAt: string;
 };
 
-export function WatchlistPanel({
-  userId,
-  coins,
-}: {
-  userId: string;
-  coins: PublicWatchedCoin[];
-}) {
+export function WatchlistPanel({ userId, coins }: { userId: string; coins: PublicWatchedCoin[] }) {
   const [watchlistNotice, setWatchlistNotice] = useState<InlineNotice | null>(null);
   const watchlistPath = `/watchlist/${userId}`;
 
@@ -96,12 +88,7 @@ export function WatchlistPanel({
   );
 }
 
-export function AccountPanel({
-  submissions,
-}: {
-  email: string;
-  submissions: AccountSubmission[];
-}) {
+export function AccountPanel({ submissions }: { submissions: AccountSubmission[] }) {
   const [submissionNotice, setSubmissionNotice] = useState<InlineNotice | null>(null);
   const [deleteModal, setDeleteModal] = useState<AccountSubmission | null>(null);
   const [deletionOverrides, setDeletionOverrides] = useState<Record<string, string | null>>({});

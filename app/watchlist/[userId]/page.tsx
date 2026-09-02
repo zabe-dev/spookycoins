@@ -1,8 +1,6 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
-import {
-  PublicWatchlistTable,
-} from '@/features/account/components/account-panel';
+import { PublicWatchlistTable } from '@/features/account/components/account-panel';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { db } from '@/lib/db/client';
@@ -10,6 +8,7 @@ import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import '../../market.css';
 
 type WatchlistPageParams = { params: Promise<{ userId: string }> };
 

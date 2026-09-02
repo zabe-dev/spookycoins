@@ -3136,7 +3136,7 @@ img.admin-project-logo {
 .settings-card {
   border: 1px solid #252c31;
   border-radius: 16px;
-  background: linear-gradient(145deg, rgba(20, 25, 28, 0.96), rgba(11, 14, 16, 0.98));
+  background: rgba(13, 16, 19, 0.98);
   padding: 24px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
 }
@@ -3381,9 +3381,7 @@ img.admin-project-logo {
   overflow-x: auto;
   border: 1px solid #262e33;
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 8% 0%, rgba(203, 255, 74, 0.035), transparent 28%),
-    rgba(255, 255, 255, 0.012);
+  background: rgba(255, 255, 255, 0.012);
 }
 .watchlist-table {
   width: 100%;
@@ -3430,25 +3428,31 @@ img.admin-project-logo {
 .public-watchlist-table-wrap {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: visible;
 }
 .public-watchlist-table {
   width: 100%;
-  min-width: 1302px;
+  min-width: 0;
 }
 .public-watchlist-table .submission-icon-action {
   margin-left: auto;
 }
 .public-watchlist-shell {
-  max-width: 1302px;
-  width: min(1302px, calc(100% - 32px));
+  max-width: 1320px;
+  width: min(1320px, calc(100% - 40px));
 }
 .public-watchlist-shell .settings-card {
   overflow: hidden;
 }
 @media (max-width: 760px) {
   .public-watchlist-shell {
-    width: min(100% - 20px, 1302px);
+    width: calc(100% - 24px);
+  }
+  .public-watchlist-table {
+    min-width: 1020px;
+  }
+  .public-watchlist-table-wrap {
+    overflow-x: auto;
   }
   .admin-detail-sections {
     grid-template-columns: 1fr;

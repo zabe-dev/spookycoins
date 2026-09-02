@@ -9,6 +9,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import '../market.css';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -71,7 +72,6 @@ export default async function DashboardPage() {
     <main className="market-page">
       <SiteHeader active="none" />
       <AccountPanel
-        email={session.user.email}
         submissions={submissions.map((submission) => ({
           ...submission,
           baseStatus: submission.status,

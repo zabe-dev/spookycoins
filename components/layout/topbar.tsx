@@ -48,13 +48,16 @@ function TopbarPlatformItems({ summary }: { summary: TopbarSummary }) {
       <TopbarCoinLink coin={summary.topVotedCoin} kind="top-voted" />
       <TopbarCoinLink coin={summary.trendingCoin} kind="trending" />
       <span>
-        Users <b>{formatCompactNumber(summary.users)}</b>
+        <span className="topbar-label">Users</span>
+        <b className="topbar-value">{formatCompactNumber(summary.users)}</b>
       </span>
       <span>
-        Projects <b>{formatCompactNumber(summary.projects)}</b>
+        <span className="topbar-label">Projects</span>
+        <b className="topbar-value">{formatCompactNumber(summary.projects)}</b>
       </span>
       <span>
-        Total votes <b>{formatCompactNumber(summary.totalVotes)}</b>
+        <span className="topbar-label">Total votes</span>
+        <b className="topbar-value">{formatCompactNumber(summary.totalVotes)}</b>
       </span>
     </>
   );

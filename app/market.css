@@ -84,6 +84,12 @@
 .topbar-coin-link b {
   color: var(--copy, var(--text));
 }
+.topbar-value {
+  color: var(--copy, var(--text)) !important;
+}
+.topbar-label {
+  color: var(--sub, var(--muted));
+}
 .topbar-coin-name {
   color: var(--copy, var(--text));
   font-family: var(--font-space-grotesk), sans-serif;
@@ -1043,6 +1049,7 @@
   }
   .topbar {
     width: 100%;
+    color: var(--copy);
     overflow: hidden;
   }
   .topbar > .ticker,
@@ -1086,8 +1093,14 @@
     white-space: nowrap;
   }
   .topbar-marquee-group b,
-  .topbar-marquee-group a b {
-    color: var(--copy);
+  .topbar-marquee-group a b,
+  .topbar-marquee-group .topbar-value,
+  .topbar-marquee-group .topbar-coin-name {
+    color: var(--copy) !important;
+  }
+  .topbar-marquee-group .topbar-label,
+  .topbar-marquee-group .topbar-coin-label {
+    color: var(--sub, var(--muted)) !important;
   }
   .topbar-marquee-group .gold-name {
     color: transparent !important;

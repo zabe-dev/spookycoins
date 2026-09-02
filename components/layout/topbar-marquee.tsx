@@ -47,7 +47,8 @@ export function TopbarItems({
     <>
       {summary.prices.map((coin) => (
         <span key={`${duplicate ? 'copy-' : ''}${coin.symbol}`}>
-          {coin.symbol} <b>{formatTickerPrice(coin.price)}</b>{' '}
+          <span className="topbar-label">{coin.symbol}</span>
+          <b className="topbar-value">{formatTickerPrice(coin.price)}</b>{' '}
           <i className={(coin.change ?? 0) < 0 ? 'down' : ''}>
             {coin.change === null
               ? '—'
@@ -60,13 +61,16 @@ export function TopbarItems({
           <TopbarCoinLink coin={summary.topVotedCoin} kind="top-voted" />
           <TopbarCoinLink coin={summary.trendingCoin} kind="trending" />
           <span>
-            Users <b>{formatCompactNumber(summary.users)}</b>
+            <span className="topbar-label">Users</span>
+            <b className="topbar-value">{formatCompactNumber(summary.users)}</b>
           </span>
           <span>
-            Projects <b>{formatCompactNumber(summary.projects)}</b>
+            <span className="topbar-label">Projects</span>
+            <b className="topbar-value">{formatCompactNumber(summary.projects)}</b>
           </span>
           <span>
-            Total votes <b>{formatCompactNumber(summary.totalVotes)}</b>
+            <span className="topbar-label">Total votes</span>
+            <b className="topbar-value">{formatCompactNumber(summary.totalVotes)}</b>
           </span>
         </>
       )}
