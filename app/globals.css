@@ -3091,10 +3091,6 @@ img.admin-project-logo {
 .container.settings-shell.account-shell:not(.public-watchlist-shell) {
   width: min(1320px, calc(100% - 40px));
 }
-.account-shell:not(.public-watchlist-shell) .settings-card {
-  border-color: var(--border, #252c31);
-  background: var(--surface, rgba(13, 16, 19, 0.98));
-}
 .inline-feedback {
   display: inline-flex;
   width: fit-content;
@@ -3347,14 +3343,16 @@ img.admin-project-logo {
   padding: 0;
   overflow: visible;
 }
-.watchlist-page-toolbar {
+.watchlist-page-toolbar,
+.dashboard-page-toolbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
   margin: 0 0 14px;
 }
-.watchlist-page-toolbar button {
+.watchlist-page-toolbar button,
+.dashboard-page-toolbar button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -3371,16 +3369,19 @@ img.admin-project-logo {
     border-color 0.16s ease,
     background 0.16s ease;
 }
-.watchlist-page-toolbar button:hover {
+.watchlist-page-toolbar button:hover,
+.dashboard-page-toolbar button:hover {
   transform: translateY(-1px);
   border-color: rgba(203, 255, 74, 0.42);
   background: rgba(203, 255, 74, 0.12);
 }
-.watchlist-page-toolbar button svg {
+.watchlist-page-toolbar button svg,
+.dashboard-page-toolbar button svg {
   width: 13px;
   height: 13px;
 }
-.watchlist-page-toolbar > span {
+.watchlist-page-toolbar > span,
+.dashboard-page-toolbar > span {
   display: inline-grid;
   min-width: 28px;
   height: 28px;

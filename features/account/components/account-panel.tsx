@@ -74,7 +74,7 @@ export function WatchlistPanel({
         <div className="watchlist-page-toolbar">
           <button type="button" onClick={() => void copyWatchlistUrl()}>
             <Copy aria-hidden="true" />
-            Copy public link
+            COPY PUBLIC LINK
           </button>
           <span>{coins.length}</span>
         </div>
@@ -119,7 +119,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
       </header>
 
       <section className="settings-card submissions-card watchlist-page-card">
-        <div className="watchlist-page-toolbar">
+        <div className="dashboard-page-toolbar">
           <span>{submissions.length}</span>
         </div>
         <InlineFeedback notice={submissionNotice} />
