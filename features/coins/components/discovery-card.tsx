@@ -94,7 +94,7 @@ function Metric({
                 : coin.votes,
           )}
         </b>
-        <span>{metric === 'watchlist' ? 'watchlists' : 'this week'}</span>
+        <span>{metric === 'watchlist' ? 'watchlists' : 'total votes'}</span>
       </strong>
     );
   }
