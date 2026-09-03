@@ -5,6 +5,7 @@ import { hasAdminAccess } from '@/lib/auth/roles';
 import { db } from '@/lib/db/client';
 import {
   adminAuditLogs,
+  bannerAds,
   changeRequests,
   coinBoosts,
   coinLinks,
@@ -13,8 +14,9 @@ import {
   coinSubmissions,
   users,
 } from '@/lib/db/schema';
+import { bannerPlacements } from '@/features/ads/types';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 
@@ -28,6 +30,7 @@ const submissionStatuses = [
   'rejected',
 ] as const;
 const changeRequestStatuses = ['pending', 'resolved', 'rejected'] as const;
+const bannerStatuses = ['active', 'paused'] as const;
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
 const boostPackageRules = {
   10: { durationHours: 24, voteMultiplier: 2 },
@@ -282,6 +285,93 @@ export async function updateChangeRequestStatus(formData: FormData) {
   revalidatePath('/admin/dashboard');
 }
 
+export async function createBannerAd(formData: FormData) {
+  const adminUser = await requireAdmin();
+  const placement = readEnum(formData, 'placement', bannerPlacements);
+  const title = readRequired(formData, 'title');
+  const subtitle = readOptional(formData, 'subtitle');
+  const desktopImageUrl = readUrl(formData, 'desktopImageUrl');
+  const mobileImageUrl = readOptionalUrl(formData, 'mobileImageUrl');
+  const targetUrl = readUrl(formData, 'targetUrl');
+  const priority = readBoundedNumber(formData, 'priority', 1, 999);
+  const startsAt = readDateTime(formData, 'startsAt') || new Date();
+  const expiresAt = readDateTime(formData, 'expiresAt');
+  const notes = readOptional(formData, 'notes');
+
+  if (expiresAt && expiresAt <= startsAt) {
+    throw new Error('End date must be after the start date.');
+  }
+
+  await db.insert(bannerAds).values({
+    placement,
+    title,
+    subtitle: subtitle || null,
+    desktopImageUrl,
+    mobileImageUrl: mobileImageUrl || null,
+    targetUrl,
+    status: 'active',
+    priority,
+    startsAt,
+    expiresAt,
+    assignedByUserId: adminUser.id,
+    notes: notes || null,
+  });
+
+  await audit(adminUser.id, 'banner.created', 'banner', title, { placement, priority });
+  revalidateBannerPaths();
+}
+
+export async function updateBannerAd(formData: FormData) {
+  const adminUser = await requireAdmin();
+  const bannerId = readRequired(formData, 'bannerId');
+  const placement = readEnum(formData, 'placement', bannerPlacements);
+  const title = readRequired(formData, 'title');
+  const subtitle = readOptional(formData, 'subtitle');
+  const desktopImageUrl = readUrl(formData, 'desktopImageUrl');
+  const mobileImageUrl = readOptionalUrl(formData, 'mobileImageUrl');
+  const targetUrl = readUrl(formData, 'targetUrl');
+  const status = readEnum(formData, 'status', bannerStatuses);
+  const priority = readBoundedNumber(formData, 'priority', 1, 999);
+  const startsAt = readDateTime(formData, 'startsAt') || new Date();
+  const expiresAt = readDateTime(formData, 'expiresAt');
+  const notes = readOptional(formData, 'notes');
+
+  if (expiresAt && expiresAt <= startsAt) {
+    throw new Error('End date must be after the start date.');
+  }
+
+  await db
+    .update(bannerAds)
+    .set({
+      placement,
+      title,
+      subtitle: subtitle || null,
+      desktopImageUrl,
+      mobileImageUrl: mobileImageUrl || null,
+      targetUrl,
+      status,
+      priority,
+      startsAt,
+      expiresAt,
+      notes: notes || null,
+      assignedByUserId: adminUser.id,
+      updatedAt: new Date(),
+    })
+    .where(eq(bannerAds.id, bannerId));
+
+  await audit(adminUser.id, 'banner.updated', 'banner', bannerId, { placement, status, priority });
+  revalidateBannerPaths();
+}
+
+export async function deleteBannerAd(formData: FormData) {
+  const adminUser = await requireAdmin();
+  const bannerId = readRequired(formData, 'bannerId');
+
+  await db.delete(bannerAds).where(eq(bannerAds.id, bannerId));
+  await audit(adminUser.id, 'banner.deleted', 'banner', bannerId, {});
+  revalidateBannerPaths();
+}
+
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect('/');
@@ -468,10 +558,52 @@ function readNumber(formData: FormData, key: string) {
   return value;
 }
 
+function readBoundedNumber(formData: FormData, key: string, min: number, max: number) {
+  const value = readNumber(formData, key);
+  if (value < min || value > max) throw new Error(`${key} must be between ${min} and ${max}.`);
+  return value;
+}
+
 function readEnum<T extends readonly string[]>(formData: FormData, key: string, options: T) {
   const value = readRequired(formData, key);
   if (!options.includes(value)) throw new Error(`${key} is invalid.`);
   return value as T[number];
+}
+
+function readUrl(formData: FormData, key: string) {
+  const value = readRequired(formData, key);
+  assertUrl(value, key);
+  return value;
+}
+
+function readOptionalUrl(formData: FormData, key: string) {
+  const value = readOptional(formData, key);
+  if (value) assertUrl(value, key);
+  return value;
+}
+
+function assertUrl(value: string, key: string) {
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Invalid protocol');
+  } catch {
+    throw new Error(`${key} must be a valid URL.`);
+  }
+}
+
+function readDateTime(formData: FormData, key: string) {
+  const value = readOptional(formData, key);
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`${key} must be a valid date.`);
+  return date;
+}
+
+function revalidateBannerPaths() {
+  revalidateTag('banner-ads', 'max');
+  revalidatePath('/admin/dashboard');
+  revalidatePath('/');
+  revalidatePath('/coin/[id]', 'page');
 }
 
 function addHours(date: Date, hours: number) {

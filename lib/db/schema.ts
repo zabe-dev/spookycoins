@@ -334,6 +334,32 @@ export const coinPromotions = pgTable(
   ],
 );
 
+export const bannerAds = pgTable(
+  'banner_ads',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    placement: text('placement').notNull(),
+    title: text('title').notNull(),
+    subtitle: text('subtitle'),
+    desktopImageUrl: text('desktop_image_url').notNull(),
+    mobileImageUrl: text('mobile_image_url'),
+    targetUrl: text('target_url').notNull(),
+    status: text('status').default('active').notNull(),
+    priority: integer('priority').default(1).notNull(),
+    startsAt: timestamp('starts_at', { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    assignedByUserId: text('assigned_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    notes: text('notes'),
+    ...timestamps,
+  },
+  (table) => [
+    index('banner_ads_placement_status_idx').on(table.placement, table.status),
+    index('banner_ads_schedule_idx').on(table.startsAt, table.expiresAt),
+  ],
+);
+
 export const coinVotes = pgTable(
   'coin_votes',
   {

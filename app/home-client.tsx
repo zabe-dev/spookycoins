@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
 import { InfoBand } from '@/components/layout/info-band';
+import type { BannerAdMap } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import {
   BannerAd as Ad,
@@ -62,9 +63,11 @@ const defaultSort: { key: CoinSortKey; dir: 1 | -1 } = { key: 'votes', dir: -1 }
 export function HomeClient({
   initialCoins,
   isSignedIn,
+  bannerAds,
 }: {
   initialCoins: CoinListItem[];
   isSignedIn: boolean;
+  bannerAds: BannerAdMap;
 }) {
   const [marketCoins, setMarketCoins] = useState<CoinListItem[]>(initialCoins);
   const [view, setView] = useState<LeaderboardView>('Top coins'),
@@ -403,9 +406,9 @@ export function HomeClient({
   return (
     <main className={adVisible ? 'market-page with-bottom-ad' : 'market-page'}>
       <div className="container ad-grid">
-        <Ad />
+        <Ad ads={bannerAds['homepage-top']} />
         <div className="desktop-only">
-          <Ad />
+          <Ad ads={bannerAds['homepage-top']} />
         </div>
       </div>
       <section className="container hotspots-shell">
@@ -511,14 +514,7 @@ export function HomeClient({
           coinLinks={false}
         />
       </section>
-      <div className="container wide-banner">
-        <small>FULL-WIDTH ADVERTISEMENT</small>
-        <div>
-          <b>Reach crypto&apos;s earliest coin hunters.</b>
-          <span>Premium inventory · Measured impressions and clicks</span>
-        </div>
-        <Link href="/advertise">View ad packages ↗</Link>
-      </div>
+      <WideBanner ads={bannerAds['homepage-wide']} />
       <section className="container leaderboard" id="leaderboard">
         <div className="section-title">
           <div>
@@ -736,27 +732,92 @@ export function HomeClient({
       <InfoBand />
       <SiteFooter id="footer" variant="home" />
       {adVisible && (
-        <aside className="bottom-ad">
-          <div className="container bottom-ad-inner">
-            <small>AD SPACE</small>
-            <b>SPOOKY</b>
-            <div className="bottom-ad-copy">
-              <span className="bottom-ad-copy-main">
-                Reach crypto&apos;s earliest coin hunters.
-              </span>
-              <span>Premium inventory · Measured impressions and clicks</span>
-            </div>
-            <Link className="ad-cta" href="/advertise">
-              View ad packages ↗
-            </Link>
-            <button className="ad-close" onClick={() => setAdVisible(false)}>
-              <X aria-hidden="true" />
-            </button>
-          </div>
-        </aside>
+        <BottomAd ad={bannerAds['site-bottom'][0]} onClose={() => setAdVisible(false)} />
       )}
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </main>
+  );
+}
+
+function WideBanner({ ads }: { ads: BannerAdMap['homepage-wide'] }) {
+  const ad = ads[0];
+
+  if (ad) {
+    return (
+      <Link className="container wide-banner wide-banner-image" href={ad.targetUrl} target="_blank">
+        <picture>
+          {ad.mobileImageUrl && <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />}
+          <img src={ad.desktopImageUrl} alt={ad.title} />
+        </picture>
+        <span className="wide-banner-overlay">
+          <small>FULL-WIDTH ADVERTISEMENT</small>
+          <b>{ad.title}</b>
+          {ad.subtitle && <em>{ad.subtitle}</em>}
+        </span>
+      </Link>
+    );
+  }
+
+  return (
+    <div className="container wide-banner">
+      <small>FULL-WIDTH ADVERTISEMENT</small>
+      <div>
+        <b>Reach crypto&apos;s earliest coin hunters.</b>
+        <span>Premium inventory · Measured impressions and clicks</span>
+      </div>
+      <Link href="/advertise">View ad packages ↗</Link>
+    </div>
+  );
+}
+
+function BottomAd({
+  ad,
+  onClose,
+}: {
+  ad?: BannerAdMap['site-bottom'][number];
+  onClose: () => void;
+}) {
+  if (ad) {
+    return (
+      <aside className="bottom-ad bottom-ad-image">
+        <div className="container bottom-ad-inner">
+          <Link className="bottom-ad-creative" href={ad.targetUrl} target="_blank">
+            <picture>
+              {ad.mobileImageUrl && (
+                <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />
+              )}
+              <img src={ad.desktopImageUrl} alt={ad.title} />
+            </picture>
+            <span>
+              <b>{ad.title}</b>
+              {ad.subtitle && <em>{ad.subtitle}</em>}
+            </span>
+          </Link>
+          <button className="ad-close" onClick={onClose} aria-label="Close ad">
+            <X aria-hidden="true" />
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="bottom-ad">
+      <div className="container bottom-ad-inner">
+        <small>AD SPACE</small>
+        <b>SPOOKY</b>
+        <div className="bottom-ad-copy">
+          <span className="bottom-ad-copy-main">Reach crypto&apos;s earliest coin hunters.</span>
+          <span>Premium inventory · Measured impressions and clicks</span>
+        </div>
+        <Link className="ad-cta" href="/advertise">
+          View ad packages ↗
+        </Link>
+        <button className="ad-close" onClick={onClose} aria-label="Close ad">
+          <X aria-hidden="true" />
+        </button>
+      </div>
+    </aside>
   );
 }
 

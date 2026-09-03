@@ -2,20 +2,29 @@
 
 import {
   addPromotedCoin,
+  createBannerAd,
+  deleteBannerAd,
   deleteAdminCoin,
   deleteAdminUser,
   grantCoinBoost,
   removeCoinBoost,
   removePromotedCoin,
+  updateBannerAd,
   updateChangeRequestStatus,
   updateAdminCoin,
   updateAdminSubmission,
   updateAdminUser,
 } from '@/app/admin/dashboard/actions';
 import {
+  bannerPlacementLabels,
+  bannerPlacements,
+  type BannerPlacement,
+} from '@/features/ads/types';
+import {
   Check,
   Eye,
   ExternalLink,
+  Image as ImageIcon,
   Megaphone,
   Pause,
   Pencil,
@@ -44,6 +53,7 @@ export type AdminSummary = {
   coins: number;
   activeBoosts: number;
   promotedCoins: number;
+  activeBanners: number;
   pendingSubmissions: number;
   changeRequests: number;
 };
@@ -95,6 +105,23 @@ export type AdminCoinRow = {
   } | null;
 };
 
+export type AdminBannerRow = {
+  id: string;
+  placement: string;
+  placementLabel: string;
+  title: string;
+  subtitle: string;
+  desktopImageUrl: string;
+  mobileImageUrl: string;
+  targetUrl: string;
+  status: string;
+  priority: number;
+  startsAt: string;
+  expiresAt: string;
+  schedule: string;
+  notes: string;
+};
+
 export type AdminChangeRequestRow = {
   id: string;
   coinId: number;
@@ -127,6 +154,7 @@ type AdminDashboardClientProps = {
   pendingSubmissions: AdminSubmissionRow[];
   changeRequests: AdminChangeRequestRow[];
   listedCoins: AdminCoinRow[];
+  bannerAds: AdminBannerRow[];
   users: AdminUserRow[];
 };
 
@@ -149,6 +177,7 @@ export function AdminDashboardClient({
   pendingSubmissions,
   changeRequests,
   listedCoins,
+  bannerAds,
   users,
 }: AdminDashboardClientProps) {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
@@ -161,6 +190,7 @@ export function AdminDashboardClient({
         <SummaryCard label="Listed coins" value={summary.coins} />
         <SummaryCard label="Active boosts" value={summary.activeBoosts} />
         <SummaryCard label="Promoted coins" value={summary.promotedCoins} />
+        <SummaryCard label="Active banners" value={summary.activeBanners} />
         <SummaryCard label="Pending submissions" value={summary.pendingSubmissions} />
         <SummaryCard label="Change requests" value={summary.changeRequests} />
       </div>
@@ -168,6 +198,7 @@ export function AdminDashboardClient({
       <PendingSubmissionsTable rows={pendingSubmissions} popover={popover} />
       <ChangeRequestsTable rows={changeRequests} popover={popover} />
       <ListedCoinsTable rows={listedCoins} popover={popover} />
+      <BannerAdsTable rows={bannerAds} popover={popover} />
       <UsersTable rows={users} popover={popover} />
     </>
   );
@@ -527,6 +558,114 @@ function ListedCoinsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Po
   );
 }
 
+function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: PopoverController }) {
+  return (
+    <AdminPanel
+      eyebrow="Banner inventory"
+      title="Banner ads"
+      count={`${rows.length} total`}
+      note="Manage image banners by placement. Use S3/public image URLs here; active banners rotate by priority when more than one is live."
+      rows={rows}
+      searchPlaceholder="Search title, placement, or URL"
+      search={(row) => [
+        row.title,
+        row.subtitle,
+        row.placement,
+        row.placementLabel,
+        row.targetUrl,
+        row.status,
+      ]}
+      empty="No banner ads created yet."
+      action={<BannerEditAction popover={popover} />}
+      renderTable={(visibleRows) => (
+        <table className="admin-table banner-admin-table">
+          <thead>
+            <tr>
+              <th>Creative</th>
+              <th>Placement</th>
+              <th>Title</th>
+              <th>Target</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Schedule</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => {
+              const active = row.status === 'active';
+              return (
+                <tr key={row.id}>
+                  <td>
+                    <BannerPreviewAction row={row} />
+                  </td>
+                  <td>{row.placementLabel}</td>
+                  <td>
+                    <strong>{row.title}</strong>
+                    {row.subtitle && <span className="admin-row-subtext">{row.subtitle}</span>}
+                  </td>
+                  <td>
+                    <a href={row.targetUrl} target="_blank" rel="noreferrer">
+                      Open target ↗
+                    </a>
+                  </td>
+                  <td>
+                    <StatusPill tone={active ? 'lime' : 'neutral'}>
+                      {labelize(row.status)}
+                    </StatusPill>
+                  </td>
+                  <td>{row.priority}</td>
+                  <td>{row.schedule}</td>
+                  <td>
+                    <ActionGroup>
+                      <BannerEditAction row={row} popover={popover} />
+                      <ConfirmAction
+                        popover={popover}
+                        popoverId={`banner-status-${row.id}`}
+                        action={updateBannerAd}
+                        title={active ? 'Pause banner' : 'Activate banner'}
+                        tone={active ? 'danger' : 'success'}
+                        message={`${active ? 'Pause' : 'Activate'} ${row.title}?`}
+                        fields={{
+                          bannerId: row.id,
+                          placement: row.placement,
+                          title: row.title,
+                          subtitle: row.subtitle,
+                          desktopImageUrl: row.desktopImageUrl,
+                          mobileImageUrl: row.mobileImageUrl,
+                          targetUrl: row.targetUrl,
+                          status: active ? 'paused' : 'active',
+                          priority: row.priority,
+                          startsAt: row.startsAt,
+                          expiresAt: row.expiresAt,
+                          notes: row.notes,
+                        }}
+                      >
+                        {active ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+                      </ConfirmAction>
+                      <ConfirmAction
+                        popover={popover}
+                        popoverId={`banner-delete-${row.id}`}
+                        action={deleteBannerAd}
+                        title="Delete banner"
+                        tone="danger"
+                        message={`Delete ${row.title}? This removes the banner from admin inventory.`}
+                        fields={{ bannerId: row.id }}
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </ConfirmAction>
+                    </ActionGroup>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    />
+  );
+}
+
 function UsersTable({ rows, popover }: { rows: AdminUserRow[]; popover: PopoverController }) {
   return (
     <AdminPanel
@@ -632,6 +771,7 @@ function AdminPanel<T>({
   searchPlaceholder,
   search,
   empty,
+  action,
   renderTable,
 }: {
   eyebrow: string;
@@ -642,6 +782,7 @@ function AdminPanel<T>({
   searchPlaceholder: string;
   search: (row: T) => string[];
   empty: string;
+  action?: ReactNode;
   renderTable: (rows: T[]) => ReactNode;
 }) {
   const [query, setQuery] = useState('');
@@ -667,7 +808,10 @@ function AdminPanel<T>({
           <small>{eyebrow}</small>
           <h2>{title}</h2>
         </div>
-        <span>{count}</span>
+        <div className="admin-panel-title-actions">
+          <span>{count}</span>
+          {action}
+        </div>
       </div>
       <p className="admin-panel-note">{note}</p>
       <div className="admin-table-tools">
@@ -791,6 +935,188 @@ function PromoteAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCo
     >
       <Megaphone aria-hidden="true" />
     </ConfirmAction>
+  );
+}
+
+function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: PopoverController }) {
+  const [placement, setPlacement] = useState<BannerPlacement>(
+    isBannerPlacement(row?.placement) ? row.placement : 'homepage-top',
+  );
+  const [title, setTitle] = useState(row?.title || '');
+  const [subtitle, setSubtitle] = useState(row?.subtitle || '');
+  const [desktopImageUrl, setDesktopImageUrl] = useState(row?.desktopImageUrl || '');
+  const [mobileImageUrl, setMobileImageUrl] = useState(row?.mobileImageUrl || '');
+  const [targetUrl, setTargetUrl] = useState(row?.targetUrl || '');
+  const [status, setStatus] = useState(row?.status || 'active');
+  const [priority, setPriority] = useState(row?.priority || 1);
+  const [startsAt, setStartsAt] = useState(row?.startsAt || defaultAdminDateTime());
+  const [expiresAt, setExpiresAt] = useState(row?.expiresAt || '');
+  const [notes, setNotes] = useState(row?.notes || '');
+  const editing = Boolean(row);
+
+  return (
+    <ConfirmAction
+      popover={popover}
+      popoverId={editing ? `banner-edit-${row?.id}` : 'banner-create'}
+      action={editing ? updateBannerAd : createBannerAd}
+      title={editing ? 'Edit banner' : 'New banner'}
+      tone={editing ? 'neutral' : 'boost'}
+      message={
+        editing
+          ? `Update ${row?.title || 'this banner'} placement, creative, or schedule.`
+          : 'Create a banner ad using public image URLs from S3 or another approved static host.'
+      }
+      fields={editing && row ? { bannerId: row.id } : {}}
+      extra={
+        <div className="admin-banner-form">
+          <label>
+            Placement
+            <select
+              name="placement"
+              value={placement}
+              onChange={(event) => setPlacement(event.target.value as BannerPlacement)}
+            >
+              {bannerPlacements.map((item) => (
+                <option key={item} value={item}>
+                  {bannerPlacementLabels[item]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Status
+            <select
+              name="status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+            >
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+            </select>
+          </label>
+          <label>
+            Title
+            <input
+              name="title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Advertiser headline"
+              required
+            />
+          </label>
+          <label>
+            Subtitle
+            <input
+              name="subtitle"
+              value={subtitle}
+              onChange={(event) => setSubtitle(event.target.value)}
+              placeholder="Optional short supporting text"
+            />
+          </label>
+          <label className="admin-banner-form-wide">
+            Desktop image URL
+            <input
+              name="desktopImageUrl"
+              value={desktopImageUrl}
+              onChange={(event) => setDesktopImageUrl(event.target.value)}
+              placeholder="https://..."
+              required
+            />
+          </label>
+          <label className="admin-banner-form-wide">
+            Mobile image URL
+            <input
+              name="mobileImageUrl"
+              value={mobileImageUrl}
+              onChange={(event) => setMobileImageUrl(event.target.value)}
+              placeholder="Optional mobile creative URL"
+            />
+          </label>
+          <label className="admin-banner-form-wide">
+            Target URL
+            <input
+              name="targetUrl"
+              value={targetUrl}
+              onChange={(event) => setTargetUrl(event.target.value)}
+              placeholder="https://..."
+              required
+            />
+          </label>
+          <label>
+            Priority
+            <input
+              name="priority"
+              type="number"
+              min={1}
+              max={999}
+              value={priority}
+              onChange={(event) => setPriority(Math.max(1, Number(event.target.value) || 1))}
+              required
+            />
+          </label>
+          <label>
+            Starts
+            <input
+              name="startsAt"
+              type="datetime-local"
+              value={startsAt}
+              onChange={(event) => setStartsAt(event.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Ends
+            <input
+              name="expiresAt"
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(event) => setExpiresAt(event.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+          <label className="admin-banner-form-wide">
+            Notes
+            <textarea
+              name="notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Internal notes"
+            />
+          </label>
+        </div>
+      }
+    >
+      {editing ? <Pencil aria-hidden="true" /> : <ImageIcon aria-hidden="true" />}
+    </ConfirmAction>
+  );
+}
+
+function BannerPreviewAction({ row }: { row: AdminBannerRow }) {
+  return (
+    <div className="admin-banner-preview-actions">
+      <a
+        className="admin-icon-button neutral"
+        href={row.desktopImageUrl}
+        target="_blank"
+        rel="noreferrer"
+        title={`Open ${row.title} desktop image`}
+        aria-label={`Open ${row.title} desktop image`}
+      >
+        <ImageIcon aria-hidden="true" />
+      </a>
+      {row.mobileImageUrl && (
+        <a
+          className="admin-icon-button neutral"
+          href={row.mobileImageUrl}
+          target="_blank"
+          rel="noreferrer"
+          title={`Open ${row.title} mobile image`}
+          aria-label={`Open ${row.title} mobile image`}
+        >
+          <ExternalLink aria-hidden="true" />
+        </a>
+      )}
+    </div>
   );
 }
 
@@ -1139,4 +1465,16 @@ function labelize(value: string) {
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function isBannerPlacement(value: string | undefined): value is BannerPlacement {
+  return bannerPlacements.includes(value as BannerPlacement);
+}
+
+function defaultAdminDateTime() {
+  const date = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
 }

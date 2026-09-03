@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
+import type { PublicBannerAd } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import { CoinTable } from '@/features/coins/components';
 import type { Coin } from '@/features/coins/types';
@@ -17,10 +18,12 @@ import { CoinSidebar } from './coin-sidebar';
 export function CoinDetailPage({
   coinRecord,
   promotedCoins,
+  bannerAds,
   isSignedIn,
 }: {
   coinRecord: Coin;
   promotedCoins: CoinListItem[];
+  bannerAds: PublicBannerAd[];
   isSignedIn: boolean;
 }) {
   const canonicalCoin = coinRecord;
@@ -395,7 +398,7 @@ export function CoinDetailPage({
         </div>
       )}
 
-      <CoinAd />
+      <CoinAd ads={bannerAds} />
 
       <div className="container coin-layout">
         <div className="coin-main-column">

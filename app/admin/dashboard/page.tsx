@@ -1,5 +1,6 @@
 import { AdminDashboardClient } from '@/app/admin/dashboard/admin-dashboard-client';
 import type {
+  AdminBannerRow,
   AdminCoinRow,
   AdminSubmissionRow,
   AdminSummary,
@@ -8,6 +9,7 @@ import type {
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { NETWORKS } from '@/features/coins/networks';
+import { bannerPlacementLabels } from '@/features/ads/types';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { auth } from '@/lib/auth/server';
@@ -18,6 +20,7 @@ import {
   coins,
   coinSubmissions,
   changeRequests,
+  bannerAds,
   sessions,
   users,
 } from '@/lib/db/schema';
@@ -54,6 +57,8 @@ export default async function AdminDashboardPage() {
     pendingSubmissionCount,
     changeRequestRows,
     pendingChangeRequestCount,
+    bannerAdRows,
+    activeBannerCountRows,
   ] = await Promise.all([
     db.select().from(users).orderBy(desc(users.createdAt)).limit(200),
     db.select().from(coins).orderBy(desc(coins.submittedAt)).limit(200),
@@ -104,6 +109,17 @@ export default async function AdminDashboardPage() {
       .select({ count: sql<number>`count(*)::int` })
       .from(changeRequests)
       .where(eq(changeRequests.status, 'pending')),
+    db.select().from(bannerAds).orderBy(desc(bannerAds.updatedAt)).limit(200),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(bannerAds)
+      .where(
+        and(
+          eq(bannerAds.status, 'active'),
+          sql`${bannerAds.startsAt} <= ${nowIso}::timestamptz`,
+          sql`(${bannerAds.expiresAt} is null or ${bannerAds.expiresAt} > ${nowIso}::timestamptz)`,
+        ),
+      ),
   ]);
 
   const userById = new Map(userRows.map((user) => [user.id, user]));
@@ -224,6 +240,7 @@ export default async function AdminDashboardPage() {
     coins: readCount(coinCountRows),
     activeBoosts: readCount(activeBoostCoinCountRows),
     promotedCoins: readCount(activePromotionCoinCountRows),
+    activeBanners: readCount(activeBannerCountRows),
     pendingSubmissions: readCount(pendingSubmissionCount),
     changeRequests: readCount(pendingChangeRequestCount),
   };
@@ -244,6 +261,25 @@ export default async function AdminDashboardPage() {
     };
   });
 
+  const adminBannerAds: AdminBannerRow[] = bannerAdRows.map((banner) => ({
+    id: banner.id,
+    placement: banner.placement,
+    placementLabel:
+      bannerPlacementLabels[banner.placement as keyof typeof bannerPlacementLabels] ||
+      banner.placement,
+    title: banner.title,
+    subtitle: banner.subtitle || '',
+    desktopImageUrl: banner.desktopImageUrl,
+    mobileImageUrl: banner.mobileImageUrl || '',
+    targetUrl: banner.targetUrl,
+    status: banner.status,
+    priority: banner.priority,
+    startsAt: formatInputDateTime(banner.startsAt),
+    expiresAt: banner.expiresAt ? formatInputDateTime(banner.expiresAt) : '',
+    schedule: formatBannerSchedule(banner.startsAt, banner.expiresAt, now),
+    notes: banner.notes || '',
+  }));
+
   return (
     <main className="market-page">
       <SiteHeader active="none" />
@@ -261,6 +297,7 @@ export default async function AdminDashboardPage() {
           pendingSubmissions={pendingSubmissions}
           changeRequests={adminChangeRequests}
           listedCoins={listedCoins}
+          bannerAds={adminBannerAds}
           users={adminUsers}
         />
       </section>
@@ -425,6 +462,20 @@ function formatDateTime(date: Date) {
     hour: 'numeric',
     minute: '2-digit',
   }).format(date);
+}
+
+function formatInputDateTime(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+}
+
+function formatBannerSchedule(startsAt: Date, expiresAt: Date | null, now: Date) {
+  if (startsAt > now) return `Starts ${formatTimeRemaining(startsAt, now)} from now`;
+  if (!expiresAt) return 'Active, no end date';
+  if (expiresAt <= now) return 'Expired';
+  return `${formatTimeRemaining(expiresAt, now)} left`;
 }
 
 function formatTimeRemaining(expiresAt: Date, now: Date) {

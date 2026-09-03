@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { CoinDetailPage } from '@/features/coin/components/coin-detail-page';
+import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getPublicCoinById, getPublicCoinListItems } from '@/features/coins/server/coin-list';
 import { NETWORKS } from '@/features/coins/networks';
 import { auth } from '@/lib/auth/server';
@@ -51,7 +52,11 @@ export default async function CoinPage({ params }: CoinPageParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
-  const promotedCoins = (await getPublicCoinListItems(session?.user.id))
+  const [allCoins, bannerAds] = await Promise.all([
+    getPublicCoinListItems(session?.user.id),
+    getActiveBannerAds(),
+  ]);
+  const promotedCoins = allCoins
     .filter((item) => item.promoted && item.coinId !== coin.id)
     .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name))
     .map((item, index) => ({ ...item, rank: index + 1 }));
@@ -62,6 +67,7 @@ export default async function CoinPage({ params }: CoinPageParams) {
       <CoinDetailPage
         coinRecord={coin}
         promotedCoins={promotedCoins}
+        bannerAds={bannerAds['coin-page-wide']}
         isSignedIn={Boolean(session?.user)}
       />
     </>
