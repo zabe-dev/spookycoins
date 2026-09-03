@@ -27,6 +27,8 @@ export type CoinListItem = {
   change: number;
   launch: string;
   launchTimestamp: string | null;
+  presaleStart: string;
+  presaleStartTimestamp: string | null;
   presaleEnd: string;
   presaleEndTimestamp: string | null;
   totalSupply: string;
@@ -49,6 +51,7 @@ export type CoinListItem = {
   contractAddress: string;
   links: Coin['links'];
   security: Coin['security'];
+  presale: Coin['presale'];
   buyUrl?: string;
 };
 
@@ -127,6 +130,8 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
           ? formatTimeAgo(coin.launchDate)
           : '—',
     launchTimestamp: coin.launchDate,
+    presaleStart: coin.presaleStartDate ? formatDateTime(coin.presaleStartDate) : '—',
+    presaleStartTimestamp: coin.presaleStartDate,
     presaleEnd: coin.presaleEndDate ? formatTimeUntil(coin.presaleEndDate) : '—',
     presaleEndTimestamp: coin.presaleEndDate,
     totalSupply: formatTokenAmount(coin.market.totalSupply),
@@ -149,8 +154,23 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     contractAddress: coin.contractAddress,
     links: coin.links,
     security: coin.security,
+    presale: coin.presale,
     ...(coin.dex.available ? { buyUrl: coin.dex.url } : {}),
   };
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  })
+    .format(new Date(value))
+    .replace(/\//g, '-')
+    .replace(',', '');
 }
 
 export function getBoostVoteFactor(boostPackage: number | null | undefined) {

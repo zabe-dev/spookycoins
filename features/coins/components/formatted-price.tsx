@@ -6,12 +6,19 @@ type FormattedPriceProps = {
 };
 
 export function FormattedPrice({ value, className }: FormattedPriceProps) {
+  const priceClassName = className ? `compact-price ${className}` : 'compact-price';
   const parts = getCompactZeroPriceParts(value);
 
-  if (!parts) return <>{value}</>;
+  if (!parts) {
+    return (
+      <span className={priceClassName} title={value}>
+        {value}
+      </span>
+    );
+  }
 
   return (
-    <span className={className ? `compact-price ${className}` : 'compact-price'} title={value}>
+    <span className={priceClassName} title={value}>
       {parts.prefix}
       <span>{parts.leadingZero}</span>
       <sub>{parts.zeroCount}</sub>

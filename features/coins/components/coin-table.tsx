@@ -74,11 +74,9 @@ export function CoinCells({ coin, linkEnabled = true }: { coin: Coin; linkEnable
           </div>
         </div>
       </td>
-      <td className="numeric table-strong-value">{coin.cap}</td>
+      <td className="numeric">{coin.cap}</td>
       <td className="numeric">
-        <b className="table-strong-value">
-          <FormattedPrice value={coin.price} />
-        </b>
+        <FormattedPrice value={coin.price} />
       </td>
       <td>
         <span className={coin.change >= 0 ? 'positive' : 'negative'}>

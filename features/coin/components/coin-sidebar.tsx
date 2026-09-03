@@ -2,7 +2,7 @@
 
 import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import { BoltIcon } from '@/features/coins/components';
-import { Pencil } from 'lucide-react';
+import { ExternalLink, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import type { CoinDetailView } from '../types';
 import { Info } from './detail-card';
@@ -95,6 +95,15 @@ export function CoinSidebar({
         <h3>Coin information</h3>
         <Info label="Network" value={coin.chain} />
         <Info label="Category" value={coin.category} />
+        {coin.lifecycle === 'presale' && (
+          <>
+            <InfoLink label="Presale website" url={coin.presale.websiteUrl} />
+            <Info label="Presale coin" value={coin.presale.paymentToken || '—'} />
+            <Info label="Soft cap" value={formatPresaleCap(coin.presale.softCap)} />
+            <Info label="Hard cap" value={formatPresaleCap(coin.presale.hardCap)} />
+            <Info label="End date" value={formatPresaleDateTime(coin.presaleEndTimestamp)} />
+          </>
+        )}
         <Info label="Submitted" value={coin.age} />
         <Info
           label="Status"
@@ -124,5 +133,40 @@ export function CoinSidebar({
         <button>View packages ↗</button>
       </div>
     </aside>
+  );
+}
+
+function formatPresaleDateTime(value: string | null) {
+  if (!value) return '—';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  })
+    .format(new Date(value))
+    .replace(/\//g, '-')
+    .replace(',', '');
+}
+
+function formatPresaleCap(value: string | null) {
+  return value?.trim() || '—';
+}
+
+function InfoLink({ label, url }: { label: string; url: string | null }) {
+  return (
+    <div className="quick-info-link">
+      <span>{label}</span>
+      {url ? (
+        <a href={url} target="_blank" rel="noreferrer">
+          Open <ExternalLink aria-hidden="true" />
+        </a>
+      ) : (
+        <b>—</b>
+      )}
+    </div>
   );
 }

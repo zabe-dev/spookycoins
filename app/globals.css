@@ -1093,17 +1093,19 @@ tbody tr:hover td {
   color: #69737b;
 }
 .numeric {
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-jetbrains-mono), var(--font-geist-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   color: #cfd4d7;
-}
-.table-strong-value {
-  font-weight: 750;
 }
 .compact-price {
   display: inline-flex;
   align-items: baseline;
   color: inherit;
-  font: inherit;
+  font-family: var(--font-jetbrains-mono), var(--font-geist-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: inherit;
   letter-spacing: inherit;
   white-space: nowrap;
 }

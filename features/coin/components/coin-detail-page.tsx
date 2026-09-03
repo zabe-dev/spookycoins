@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { AuthModal } from '@/features/auth/components/auth-modal';
-import { CoinTable, SectionTitle } from '@/features/coins/components';
+import { CoinTable } from '@/features/coins/components';
 import type { Coin } from '@/features/coins/types';
 import { getBoostVoteFactor, toCoinListItem, type CoinListItem } from '@/features/coins/view';
 import { ChangeRequestModal } from './change-request-modal';
@@ -418,11 +418,6 @@ export function CoinDetailPage({
 
       {promotedRows.length > 0 && (
         <section className="promoted-section coin-promoted-section">
-          <SectionTitle
-            kicker="SPONSORED PLACEMENTS"
-            title="Promoted coins"
-            subtitle="Sponsored coins with active visibility packages. Promotion does not guarantee rank or endorsement."
-          />
           <CoinTable
             className="promoted-table"
             coins={promotedRows}

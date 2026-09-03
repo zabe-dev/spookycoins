@@ -159,6 +159,7 @@ function mapDbCoinToCoin({
   const network = toNetworkId(coin.chain);
   const dexLink = links.get('dex');
   const websiteLink = links.get('website');
+  const presale = readPresaleDetails(submission?.coinData);
 
   return {
     id: coin.id,
@@ -175,7 +176,8 @@ function mapDbCoinToCoin({
     description: coin.description,
     category: toCoinCategory(coin.category),
     launchDate: coin.launchDate ? coin.launchDate.toISOString() : null,
-    presaleEndDate: readPresaleEndDate(submission?.coinData),
+    presaleStartDate: presale.startDate,
+    presaleEndDate: presale.endDate,
     submittedAt: coin.submittedAt.toISOString(),
     populatedAt: coin.updatedAt.toISOString(),
     chart: buildChartConfig(links, submission, network, coin.contractAddress || ''),
@@ -184,6 +186,10 @@ function mapDbCoinToCoin({
     security: {
       kycUrl: links.get('kyc')?.url || null,
       auditUrl: links.get('audit')?.url || null,
+    },
+    presale: {
+      ...presale,
+      websiteUrl: links.get('presale-website')?.url || presale.websiteUrl,
     },
     boost:
       boost && isBoostMultiplier(boost.multiplier)
@@ -256,16 +262,38 @@ function buildProjectLinks(links: Map<string, DbCoinLink>): CoinProjectLink[] {
   });
 }
 
-function readPresaleEndDate(value: unknown) {
-  if (!isRecord(value)) return null;
+function readPresaleDetails(value: unknown) {
+  if (!isRecord(value)) return emptyPresaleDetails();
   const market = isRecord(value.market) ? value.market : {};
   const presale = isRecord(market.presale) ? market.presale : {};
-  const endDate = typeof presale.endDate === 'string' ? presale.endDate : '';
-  return endDate || null;
+
+  return {
+    websiteUrl: null,
+    startDate: readString(presale.startDate) || null,
+    endDate: readString(presale.endDate) || null,
+    paymentToken: readString(presale.paymentToken) || null,
+    softCap: readString(presale.softCap) || null,
+    hardCap: readString(presale.hardCap) || null,
+  };
+}
+
+function emptyPresaleDetails() {
+  return {
+    websiteUrl: null,
+    startDate: null,
+    endDate: null,
+    paymentToken: null,
+    softCap: null,
+    hardCap: null,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
 }
 
 function groupLinksByCoinId(rows: DbCoinLink[]) {

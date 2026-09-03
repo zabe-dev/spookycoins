@@ -73,6 +73,15 @@ export type CoinSecurityLinks = {
   auditUrl: string | null;
 };
 
+export type CoinPresaleDetails = {
+  websiteUrl: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  paymentToken: string | null;
+  softCap: string | null;
+  hardCap: string | null;
+};
+
 export type BoostMultiplier = 10 | 30 | 50 | 100 | 500;
 
 export type BoostState =
@@ -133,6 +142,7 @@ export type Coin = {
   description: string | null;
   category: CoinCategory;
   launchDate: string | null;
+  presaleStartDate: string | null;
   presaleEndDate: string | null;
   submittedAt: string;
   populatedAt: string;
@@ -140,6 +150,7 @@ export type Coin = {
   dex: DexConfig;
   links: CoinProjectLink[];
   security: CoinSecurityLinks;
+  presale: CoinPresaleDetails;
   boost: BoostState;
   promoted: PromotedState;
   market: CoinMarketData;

@@ -35,6 +35,9 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+.coin-heading-trade-presale {
+  min-width: min(100%, 560px);
+}
 .coin-identity {
   display: flex;
   align-items: center;
@@ -112,6 +115,10 @@
   min-width: 170px;
   max-width: 210px;
 }
+.coin-heading-trade-presale .contract-stat {
+  min-width: 170px;
+  max-width: 210px;
+}
 .contract-box {
   width: 100%;
   padding: 8px 9px;
@@ -137,7 +144,6 @@
 .contract-box-label {
   color: var(--sub);
   font-size: 7px;
-  font-weight: 800;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
@@ -148,8 +154,8 @@
   gap: 7px;
 }
 .contract-chain-icon {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
@@ -170,7 +176,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--copy);
-  font: 700 9px var(--font-fira-mono);
+  font: 500 9px var(--font-fira-mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -180,7 +186,7 @@
   color: var(--sub);
 }
 .coin-security-chip {
-  min-width: 68px;
+  min-width: 0;
   display: grid;
   gap: 6px;
   color: var(--copy);
@@ -188,6 +194,10 @@
 }
 .coin-security-chip b {
   padding: 8px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   border: 1px solid rgba(196, 255, 68, 0.22);
   border-radius: 8px;
   background: rgba(196, 255, 68, 0.055);
@@ -199,7 +209,6 @@
 .coin-security-chip span {
   color: var(--sub);
   font-size: 7px;
-  font-weight: 800;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
@@ -208,6 +217,10 @@
   font-size: 9px;
   font-weight: 750;
   white-space: nowrap;
+}
+.coin-security-chip b svg {
+  width: 12px;
+  height: 12px;
 }
 .coin-security-chip.muted b {
   color: var(--sub);
@@ -301,7 +314,7 @@
   width: min(1302px, calc(100% - 32px));
   max-width: 1302px;
   margin-inline: auto;
-  padding-top: 0;
+  padding-top: 18px;
   padding-bottom: 58px;
 }
 .request-change-card {
@@ -588,6 +601,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  margin-left: 20px;
 }
 .coin-price-block > small {
   color: var(--sub);
@@ -602,10 +616,29 @@
   gap: 9px;
 }
 .coin-price-block strong {
-  font: 700 18px var(--font-fira-mono);
+  font:
+    500 15px var(--font-jetbrains-mono),
+    var(--font-fira-mono);
 }
 .coin-price-block > div > span {
-  font: 650 9px var(--font-fira-mono);
+  font:
+    500 9px var(--font-jetbrains-mono),
+    var(--font-fira-mono);
+}
+.coin-date-block {
+  min-width: 126px;
+}
+.coin-date-block small {
+  color: var(--sub);
+  font-size: 7px;
+  letter-spacing: 0.13em;
+}
+.coin-date-block b {
+  color: var(--copy);
+  font:
+    500 10px var(--font-jetbrains-mono),
+    var(--font-fira-mono);
+  white-space: nowrap;
 }
 .coin-primary-actions {
   display: flex;
@@ -727,22 +760,32 @@
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 18px;
   padding-block: 28px 60px;
-  align-items: start;
+  align-items: stretch;
 }
 .coin-main-column,
 .coin-sidebar {
   display: grid;
   gap: 18px;
 }
+.coin-main-column {
+  grid-template-rows: auto auto 1fr;
+  align-self: stretch;
+}
 .coin-sidebar {
   position: sticky;
   top: 18px;
+  align-self: start;
 }
 .detail-card {
   border: 1px solid var(--border);
   border-radius: 11px;
   background: var(--surface);
   overflow: hidden;
+}
+.about-card {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .chart-head {
   min-height: 72px;
@@ -754,15 +797,20 @@
 }
 .chart-head > div:first-child {
   display: flex;
+  min-width: 0;
   align-items: baseline;
   gap: 10px;
 }
 .chart-head strong {
+  overflow: hidden;
   color: var(--sub);
   font: 500 10px var(--font-fira-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .chart-head > span,
 .chart-head > a {
+  flex: 0 0 auto;
   color: var(--sub);
   font: 600 10px var(--font-fira-mono);
   text-decoration: none;
@@ -904,6 +952,7 @@
   font: 600 14px var(--font-fira-mono);
 }
 .about-card > p {
+  flex: 1;
   margin: 0;
   padding: 20px;
   color: #a7afb5;
@@ -1214,6 +1263,22 @@
 .quick-info b {
   font-family: var(--font-fira-mono);
 }
+.quick-info-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--lime);
+  font-size: 10px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.quick-info-link a svg {
+  width: 12px;
+  height: 12px;
+}
+.quick-info-link a:hover {
+  color: var(--copy);
+}
 .sidebar-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1271,9 +1336,19 @@
     width: 100%;
     justify-content: space-between;
   }
+  .coin-heading-trade-presale {
+    min-width: 0;
+  }
   .contract-stat {
     min-width: 0;
+    max-width: none;
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .contract-stat .contract-box {
+    width: auto;
   }
   .coin-heading-actions {
     justify-content: flex-start;
@@ -1303,13 +1378,27 @@
     padding: 17px;
   }
   .coin-heading-trade {
-    align-items: stretch;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .coin-heading-trade-presale {
+    display: flex;
   }
   .contract-stat,
   .coin-security-chip,
-  .coin-price-block {
+  .coin-price-block,
+  .coin-date-block {
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .contract-stat .contract-box {
+    width: auto;
+  }
+  .coin-security-chip b,
+  .coin-date-block b {
+    text-align: right;
   }
   .coin-name-line h1 {
     max-width: calc(100vw - 140px);
@@ -1337,9 +1426,9 @@
     flex-wrap: wrap;
   }
   .coin-price-block {
-    align-items: flex-start;
-    border-left: 0;
-    border-top: 1px solid var(--border);
+    margin-left: 0;
+    flex-direction: row;
+    padding: 0;
   }
   .coin-primary-actions {
     grid-column: auto;
@@ -1362,9 +1451,13 @@
     padding: 0;
   }
   .chart-head {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .chart-head > a,
+  .chart-head > span {
+    white-space: nowrap;
   }
   .price-chart {
     height: 280px;

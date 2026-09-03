@@ -3,7 +3,8 @@
 
 import { BoltIcon } from '@/features/coins/components';
 import { FormattedPrice } from '@/features/coins/components/formatted-price';
-import { Copy } from 'lucide-react';
+import { Icon as IconifyIcon } from '@iconify/react';
+import { Check, Copy } from 'lucide-react';
 import type { CoinDetailView } from '../types';
 import { CoinSocialActions } from './coin-social-actions';
 
@@ -12,6 +13,22 @@ function shortenContract(address: string) {
   if (address.length <= 18) return address;
 
   return `${address.slice(0, 10)}......${address.slice(-6)}`;
+}
+
+function formatPresaleDateTime(value: string | null) {
+  if (!value) return '—';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  })
+    .format(new Date(value))
+    .replace(/\//g, '-')
+    .replace(',', '');
 }
 
 export function CoinHero({
@@ -63,11 +80,13 @@ export function CoinHero({
             </div>
           </div>
         </div>
-        <div className="coin-heading-trade">
+        <div
+          className={`coin-heading-trade ${
+            coin.lifecycle === 'presale' ? 'coin-heading-trade-presale' : ''
+          }`}
+        >
           <div className="coin-hero-stat contract-stat">
-            <span className="contract-box-label">
-              {contractCopied ? 'Copied' : 'Contract address'}
-            </span>
+            <span className="contract-box-label">Contract address</span>
             <button
               className="contract-box"
               type="button"
@@ -78,26 +97,34 @@ export function CoinHero({
               <span className="contract-box-value">
                 <ChainIcon coin={coin} />
                 <code>{shortenContract(contractAddress)}</code>
-                {hasContract && <Copy aria-hidden="true" />}
+                {hasContract &&
+                  (contractCopied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />)}
               </span>
             </button>
           </div>
-          <SecurityChip label="KYC" url={coin.security.kycUrl} />
-          <SecurityChip label="Audit" url={coin.security.auditUrl} />
-          <div className="coin-hero-stat coin-price-block">
-            <small>PRICE USD</small>
-            <div>
-              <strong>
-                <FormattedPrice value={coin.price} />
-              </strong>
-              {coin.price !== '—' && (
-                <span className={coin.change >= 0 ? 'positive' : 'negative'}>
-                  {coin.change >= 0 ? '+' : ''}
-                  {coin.change}%
-                </span>
-              )}
+          <SecurityChip label="KYC" icon="bi:person-check" url={coin.security.kycUrl} />
+          <SecurityChip label="Audit" icon="bi:shield-check" url={coin.security.auditUrl} />
+          {coin.lifecycle === 'presale' ? (
+            <DateStat
+              label="PRESALE END DATE"
+              value={formatPresaleDateTime(coin.presaleEndTimestamp)}
+            />
+          ) : (
+            <div className="coin-hero-stat coin-price-block">
+              <small>PRICE USD</small>
+              <div>
+                <strong>
+                  <FormattedPrice value={coin.price} />
+                </strong>
+                {coin.price !== '—' && (
+                  <span className={coin.change >= 0 ? 'positive' : 'negative'}>
+                    {coin.change >= 0 ? '+' : ''}
+                    {coin.change}%
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       <div className="coin-heading-actions">
@@ -107,11 +134,22 @@ export function CoinHero({
   );
 }
 
-function SecurityChip({ label, url }: { label: 'KYC' | 'Audit'; url: string | null }) {
+function SecurityChip({
+  label,
+  icon,
+  url,
+}: {
+  label: 'KYC' | 'Audit';
+  icon: string;
+  url: string | null;
+}) {
   const content = (
     <>
       <span>{label}</span>
-      <b>{url ? 'Verified' : '-'}</b>
+      <b>
+        <IconifyIcon icon={icon} aria-hidden="true" />
+        {label}
+      </b>
     </>
   );
 
@@ -121,6 +159,15 @@ function SecurityChip({ label, url }: { label: 'KYC' | 'Audit'; url: string | nu
     <a className="coin-security-chip" href={url} target="_blank" rel="noreferrer">
       {content}
     </a>
+  );
+}
+
+function DateStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="coin-hero-stat coin-date-block">
+      <small>{label}</small>
+      <b>{value}</b>
+    </div>
   );
 }
 

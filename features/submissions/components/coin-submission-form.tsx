@@ -17,8 +17,6 @@ import {
   TurnstileSlot,
   type TurnstileSlotHandle,
 } from '@/features/submissions/components/submission-fields';
-import { handleLogoFile, type LogoDraft } from '@/features/submissions/lib/logo-utils';
-import { socialLinkFields } from '@/features/submissions/lib/link-options';
 import {
   clearScopedErrors,
   setByPath,
@@ -27,6 +25,8 @@ import {
   validateStep,
   type FieldErrors,
 } from '@/features/submissions/lib/form-utils';
+import { socialLinkFields } from '@/features/submissions/lib/link-options';
+import { handleLogoFile, type LogoDraft } from '@/features/submissions/lib/logo-utils';
 import { defaultProviderOption, providerOptions } from '@/features/submissions/lib/market-options';
 import { buildReviewSections } from '@/features/submissions/lib/review-sections';
 import {
@@ -542,7 +542,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                     <div className="submission-date-time-row">
                       <Field
                         required
-                        label="Presale start date (UTC)"
+                        label="Presale start date"
                         error={errors['presale.startDate']}
                       >
                         <DateInput
@@ -550,7 +550,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                           onChange={(value) => updateNested('presale.startDate', value)}
                         />
                       </Field>
-                      <Field required label="Start time" error={errors['presale.startTime']}>
+                      <Field required label="Start time (UTC)" error={errors['presale.startTime']}>
                         <input
                           type="time"
                           step={60}
@@ -562,17 +562,13 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                       </Field>
                     </div>
                     <div className="submission-date-time-row">
-                      <Field
-                        required
-                        label="Presale end date (UTC)"
-                        error={errors['presale.endDate']}
-                      >
+                      <Field required label="Presale end date" error={errors['presale.endDate']}>
                         <DateInput
                           value={values.presale.endDate || ''}
                           onChange={(value) => updateNested('presale.endDate', value)}
                         />
                       </Field>
-                      <Field required label="End time" error={errors['presale.endTime']}>
+                      <Field required label="End time (UTC)" error={errors['presale.endTime']}>
                         <input
                           type="time"
                           step={60}
