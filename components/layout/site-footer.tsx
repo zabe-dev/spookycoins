@@ -18,6 +18,8 @@ export function SiteFooter({ id, variant = 'default' }: SiteFooterProps) {
           <Link href="/#leaderboard">Methodology</Link>
           <Link href="/advertise">Advertise</Link>
           <Link href="/partners">Partners</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
         </div>
       </div>
     </footer>

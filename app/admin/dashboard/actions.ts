@@ -514,7 +514,7 @@ function parseSubmissionData(value: unknown) {
   return {
     name: readRecordString(basic.name),
     symbol: readRecordString(basic.symbol).toUpperCase(),
-    description: readRecordString(basic.description),
+    description: readRecordText(basic.description),
     categories: Array.isArray(basic.categories)
       ? basic.categories.filter((category): category is string => typeof category === 'string')
       : [],
@@ -570,6 +570,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readRecordString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function readRecordText(value: unknown) {
+  return typeof value === 'string' ? value : '';
 }
 
 function slugify(value: string) {

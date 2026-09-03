@@ -54,6 +54,13 @@ const plainText = (min: number, max: number, message: string) =>
     .transform((value) => stripDangerousMarkup(value))
     .pipe(z.string().min(min, message).max(max, message));
 
+const descriptionText = (min: number, max: number, message: string) =>
+  z
+    .string()
+    .transform((value) => stripDangerousDescription(value))
+    .refine((value) => value.trim().length >= min, message)
+    .refine((value) => value.length <= max, message);
+
 const symbolText = z
   .string()
   .trim()
@@ -159,7 +166,7 @@ export const submissionBasicsSchema = z.object({
   logo: logoSchema,
   name: plainText(4, 40, 'Coin name must be 4–40 characters.'),
   symbol: symbolText,
-  description: plainText(60, 320, 'Description must be 60–320 characters.'),
+  description: descriptionText(60, 320, 'Description must be 60–320 characters.'),
   categories: z
     .array(z.enum(submissionCategoryValues))
     .min(1, 'Choose at least one category.')
@@ -348,6 +355,17 @@ function stripDangerousMarkup(value: string) {
     .replace(/[<>`$]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function stripDangerousDescription(value: string) {
+  return value
+    .replace(/\r\n?/g, '\n')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(?:#\d+|#x[\da-f]+|[a-z][\w-]*);/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/[<>`]/g, '');
 }
 
 function validateProvider(

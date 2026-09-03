@@ -4,6 +4,7 @@ import { Brand } from '@/components/ui/brand';
 import { PasswordField } from '@/components/ui/password-field';
 import { authClient } from '@/lib/auth/client';
 import { Check, Info, TriangleAlert, X } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   useCallback,
@@ -546,7 +547,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         )}
 
         <p className="auth-terms">
-          By continuing, you agree to the Terms of Service and Privacy Policy.
+          By continuing, you agree to the <Link href="/terms">Terms of Service</Link> and{' '}
+          <Link href="/privacy">Privacy Policy</Link>.
         </p>
       </div>
     </div>

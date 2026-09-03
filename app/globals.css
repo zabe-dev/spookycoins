@@ -2243,6 +2243,20 @@ body.modal-open {
   text-align: center;
   font-size: 8px;
 }
+.auth-terms a {
+  color: #dce5dd;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(196, 255, 68, 0.62);
+  text-underline-offset: 3px;
+  transition:
+    color 0.16s ease,
+    text-decoration-color 0.16s ease;
+}
+.auth-terms a:hover {
+  color: var(--lime);
+  text-decoration-color: currentColor;
+}
 .protected-shell {
   min-height: calc(100dvh - 120px);
   padding-block: 80px;

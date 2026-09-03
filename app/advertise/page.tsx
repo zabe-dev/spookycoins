@@ -1,7 +1,15 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { BoltIcon } from '@/features/coins/components';
-import { Activity, BarChart3, Megaphone, MessageCircle, ShieldCheck } from 'lucide-react';
+import {
+  Activity,
+  BarChart3,
+  ImageIcon,
+  Megaphone,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import '../market.css';
 import './advertise.css';
@@ -10,7 +18,7 @@ import { SubmitProjectAction } from './submit-project-action';
 export const metadata: Metadata = {
   title: 'Advertise Crypto Projects',
   description:
-    'Advertise on SpookyCoins with promoted coin slots and boost packages for listed crypto projects. Banner ad placements are paused for now.',
+    'Advertise on SpookyCoins with banner ads, promoted coin slots, and boost packages for listed crypto projects.',
   alternates: {
     canonical: '/advertise',
   },
@@ -43,12 +51,51 @@ const boostRates = [
   },
 ];
 
+const bannerPlacements = [
+  {
+    placement: 'Homepage top rotating',
+    size: '965 × 90',
+    price: '$45/day',
+    mobile: 'keeps 90px height',
+    note: 'Top-of-page rotating banner inventory.',
+  },
+  {
+    placement: 'Homepage wide banner',
+    size: '1320 × 120',
+    price: '$60/day',
+    mobile: 'responsive full width',
+    note: 'Full-width placement between homepage sections.',
+  },
+  {
+    placement: 'Homepage FAQ wide banner',
+    size: '1320 × 120',
+    price: '$45/day',
+    mobile: 'responsive full width',
+    note: 'Full-width placement before the FAQ section.',
+  },
+  {
+    placement: 'Coin page wide banner',
+    size: '1320 × 120',
+    price: '$35/day',
+    mobile: 'responsive full width',
+    note: 'Appears on individual coin pages.',
+  },
+  {
+    placement: 'Fixed bottom banner',
+    size: 'breakpoint based',
+    price: '$75/day',
+    mobile: 'site breakpoint layout',
+    note: 'Sticky bottom placement across the site.',
+  },
+];
+
 const approvalSteps = [
-  'Choose your project and promotion type.',
+  'Choose your project and campaign type.',
   'Message @SpookyCoinsSupport on Telegram.',
-  'We manually review the placement request.',
+  'Send your preferred dates and creative.',
+  'We manually review the request.',
   'Confirm the payment/order details.',
-  'Approved promotions go live on the next available schedule.',
+  'Approved campaigns go live on schedule.',
 ];
 
 export default function AdvertisePage() {
@@ -62,9 +109,9 @@ export default function AdvertisePage() {
           </p>
           <h1>Reach crypto’s earliest project hunters.</h1>
           <p>
-            Right now, the best way to get your project noticed on SpookyCoins is through promoted
-            coin slots and boosts. Banner ads are on their way too, we just need a little more time
-            before they&apos;re ready for you.
+            Put your project in front of hunters scanning for new launches, presales, and coins
+            gaining community attention. Choose banner placements, promoted coin visibility, or
+            boosts depending on how loud you want the campaign to be.
           </p>
           <div className="advertise-actions">
             <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
@@ -74,6 +121,36 @@ export default function AdvertisePage() {
             <SubmitProjectAction />
           </div>
         </div>
+
+        <section className="advertise-card advertise-banner-card">
+          <div className="advertise-section-head">
+            <span className="advertise-card-icon">
+              <ImageIcon aria-hidden="true" />
+            </span>
+            <div>
+              <h2>Banner ad placements</h2>
+              <p>
+                Banner ads are now available as managed placements. Send us your creative, target
+                URL, preferred dates, and we&apos;ll review everything before it goes live.
+              </p>
+            </div>
+          </div>
+          <div className="advertise-banner-grid">
+            {bannerPlacements.map((banner) => (
+              <div key={banner.placement}>
+                <b>{banner.placement}</b>
+                <strong>{banner.price}</strong>
+                <span>{banner.size}</span>
+                <span>{banner.mobile}</span>
+                <small>{banner.note}</small>
+              </div>
+            ))}
+          </div>
+          <p className="advertise-note">
+            *Banner ads follow the same multi-day discount model as promoted coins. Pricing is
+            non-refundable once the placement is approved and active.
+          </p>
+        </section>
 
         <div className="advertise-grid">
           <section className="advertise-card">
@@ -142,11 +219,11 @@ export default function AdvertisePage() {
             <span className="advertise-card-icon">
               <BarChart3 aria-hidden="true" />
             </span>
-            <h2>Banner ads are paused</h2>
+            <h2>Managed banner setup</h2>
             <p>
-              We haven&apos;t turned banner placements on just yet. Once they&apos;re ready,
-              you&apos;ll be able to pick your dates, submit your creative for a quick review, and
-              see exactly how your ad is performing.
+              Banner ads are reviewed before they run. We check the creative, destination link,
+              timing, and placement fit so the site stays clean for users and useful for
+              advertisers.
             </p>
           </div>
           <div>
@@ -166,16 +243,15 @@ export default function AdvertisePage() {
               <Activity aria-hidden="true" />
             </span>
             <div>
-              <h2>Advertiser analytics are in development.</h2>
+              <h2>Hands-on campaign setup.</h2>
               <p>
-                We&apos;re building measured campaign reporting for future ad operations, so
-                advertisers can understand placement performance through impressions, clicks, and
-                campaign-level results instead of guessing what worked.
+                Tell us what you want to promote, where you want it shown, and when you want the
+                campaign to run. We&apos;ll confirm availability, review the creative, and set it up
+                from the admin side.
               </p>
               <p>
-                For now, placements stay hands-on. Message us with your project, preferred
-                promotion, and target dates, and we&apos;ll review the request manually before
-                confirming the earliest available start time. Same-day starts are not guaranteed.
+                Same-day starts are not guaranteed. Paid visibility is advertising inventory, not a
+                project endorsement, ranking promise, or performance guarantee.
               </p>
             </div>
           </div>
@@ -184,6 +260,23 @@ export default function AdvertisePage() {
               <li key={step}>{step}</li>
             ))}
           </ol>
+        </section>
+
+        <section className="advertise-final-cta">
+          <Sparkles aria-hidden="true" />
+          <div>
+            <h2>Ready to book visibility?</h2>
+            <p>
+              Message us with your project link, campaign type, creative URL, and preferred dates.
+            </p>
+          </div>
+          <div className="advertise-actions advertise-final-actions">
+            <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
+              <MessageCircle aria-hidden="true" />
+              Contact us
+            </a>
+            <SubmitProjectAction />
+          </div>
         </section>
       </section>
 

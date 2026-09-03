@@ -728,7 +728,15 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                       className="submission-terms-link"
                       onClick={(event) => event.stopPropagation()}
                     >
-                      terms and conditions
+                      Terms and Conditions
+                    </Link>{' '}
+                    and acknowledge the{' '}
+                    <Link
+                      href="/privacy"
+                      className="submission-terms-link"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      Privacy Policy
                     </Link>{' '}
                     <RequiredMark />
                   </span>

@@ -1061,6 +1061,7 @@
   font: inherit;
   text-transform: inherit;
   letter-spacing: inherit;
+  white-space: pre-wrap;
 }
 
 .submission-review-chain-icon {
