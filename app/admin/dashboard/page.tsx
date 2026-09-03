@@ -114,7 +114,18 @@ export default async function AdminDashboardPage({
       .select({ count: sql<number>`count(*)::int` })
       .from(changeRequests)
       .where(eq(changeRequests.status, 'pending')),
-    db.select().from(bannerAds).orderBy(desc(bannerAds.updatedAt)).limit(200),
+    db
+      .select()
+      .from(bannerAds)
+      .orderBy(desc(bannerAds.updatedAt))
+      .limit(200)
+      .catch((error) => {
+        console.warn(
+          '[admin] Banner ad rows unavailable:',
+          error instanceof Error ? error.message : error,
+        );
+        return [];
+      }),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(bannerAds)
@@ -124,7 +135,14 @@ export default async function AdminDashboardPage({
           sql`${bannerAds.startsAt} <= ${nowIso}::timestamptz`,
           sql`(${bannerAds.expiresAt} is null or ${bannerAds.expiresAt} > ${nowIso}::timestamptz)`,
         ),
-      ),
+      )
+      .catch((error) => {
+        console.warn(
+          '[admin] Active banner count unavailable:',
+          error instanceof Error ? error.message : error,
+        );
+        return [{ count: 0 }];
+      }),
   ]);
 
   const userById = new Map(userRows.map((user) => [user.id, user]));
@@ -290,9 +308,6 @@ export default async function AdminDashboardPage({
       <SiteHeader active="none" />
       <section className="container admin-dashboard" aria-label="Admin dashboard">
         <header className="admin-dashboard-head">
-          <p className="eyebrow">
-            <span>●</span> Admin
-          </p>
           <h1>Admin dashboard</h1>
           <p>Review submissions, manage listed coins, and control boosts or promotions.</p>
         </header>

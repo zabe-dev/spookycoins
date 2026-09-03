@@ -24,7 +24,14 @@ export const getActiveBannerAds = unstable_cache(
           and ${bannerAds.startsAt} <= ${nowIso}::timestamptz
           and (${bannerAds.expiresAt} is null or ${bannerAds.expiresAt} > ${nowIso}::timestamptz)`,
       )
-      .orderBy(asc(bannerAds.priority), asc(bannerAds.createdAt));
+      .orderBy(asc(bannerAds.priority), asc(bannerAds.createdAt))
+      .catch((error) => {
+        console.warn(
+          '[banner-ads] Active banner lookup skipped:',
+          error instanceof Error ? error.message : error,
+        );
+        return [];
+      });
 
     const map = emptyBannerMap();
 

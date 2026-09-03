@@ -237,7 +237,7 @@ export function AdminDashboardClient({
 
   return (
     <div className="admin-workspace">
-      <nav className="admin-tabs" aria-label="Admin sections">
+      <div className="admin-tabs" role="tablist" aria-label="Admin sections">
         {adminTabs.map((tab) => {
           const Icon = tab.icon;
           const count = counts[tab.id];
@@ -245,6 +245,8 @@ export function AdminDashboardClient({
             <button
               key={tab.id}
               type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
               className={activeTab === tab.id ? 'active' : ''}
               onClick={() => switchTab(tab.id)}
             >
@@ -254,9 +256,9 @@ export function AdminDashboardClient({
             </button>
           );
         })}
-      </nav>
+      </div>
 
-      <div className="admin-tab-panel">
+      <div className="admin-tab-panel" role="tabpanel">
         {activeTab === 'overview' && (
           <AdminOverview
             summary={summary}
