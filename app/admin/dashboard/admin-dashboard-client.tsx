@@ -1667,17 +1667,33 @@ function usePopoverPosition(open: boolean, buttonRef: RefObject<HTMLButtonElemen
       const rect = button.getBoundingClientRect();
       const width = Math.min(340, window.innerWidth - 32);
       const left = Math.min(Math.max(16, rect.left), window.innerWidth - width - 16);
-      const shouldFlip = rect.bottom > window.innerHeight - 260;
-
-      setPosition({
+      const gap = 10;
+      const viewportPadding = 16;
+      const availableBelow = window.innerHeight - rect.bottom - gap - viewportPadding;
+      const availableAbove = rect.top - gap - viewportPadding;
+      const minUsefulHeight = 260;
+      const viewportMaxHeight = Math.max(160, window.innerHeight - viewportPadding * 2);
+      const clampPopoverHeight = (availableSpace: number) =>
+        Math.max(160, Math.min(viewportMaxHeight, availableSpace));
+      const nextPosition: CSSProperties = {
         position: 'fixed',
         width,
         left,
-        top: shouldFlip
-          ? Math.max(16, rect.top - 10)
-          : Math.min(rect.bottom + 10, window.innerHeight - 16),
-        transform: shouldFlip ? 'translateY(-100%)' : undefined,
-      });
+        maxHeight: viewportMaxHeight,
+      };
+
+      if (availableBelow >= minUsefulHeight || availableBelow >= availableAbove) {
+        nextPosition.top = Math.min(rect.bottom + gap, window.innerHeight - viewportPadding);
+        nextPosition.maxHeight = clampPopoverHeight(availableBelow);
+      } else {
+        nextPosition.bottom = Math.min(
+          window.innerHeight - rect.top + gap,
+          window.innerHeight - viewportPadding,
+        );
+        nextPosition.maxHeight = clampPopoverHeight(availableAbove);
+      }
+
+      setPosition(nextPosition);
     }
 
     updatePosition();
