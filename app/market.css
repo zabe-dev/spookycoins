@@ -556,7 +556,7 @@
   }
 }
 .wide-banner {
-  min-height: 92px;
+  min-height: 120px;
   margin-top: 18px;
   border: 1px solid #34311e;
   background: linear-gradient(100deg, #15140f, #1c1810 55%, #111519);
@@ -1340,6 +1340,9 @@
   height: 78px;
   gap: 10px;
 }
+.market-page .bottom-ad-inner {
+  height: 78px;
+}
 .bottom-ad-creative {
   position: relative;
   min-width: 0;
@@ -1858,6 +1861,7 @@
 }
 
 @media (max-width: 760px) {
+  .market-page .bottom-ad-inner,
   .bottom-ad-image .bottom-ad-inner {
     height: 68px;
   }
@@ -1873,6 +1877,9 @@
 }
 
 @media (max-width: 620px) {
+  .banner-ad {
+    height: 64px;
+  }
   .banner-ad-image {
     height: 64px;
   }
@@ -1882,6 +1889,7 @@
   .banner-ad-overlay em {
     display: none;
   }
+  .wide-banner,
   .wide-banner-image,
   .wide-banner-overlay {
     min-height: 132px;
@@ -1942,7 +1950,7 @@
   }
   .market-page .bottom-ad-inner {
     width: calc(100% - 16px);
-    height: 62px;
+    height: 68px;
     display: flex;
     align-items: center;
     gap: 8px;
