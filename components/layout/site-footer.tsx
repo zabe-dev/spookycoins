@@ -8,14 +8,21 @@ type SiteFooterProps = {
   variant?: 'default' | 'home';
 };
 
+function getCurrentYear() {
+  return new Date().getFullYear();
+}
+
 export function SiteFooter({ id, variant = 'default' }: SiteFooterProps) {
   return (
     <footer className={`site-footer ${variant === 'home' ? 'site-footer--home' : ''}`} id={id}>
       <div className="container site-footer-inner">
         <Brand />
-        <p>Community-powered crypto discovery.</p>
+        <p>
+          <Link href="https://spookycoins.com">www.spookycoins.com</Link> © {getCurrentYear()} ·
+          Community-powered crypto discovery.
+        </p>
         <div>
-          <Link href="/#leaderboard">Methodology</Link>
+          <Link href="/#leaderboard">Discover</Link>
           <Link href="/advertise">Advertise</Link>
           <Link href="/partners">Partners</Link>
           <Link href="/terms">Terms</Link>

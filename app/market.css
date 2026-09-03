@@ -1489,11 +1489,19 @@
     padding: 22px 18px;
   }
   .site-footer-inner {
+    justify-content: center;
+    text-align: center;
     flex-wrap: wrap;
+  }
+  .site-footer-inner .brand {
+    justify-content: center;
   }
   .site-footer-inner p {
     flex-basis: 100%;
     order: 3;
+  }
+  .site-footer-inner > div {
+    justify-content: center;
   }
 }
 .banner-ad {
