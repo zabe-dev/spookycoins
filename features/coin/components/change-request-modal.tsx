@@ -4,18 +4,27 @@ import { Check, X } from 'lucide-react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 export function ChangeRequestModal({
+  coinId,
   coinName,
+  defaultType = 'change',
   open,
   onClose,
 }: {
+  coinId: number;
   coinName: string;
+  defaultType?: 'change' | 'report';
   open: boolean;
   onClose: () => void;
 }) {
   const [submitted, setSubmitted] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [saving, setSaving] = useState(false);
+  const defaultChangeType = defaultType === 'report' ? 'Report duplicate or incorrect listing' : '';
 
   const close = useCallback(() => {
     setSubmitted(false);
+    setFeedback('');
+    setSaving(false);
     onClose();
   }, [onClose]);
 
@@ -32,8 +41,31 @@ export function ChangeRequestModal({
     };
   }, [close, open]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    setFeedback('');
+    setSaving(true);
+
+    const response = await fetch(`/api/coins/${coinId}/change-request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        changeType: formData.get('changeType'),
+        requestedChanges: formData.get('requestedChanges'),
+        evidenceUrl: formData.get('evidenceUrl'),
+        email: formData.get('email'),
+      }),
+    });
+    const body = await response.json().catch(() => ({}));
+    setSaving(false);
+
+    if (!response.ok) {
+      setFeedback(body.message || 'Could not submit the request. Please try again.');
+      return;
+    }
+
     setSubmitted(true);
   }
 
@@ -71,10 +103,10 @@ export function ChangeRequestModal({
                 publishing.
               </p>
             </div>
-            <form className="change-request-form" onSubmit={submit}>
+            <form className="change-request-form" key={defaultChangeType} onSubmit={submit}>
               <label>
                 <span>What needs changing?</span>
-                <select name="changeType" required defaultValue="">
+                <select name="changeType" required defaultValue={defaultChangeType}>
                   <option value="" disabled>
                     Select a change type
                   </option>
@@ -109,11 +141,18 @@ export function ChangeRequestModal({
               <p className="change-form-note">
                 Submitting a request does not guarantee that the listing will be changed.
               </p>
+              {feedback && (
+                <p className="change-form-feedback" role="alert">
+                  {feedback}
+                </p>
+              )}
               <div className="change-form-actions">
-                <button type="button" onClick={close}>
+                <button type="button" onClick={close} disabled={saving}>
                   Cancel
                 </button>
-                <button type="submit">Submit request</button>
+                <button type="submit" disabled={saving}>
+                  {saving ? 'Submitting...' : 'Submit request'}
+                </button>
               </div>
             </form>
           </>

@@ -5,6 +5,7 @@ import { hasAdminAccess } from '@/lib/auth/roles';
 import { db } from '@/lib/db/client';
 import {
   adminAuditLogs,
+  changeRequests,
   coinBoosts,
   coinLinks,
   coinPromotions,
@@ -26,6 +27,7 @@ const submissionStatuses = [
   'approved',
   'rejected',
 ] as const;
+const changeRequestStatuses = ['pending', 'resolved', 'rejected'] as const;
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
 const boostPackageRules = {
   10: { durationHours: 24, voteMultiplier: 2 },
@@ -259,6 +261,24 @@ export async function removePromotedCoin(formData: FormData) {
   const coinId = readNumber(formData, 'coinId');
   await cancelActivePromotions(coinId);
   await audit(adminUser.id, 'promotion.removed', 'coin', String(coinId), {});
+  revalidatePath('/admin/dashboard');
+}
+
+export async function updateChangeRequestStatus(formData: FormData) {
+  const adminUser = await requireAdmin();
+  const requestId = readRequired(formData, 'requestId');
+  const status = readEnum(formData, 'status', changeRequestStatuses);
+
+  await db
+    .update(changeRequests)
+    .set({
+      status,
+      reviewedAt: status === 'pending' ? null : new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(changeRequests.id, requestId));
+
+  await audit(adminUser.id, 'change-request.updated', 'change-request', requestId, { status });
   revalidatePath('/admin/dashboard');
 }
 

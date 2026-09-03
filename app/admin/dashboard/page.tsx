@@ -17,6 +17,7 @@ import {
   coinPromotions,
   coins,
   coinSubmissions,
+  changeRequests,
   sessions,
   users,
 } from '@/lib/db/schema';
@@ -51,6 +52,8 @@ export default async function AdminDashboardPage() {
     activeBoostCoinCountRows,
     activePromotionCoinCountRows,
     pendingSubmissionCount,
+    changeRequestRows,
+    pendingChangeRequestCount,
   ] = await Promise.all([
     db.select().from(users).orderBy(desc(users.createdAt)).limit(200),
     db.select().from(coins).orderBy(desc(coins.submittedAt)).limit(200),
@@ -96,9 +99,15 @@ export default async function AdminDashboardPage() {
       .where(
         and(eq(coinSubmissions.submissionType, 'new-coin'), eq(coinSubmissions.status, 'pending')),
       ),
+    db.select().from(changeRequests).orderBy(desc(changeRequests.createdAt)).limit(200),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(changeRequests)
+      .where(eq(changeRequests.status, 'pending')),
   ]);
 
   const userById = new Map(userRows.map((user) => [user.id, user]));
+  const coinById = new Map(coinRows.map((coin) => [coin.id, coin]));
   const latestSessionByUser = new Map<string, (typeof sessionRows)[number]>();
   sessionRows.forEach((row) => {
     if (!latestSessionByUser.has(row.userId)) latestSessionByUser.set(row.userId, row);
@@ -216,7 +225,24 @@ export default async function AdminDashboardPage() {
     activeBoosts: readCount(activeBoostCoinCountRows),
     promotedCoins: readCount(activePromotionCoinCountRows),
     pendingSubmissions: readCount(pendingSubmissionCount),
+    changeRequests: readCount(pendingChangeRequestCount),
   };
+
+  const adminChangeRequests = changeRequestRows.map((request) => {
+    const coin = coinById.get(request.coinId);
+    return {
+      id: request.id,
+      coinId: request.coinId,
+      coinName: coin?.name || `Coin #${request.coinId}`,
+      coinSymbol: coin?.symbol || '',
+      requesterEmail: request.requesterEmail,
+      requesterTelegram: request.requesterTelegram || '',
+      requestedChanges: request.requestedChanges,
+      evidenceUrl: request.evidenceUrl || '',
+      status: request.status,
+      submittedAt: formatDateTime(request.createdAt),
+    };
+  });
 
   return (
     <main className="market-page">
@@ -233,6 +259,7 @@ export default async function AdminDashboardPage() {
         <AdminDashboardClient
           summary={summary}
           pendingSubmissions={pendingSubmissions}
+          changeRequests={adminChangeRequests}
           listedCoins={listedCoins}
           users={adminUsers}
         />

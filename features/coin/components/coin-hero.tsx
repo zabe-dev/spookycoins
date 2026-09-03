@@ -3,6 +3,7 @@
 
 import { BoltIcon } from '@/features/coins/components';
 import { FormattedPrice } from '@/features/coins/components/formatted-price';
+import { Copy } from 'lucide-react';
 import type { CoinDetailView } from '../types';
 import { CoinSocialActions } from './coin-social-actions';
 
@@ -18,11 +19,15 @@ export function CoinHero({
   contractAddress,
   contractCopied,
   onCopyContract,
+  onShare,
+  onReport,
 }: {
   coin: CoinDetailView;
   contractAddress: string;
   contractCopied: boolean;
   onCopyContract: () => void;
+  onShare: () => void;
+  onReport: () => void;
 }) {
   const hasContract = Boolean(coin.contractAddress && contractAddress && contractAddress !== '—');
 
@@ -32,9 +37,6 @@ export function CoinHero({
         <div className="coin-identity">
           <div className={`detail-logo ${coin.color}`}>
             {coin.image ? <img src={coin.image} alt="" /> : coin.logo}
-            <span title={coin.networkName}>
-              {coin.chainIcon ? <img src={coin.chainIcon} alt="" /> : coin.chain}
-            </span>
           </div>
           <div className="coin-title-copy">
             <div className="coin-name-line">
@@ -53,29 +55,36 @@ export function CoinHero({
             </div>
             <div className="coin-meta-row">
               <span className="coin-symbol">${coin.symbol}</span>
-              <span>{coin.networkName}</span>
+              <span className="coin-meta-chain">
+                <ChainIcon coin={coin} />
+                {coin.networkName}
+              </span>
               <span>{coin.category}</span>
             </div>
           </div>
         </div>
         <div className="coin-heading-trade">
-          <button
-            className="contract-box"
-            type="button"
-            onClick={onCopyContract}
-            disabled={!hasContract}
-            title={hasContract ? `Copy ${contractAddress}` : 'No contract address available'}
-          >
-            <span className="contract-box-label">Contract address</span>
-            <span className="contract-box-value">
-              <span className="contract-chain-icon" title={coin.networkName}>
-                {coin.chainIcon ? <img src={coin.chainIcon} alt="" /> : coin.chain[0]}
-              </span>
-              <code>{shortenContract(contractAddress)}</code>
-              {hasContract && <small>{contractCopied ? 'Copied' : 'Copy'}</small>}
+          <div className="coin-hero-stat contract-stat">
+            <span className="contract-box-label">
+              {contractCopied ? 'Copied' : 'Contract address'}
             </span>
-          </button>
-          <div className="coin-price-block">
+            <button
+              className="contract-box"
+              type="button"
+              onClick={onCopyContract}
+              disabled={!hasContract}
+              title={hasContract ? `Copy ${contractAddress}` : 'No contract address available'}
+            >
+              <span className="contract-box-value">
+                <ChainIcon coin={coin} />
+                <code>{shortenContract(contractAddress)}</code>
+                {hasContract && <Copy aria-hidden="true" />}
+              </span>
+            </button>
+          </div>
+          <SecurityChip label="KYC" url={coin.security.kycUrl} />
+          <SecurityChip label="Audit" url={coin.security.auditUrl} />
+          <div className="coin-hero-stat coin-price-block">
             <small>PRICE USD</small>
             <div>
               <strong>
@@ -92,8 +101,33 @@ export function CoinHero({
         </div>
       </div>
       <div className="coin-heading-actions">
-        <CoinSocialActions buyUrl={coin.buyUrl} />
+        <CoinSocialActions links={coin.links} onShare={onShare} onReport={onReport} />
       </div>
     </section>
+  );
+}
+
+function SecurityChip({ label, url }: { label: 'KYC' | 'Audit'; url: string | null }) {
+  const content = (
+    <>
+      <span>{label}</span>
+      <b>{url ? 'Verified' : '-'}</b>
+    </>
+  );
+
+  if (!url) return <span className="coin-security-chip muted">{content}</span>;
+
+  return (
+    <a className="coin-security-chip" href={url} target="_blank" rel="noreferrer">
+      {content}
+    </a>
+  );
+}
+
+function ChainIcon({ coin }: { coin: CoinDetailView }) {
+  return (
+    <span className="contract-chain-icon" title={coin.networkName}>
+      {coin.chainIcon ? <img src={coin.chainIcon} alt="" /> : coin.chain[0]}
+    </span>
   );
 }

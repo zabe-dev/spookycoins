@@ -63,6 +63,16 @@ export type DexConfig =
     }
   | { available: false };
 
+export type CoinProjectLink = {
+  type: 'website' | 'telegram' | 'x' | 'discord' | 'github' | 'whitepaper';
+  url: string;
+};
+
+export type CoinSecurityLinks = {
+  kycUrl: string | null;
+  auditUrl: string | null;
+};
+
 export type BoostMultiplier = 10 | 30 | 50 | 100 | 500;
 
 export type BoostState =
@@ -128,6 +138,8 @@ export type Coin = {
   populatedAt: string;
   chart: ChartConfig;
   dex: DexConfig;
+  links: CoinProjectLink[];
+  security: CoinSecurityLinks;
   boost: BoostState;
   promoted: PromotedState;
   market: CoinMarketData;

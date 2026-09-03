@@ -8,6 +8,7 @@ import type {
   BoostMultiplier,
   Coin,
   CoinCategory,
+  CoinProjectLink,
   DexConfig,
   NetworkId,
 } from '@/features/coins/types';
@@ -179,6 +180,11 @@ function mapDbCoinToCoin({
     populatedAt: coin.updatedAt.toISOString(),
     chart: buildChartConfig(links, submission, network, coin.contractAddress || ''),
     dex: buildDexConfig(dexLink, websiteLink, submission, network),
+    links: buildProjectLinks(links),
+    security: {
+      kycUrl: links.get('kyc')?.url || null,
+      auditUrl: links.get('audit')?.url || null,
+    },
     boost:
       boost && isBoostMultiplier(boost.multiplier)
         ? {
@@ -232,6 +238,22 @@ function firstByCoinId<T extends { coinId: number }>(rows: T[]) {
 
 function hasLinkedCoinId(row: DbCoinSubmission): row is DbCoinSubmission & { coinId: number } {
   return typeof row.coinId === 'number';
+}
+
+function buildProjectLinks(links: Map<string, DbCoinLink>): CoinProjectLink[] {
+  const publicTypes: CoinProjectLink['type'][] = [
+    'website',
+    'telegram',
+    'x',
+    'discord',
+    'github',
+    'whitepaper',
+  ];
+
+  return publicTypes.flatMap((type) => {
+    const link = links.get(type);
+    return link?.url ? [{ type, url: link.url }] : [];
+  });
 }
 
 function readPresaleEndDate(value: unknown) {

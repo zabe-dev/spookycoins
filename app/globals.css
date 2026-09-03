@@ -2426,6 +2426,17 @@ body.modal-open {
   color: #78838b;
   font-size: 10px;
 }
+.admin-row-subtext {
+  display: block;
+  margin-top: 4px;
+  color: #78838b;
+  font-size: 10px;
+}
+.admin-request-cell {
+  max-width: 340px;
+  text-align: left !important;
+  line-height: 1.45;
+}
 .admin-status-pill {
   display: inline-flex !important;
   align-items: center;

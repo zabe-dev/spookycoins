@@ -7,6 +7,7 @@ import {
   grantCoinBoost,
   removeCoinBoost,
   removePromotedCoin,
+  updateChangeRequestStatus,
   updateAdminCoin,
   updateAdminSubmission,
   updateAdminUser,
@@ -44,6 +45,7 @@ export type AdminSummary = {
   activeBoosts: number;
   promotedCoins: number;
   pendingSubmissions: number;
+  changeRequests: number;
 };
 
 export type AdminSubmissionRow = {
@@ -93,6 +95,19 @@ export type AdminCoinRow = {
   } | null;
 };
 
+export type AdminChangeRequestRow = {
+  id: string;
+  coinId: number;
+  coinName: string;
+  coinSymbol: string;
+  requesterEmail: string;
+  requesterTelegram: string;
+  requestedChanges: string;
+  evidenceUrl: string;
+  status: string;
+  submittedAt: string;
+};
+
 export type AdminUserRow = {
   id: string;
   avatar: string;
@@ -110,6 +125,7 @@ export type AdminUserRow = {
 type AdminDashboardClientProps = {
   summary: AdminSummary;
   pendingSubmissions: AdminSubmissionRow[];
+  changeRequests: AdminChangeRequestRow[];
   listedCoins: AdminCoinRow[];
   users: AdminUserRow[];
 };
@@ -131,6 +147,7 @@ const boostPackages = [
 export function AdminDashboardClient({
   summary,
   pendingSubmissions,
+  changeRequests,
   listedCoins,
   users,
 }: AdminDashboardClientProps) {
@@ -145,12 +162,117 @@ export function AdminDashboardClient({
         <SummaryCard label="Active boosts" value={summary.activeBoosts} />
         <SummaryCard label="Promoted coins" value={summary.promotedCoins} />
         <SummaryCard label="Pending submissions" value={summary.pendingSubmissions} />
+        <SummaryCard label="Change requests" value={summary.changeRequests} />
       </div>
 
       <PendingSubmissionsTable rows={pendingSubmissions} popover={popover} />
+      <ChangeRequestsTable rows={changeRequests} popover={popover} />
       <ListedCoinsTable rows={listedCoins} popover={popover} />
       <UsersTable rows={users} popover={popover} />
     </>
+  );
+}
+
+function ChangeRequestsTable({
+  rows,
+  popover,
+}: {
+  rows: AdminChangeRequestRow[];
+  popover: PopoverController;
+}) {
+  return (
+    <AdminPanel
+      eyebrow="Corrections"
+      title="Change requests"
+      count={`${rows.length} latest`}
+      note="Reports and requested listing updates from coin pages. Review here, then update the database manually for now."
+      rows={rows}
+      searchPlaceholder="Search coin, email, or request"
+      search={(row) => [
+        row.coinName,
+        row.coinSymbol,
+        row.requesterEmail,
+        row.requesterTelegram,
+        row.requestedChanges,
+        row.status,
+      ]}
+      empty="No change requests yet."
+      renderTable={(visibleRows) => (
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Coin</th>
+              <th>Email</th>
+              <th>Telegram</th>
+              <th>Request</th>
+              <th>Evidence</th>
+              <th>Date Submitted</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => (
+              <tr key={row.id}>
+                <td>
+                  <strong>{row.coinName}</strong>
+                  <span className="admin-row-subtext">
+                    {row.coinSymbol ? `$${row.coinSymbol}` : `#${row.coinId}`}
+                  </span>
+                </td>
+                <td>{row.requesterEmail}</td>
+                <td>{row.requesterTelegram || '—'}</td>
+                <td className="admin-request-cell">{row.requestedChanges}</td>
+                <td>
+                  {row.evidenceUrl ? (
+                    <a href={row.evidenceUrl} target="_blank" rel="noreferrer">
+                      Open link ↗
+                    </a>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+                <td>{row.submittedAt}</td>
+                <td>
+                  <StatusPill tone={row.status === 'pending' ? 'warning' : 'neutral'}>
+                    {labelize(row.status)}
+                  </StatusPill>
+                </td>
+                <td>
+                  <ActionGroup>
+                    <CoinPageLinkAction coinId={row.coinId} name={row.coinName} />
+                    <ConfirmAction
+                      popover={popover}
+                      popoverId={`change-resolve-${row.id}`}
+                      action={updateChangeRequestStatus}
+                      title="Mark resolved"
+                      tone="success"
+                      message={`Mark the request for ${row.coinName} as resolved?`}
+                      fields={{ requestId: row.id, status: 'resolved' }}
+                      disabled={row.status === 'resolved'}
+                    >
+                      <Check aria-hidden="true" />
+                    </ConfirmAction>
+                    <ConfirmAction
+                      popover={popover}
+                      popoverId={`change-reject-${row.id}`}
+                      action={updateChangeRequestStatus}
+                      title="Reject request"
+                      tone="danger"
+                      message={`Reject the request for ${row.coinName}?`}
+                      fields={{ requestId: row.id, status: 'rejected' }}
+                      disabled={row.status === 'rejected'}
+                    >
+                      <X aria-hidden="true" />
+                    </ConfirmAction>
+                  </ActionGroup>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    />
   );
 }
 

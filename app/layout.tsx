@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Fira_Mono, Poppins, Space_Grotesk } from 'next/font/google';
+import { Fira_Mono, JetBrains_Mono, Poppins, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
 const poppins = Poppins({
@@ -18,6 +18,12 @@ const firaMono = Fira_Mono({
   variable: '--font-fira-mono',
   subsets: ['latin'],
   weight: ['400', '500', '700'],
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -71,7 +77,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${spaceGrotesk.variable} ${firaMono.variable} antialiased`}
+        className={`${poppins.variable} ${spaceGrotesk.variable} ${firaMono.variable} ${jetBrainsMono.variable} antialiased`}
       >
         {children}
       </body>

@@ -47,6 +47,8 @@ export type CoinListItem = {
   category: CoinCategory;
   trend: number;
   contractAddress: string;
+  links: Coin['links'];
+  security: Coin['security'];
   buyUrl?: string;
 };
 
@@ -145,6 +147,8 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     category: coin.category,
     trend: coin.community.trendingScore,
     contractAddress: coin.contractAddress,
+    links: coin.links,
+    security: coin.security,
     ...(coin.dex.available ? { buyUrl: coin.dex.url } : {}),
   };
 }

@@ -20,8 +20,8 @@
   overflow: hidden;
 }
 .coin-heading-main {
-  min-height: 132px;
-  padding: 22px;
+  min-height: 118px;
+  padding: 18px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -29,10 +29,11 @@
 }
 .coin-heading-trade {
   display: flex;
-  min-width: min(100%, 520px);
+  min-width: min(100%, 500px);
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 .coin-identity {
   display: flex;
@@ -42,9 +43,9 @@
 }
 .detail-logo {
   position: relative;
-  width: 68px;
-  height: 68px;
-  border-radius: 16px;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
   display: grid;
   place-items: center;
   flex: none;
@@ -58,26 +59,6 @@
   border-radius: inherit;
   object-fit: cover;
 }
-.detail-logo span {
-  position: absolute;
-  right: -5px;
-  bottom: -5px;
-  width: 22px;
-  height: 22px;
-  padding: 3px;
-  display: grid;
-  place-items: center;
-  border: 3px solid var(--surface);
-  border-radius: 999px;
-  background: var(--surface2);
-  font: 700 7px var(--font-fira-mono);
-}
-.detail-logo span img {
-  width: 100%;
-  height: 100%;
-  border-radius: 999px;
-  object-fit: contain;
-}
 .coin-name-line {
   display: flex;
   align-items: center;
@@ -90,7 +71,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: clamp(25px, 3vw, 38px);
+  font-size: clamp(21px, 2.4vw, 30px);
   letter-spacing: -0.045em;
   font-family: var(--font-space-grotesk), sans-serif;
   font-weight: 700;
@@ -103,22 +84,39 @@
   margin-top: 7px;
 }
 .coin-meta-row > span {
-  padding: 4px 7px;
-  border-radius: 5px;
   background: var(--surface2);
   color: var(--sub);
   font: 600 8px var(--font-fira-mono);
+  border-radius: 5px;
+  padding: 4px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 .coin-meta-row .coin-symbol {
   color: var(--copy);
 }
-.contract-box {
-  min-width: 252px;
-  padding: 13px 14px;
+.coin-meta-chain {
+  gap: 5px;
+}
+.coin-meta-chain .contract-chain-icon {
+  width: 13px;
+  height: 13px;
+}
+.coin-hero-stat {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+}
+.contract-stat {
+  min-width: 170px;
+  max-width: 210px;
+}
+.contract-box {
+  width: 100%;
+  padding: 8px 9px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--surface2);
   color: var(--copy);
   cursor: pointer;
@@ -138,7 +136,7 @@
 }
 .contract-box-label {
   color: var(--sub);
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -147,11 +145,11 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 .contract-chain-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
@@ -168,32 +166,68 @@
   object-fit: contain;
 }
 .contract-box code {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   color: var(--copy);
-  font: 700 11px var(--font-fira-mono);
+  font: 700 9px var(--font-fira-mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.contract-box small {
-  margin-left: auto;
-  color: var(--lime);
-  font-size: 8px;
+.contract-box svg {
+  width: 12px;
+  height: 12px;
+  color: var(--sub);
+}
+.coin-security-chip {
+  min-width: 68px;
+  display: grid;
+  gap: 6px;
+  color: var(--copy);
+  text-decoration: none;
+}
+.coin-security-chip b {
+  padding: 8px 9px;
+  border: 1px solid rgba(196, 255, 68, 0.22);
+  border-radius: 8px;
+  background: rgba(196, 255, 68, 0.055);
+}
+.coin-security-chip.muted b {
+  border-color: var(--border);
+  background: var(--surface2);
+}
+.coin-security-chip span {
+  color: var(--sub);
+  font-size: 7px;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
+.coin-security-chip b {
+  color: var(--copy);
+  font-size: 9px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.coin-security-chip.muted b {
+  color: var(--sub);
+}
+.coin-security-chip:hover {
+  border-color: rgba(196, 255, 68, 0.44);
+}
 .coin-heading-actions {
-  padding: 14px 22px;
+  padding: 12px 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
   border-top: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.012);
 }
 .coin-social-actions {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 10px;
+  justify-content: space-between;
   flex-wrap: wrap;
   margin-top: 0;
 }
@@ -203,10 +237,13 @@
   align-items: center;
   gap: 5px;
 }
+.coin-utilities {
+  margin-left: auto;
+}
 .coin-social-actions a,
 .coin-social-actions button {
-  min-height: 36px;
-  padding: 0 12px;
+  min-height: 32px;
+  padding: 0 10px;
   display: flex;
   place-items: center;
   align-items: center;
@@ -235,6 +272,10 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.coin-social-actions .project-link-action svg {
+  fill: currentColor;
+  stroke: none;
+}
 .coin-social-actions .share-action {
   border-color: rgba(196, 255, 68, 0.32);
   background: rgba(196, 255, 68, 0.08);
@@ -249,16 +290,19 @@
   color: #e66e73;
   border-color: rgba(230, 110, 115, 0.55);
 }
-.coin-social-actions .buy-action {
-  width: auto;
-  padding-inline: 9px;
-  grid-auto-flow: column;
-  gap: 5px;
-  background: var(--lime);
-  border-color: var(--lime);
-  color: #090c0c;
-  font-size: 9px;
-  font-weight: 700;
+.coin-social-actions .project-link-action {
+  color: var(--copy);
+}
+.coin-social-actions .project-link-action:hover {
+  border-color: rgba(196, 255, 68, 0.34);
+  color: var(--lime);
+}
+.coin-promoted-section {
+  width: min(1302px, calc(100% - 32px));
+  max-width: 1302px;
+  margin-inline: auto;
+  padding-top: 0;
+  padding-bottom: 58px;
 }
 .request-change-card {
   padding: 16px;
@@ -452,6 +496,16 @@
   font-size: 10px;
   line-height: 1.5;
 }
+.change-form-feedback {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(230, 110, 115, 0.35);
+  border-radius: 10px;
+  background: rgba(230, 110, 115, 0.08);
+  color: #ffaaa9;
+  font-size: 10px;
+  line-height: 1.45;
+}
 .change-form-actions {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
@@ -529,6 +583,8 @@
   cursor: pointer;
 }
 .coin-price-block {
+  min-width: 116px;
+  padding: 9px 10px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -546,10 +602,10 @@
   gap: 9px;
 }
 .coin-price-block strong {
-  font: 600 27px var(--font-fira-mono);
+  font: 700 18px var(--font-fira-mono);
 }
 .coin-price-block > div > span {
-  font: 600 11px var(--font-fira-mono);
+  font: 650 9px var(--font-fira-mono);
 }
 .coin-primary-actions {
   display: flex;
@@ -1215,7 +1271,7 @@
     width: 100%;
     justify-content: space-between;
   }
-  .contract-box {
+  .contract-stat {
     min-width: 0;
     flex: 1;
   }
@@ -1250,9 +1306,14 @@
     align-items: stretch;
     flex-direction: column;
   }
+  .contract-stat,
+  .coin-security-chip,
+  .coin-price-block {
+    width: 100%;
+  }
   .coin-name-line h1 {
     max-width: calc(100vw - 140px);
-    font-size: 27px;
+    font-size: 25px;
   }
   .coin-heading-actions {
     padding: 13px 17px;
@@ -1264,20 +1325,21 @@
   .coin-utilities {
     width: 100%;
     flex-wrap: wrap;
+    margin-left: 0;
   }
   .coin-social-actions a,
   .coin-social-actions button {
     flex: 1;
     justify-content: center;
   }
-  .contract-box {
-    width: 100%;
-  }
   .official-links {
+    width: 100%;
     flex-wrap: wrap;
   }
   .coin-price-block {
     align-items: flex-start;
+    border-left: 0;
+    border-top: 1px solid var(--border);
   }
   .coin-primary-actions {
     grid-column: auto;

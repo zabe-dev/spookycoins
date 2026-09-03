@@ -42,6 +42,7 @@ export function CoinDetailPage({
   const [authOpen, setAuthOpen] = useState(false);
   const [contractCopied, setContractCopied] = useState(false);
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
+  const [changeRequestIntent, setChangeRequestIntent] = useState<'change' | 'report'>('change');
   const [voteAnimating, setVoteAnimating] = useState(false);
   const [watchAnimating, setWatchAnimating] = useState(false);
 
@@ -338,6 +339,26 @@ export function CoinDetailPage({
     window.setTimeout(() => setContractCopied(false), 1400);
   }
 
+  async function shareCoin() {
+    const url = window.location.href;
+    const title = `${coin.name} on SpookyCoins`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setNotice('Coin page link copied.');
+    } catch {
+      setNotice('Could not share this coin right now.');
+    }
+  }
+
+  function openChangeRequest(intent: 'change' | 'report') {
+    setChangeRequestIntent(intent);
+    setChangeRequestOpen(true);
+  }
+
   return (
     <main className="market-page coin-detail-page">
       <div className="container coin-breadcrumb">
@@ -351,6 +372,8 @@ export function CoinDetailPage({
         contractAddress={contractAddress}
         contractCopied={contractCopied}
         onCopyContract={copyContract}
+        onShare={shareCoin}
+        onReport={() => openChangeRequest('report')}
       />
 
       {isSuspended && (
@@ -389,12 +412,12 @@ export function CoinDetailPage({
           actionsDisabled={isSuspended}
           onVote={vote}
           onToggleWatch={toggleWatch}
-          onOpenChangeRequest={() => setChangeRequestOpen(true)}
+          onOpenChangeRequest={() => openChangeRequest('change')}
         />
       </div>
 
       {promotedRows.length > 0 && (
-        <section className="container promoted-section coin-promoted-section">
+        <section className="promoted-section coin-promoted-section">
           <SectionTitle
             kicker="SPONSORED PLACEMENTS"
             title="Promoted coins"
@@ -415,7 +438,9 @@ export function CoinDetailPage({
       )}
 
       <ChangeRequestModal
+        coinId={coin.coinId}
         coinName={coin.name}
+        defaultType={changeRequestIntent}
         open={changeRequestOpen}
         onClose={() => setChangeRequestOpen(false)}
       />
