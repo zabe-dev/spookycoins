@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { CoinDetailPage } from '@/features/coin/components/coin-detail-page';
-import { getPublicCoinById } from '@/features/coins/server/coin-list';
+import { getPublicCoinById, getPublicCoinListItems } from '@/features/coins/server/coin-list';
 import { NETWORKS } from '@/features/coins/networks';
 import { auth } from '@/lib/auth/server';
 import { headers } from 'next/headers';
@@ -51,10 +51,19 @@ export default async function CoinPage({ params }: CoinPageParams) {
   const session = await auth.api.getSession({ headers: await headers() });
   const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
+  const promotedCoins = (await getPublicCoinListItems(session?.user.id))
+    .filter((item) => item.promoted && item.coinId !== coin.id)
+    .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name))
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+
   return (
     <>
       <SiteHeader active="none" />
-      <CoinDetailPage coinRecord={coin} isSignedIn={Boolean(session?.user)} />
+      <CoinDetailPage
+        coinRecord={coin}
+        promotedCoins={promotedCoins}
+        isSignedIn={Boolean(session?.user)}
+      />
     </>
   );
 }

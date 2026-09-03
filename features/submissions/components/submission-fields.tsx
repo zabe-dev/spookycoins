@@ -11,9 +11,9 @@ import {
 import { Icon } from '@iconify/react';
 import {
   BrainCircuit,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   CircleHelp,
   Dice6,
   FileText,
@@ -225,7 +225,7 @@ export function PresaleToggle({
     <div className="submission-field wide">
       <span>
         <span>
-          Is your project in a presale phase? <RequiredMark />
+          Is your project in presale right now? <RequiredMark />
         </span>
       </span>
       <div className="submission-radio-row">

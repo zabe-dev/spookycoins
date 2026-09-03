@@ -1,5 +1,6 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
+import { InfoBand } from '@/components/layout/info-band';
 import { PublicWatchlistTable } from '@/features/account/components/account-panel';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
@@ -54,6 +55,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
           )}
         </section>
       </section>
+      <InfoBand />
       <SiteFooter />
     </main>
   );

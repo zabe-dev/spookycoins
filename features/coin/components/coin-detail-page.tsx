@@ -4,8 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { AuthModal } from '@/features/auth/components/auth-modal';
+import { CoinTable, SectionTitle } from '@/features/coins/components';
 import type { Coin } from '@/features/coins/types';
-import { getBoostVoteFactor, toCoinListItem } from '@/features/coins/view';
+import { getBoostVoteFactor, toCoinListItem, type CoinListItem } from '@/features/coins/view';
 import { ChangeRequestModal } from './change-request-modal';
 import { CoinAd } from './coin-ad';
 import { CoinChartCard } from './coin-chart-card';
@@ -15,13 +16,24 @@ import { CoinSidebar } from './coin-sidebar';
 
 export function CoinDetailPage({
   coinRecord,
+  promotedCoins,
   isSignedIn,
 }: {
   coinRecord: Coin;
+  promotedCoins: CoinListItem[];
   isSignedIn: boolean;
 }) {
   const canonicalCoin = coinRecord;
   const [coin, setCoin] = useState(() => toCoinListItem(canonicalCoin, 0));
+  const [promotedRows, setPromotedRows] = useState(promotedCoins);
+  const [promotedVoted, setPromotedVoted] = useState<number[]>(() =>
+    promotedCoins.filter((item) => item.hasVoted).map((item) => item.coinId),
+  );
+  const [promotedWatched, setPromotedWatched] = useState<number[]>(() =>
+    promotedCoins.filter((item) => item.isWatching).map((item) => item.coinId),
+  );
+  const [promotedVoteAnimating, setPromotedVoteAnimating] = useState<number | null>(null);
+  const [promotedWatchAnimating, setPromotedWatchAnimating] = useState<number | null>(null);
   const contractAddress = coin.contractAddress || 'Contract address unavailable';
   const isSuspended = canonicalCoin.listingStatus !== 'active';
   const [voted, setVoted] = useState(coin.hasVoted);
@@ -121,6 +133,117 @@ export function CoinDetailPage({
     updateInteractionSummary(body.data?.summary);
   }
 
+  async function votePromoted(coinId: number) {
+    if (promotedVoted.includes(coinId)) return;
+    if (!isSignedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    setNotice('');
+    setPromotedVoted((current) => [...current, coinId]);
+    setPromotedRows((rows) =>
+      rows.map((row) =>
+        row.coinId === coinId
+          ? {
+              ...row,
+              hasVoted: true,
+              rawVotes: row.rawVotes + 1,
+              votes: row.votes + getBoostVoteFactor(row.boost),
+              totalVotes: row.totalVotes + 1,
+              recentVotes: row.recentVotes + 1,
+              trendingScore: row.trendingScore + 3,
+              trend: row.trend + 3,
+            }
+          : row,
+      ),
+    );
+    setPromotedVoteAnimating(coinId);
+    window.setTimeout(() => setPromotedVoteAnimating(null), 700);
+
+    const response = await fetch(`/api/coins/${coinId}/vote`, { method: 'POST' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setPromotedVoted((current) => current.filter((id) => id !== coinId));
+      setPromotedRows((rows) =>
+        rows.map((row) =>
+          row.coinId === coinId
+            ? {
+                ...row,
+                hasVoted: false,
+                rawVotes: Math.max(0, row.rawVotes - 1),
+                votes: Math.max(0, row.votes - getBoostVoteFactor(row.boost)),
+                totalVotes: Math.max(0, row.totalVotes - 1),
+                recentVotes: Math.max(0, row.recentVotes - 1),
+                trendingScore: Math.max(0, row.trendingScore - 3),
+                trend: Math.max(0, row.trend - 3),
+              }
+            : row,
+        ),
+      );
+      setNotice(body.message || body.errorMessage || 'Could not record your vote.');
+      return;
+    }
+
+    updatePromotedInteractionSummary(coinId, body.data?.summary);
+  }
+
+  async function togglePromotedWatch(coinId: number) {
+    if (!isSignedIn) {
+      setAuthOpen(true);
+      return;
+    }
+    const removing = promotedWatched.includes(coinId);
+    setNotice('');
+    setPromotedWatched((current) =>
+      removing ? current.filter((id) => id !== coinId) : [...current, coinId],
+    );
+    setPromotedRows((rows) =>
+      rows.map((row) =>
+        row.coinId === coinId
+          ? {
+              ...row,
+              isWatching: !removing,
+              watchCount: Math.max(0, row.watchCount + (removing ? -1 : 1)),
+              recentWatchlistAdds: Math.max(0, row.recentWatchlistAdds + (removing ? -1 : 1)),
+              trendingScore: Math.max(0, row.trendingScore + (removing ? -2 : 2)),
+              trend: Math.max(0, row.trend + (removing ? -2 : 2)),
+            }
+          : row,
+      ),
+    );
+    if (removing) setPromotedWatchAnimating(null);
+    else {
+      setPromotedWatchAnimating(coinId);
+      window.setTimeout(() => setPromotedWatchAnimating(null), 600);
+    }
+
+    const response = await fetch(`/api/coins/${coinId}/watchlist`, { method: 'POST' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setPromotedWatched((current) =>
+        removing ? [...current, coinId] : current.filter((id) => id !== coinId),
+      );
+      setPromotedRows((rows) =>
+        rows.map((row) =>
+          row.coinId === coinId
+            ? {
+                ...row,
+                isWatching: removing,
+                watchCount: Math.max(0, row.watchCount + (removing ? 1 : -1)),
+                recentWatchlistAdds: Math.max(0, row.recentWatchlistAdds + (removing ? 1 : -1)),
+                trendingScore: Math.max(0, row.trendingScore + (removing ? 2 : -2)),
+                trend: Math.max(0, row.trend + (removing ? 2 : -2)),
+              }
+            : row,
+        ),
+      );
+      setNotice(body.message || body.errorMessage || 'Could not update your watchlist.');
+      return;
+    }
+
+    updatePromotedInteractionSummary(coinId, body.data?.summary);
+  }
+
   function updateInteractionSummary(
     summary:
       | {
@@ -154,6 +277,59 @@ export function CoinDetailPage({
     });
     if (typeof summary.userHasVoted === 'boolean') setVoted(summary.userHasVoted);
     if (typeof summary.userWatching === 'boolean') setWatched(summary.userWatching);
+  }
+
+  function updatePromotedInteractionSummary(
+    coinId: number,
+    summary:
+      | {
+          weeklyVotes?: number;
+          totalVotes?: number;
+          recentVotes?: number;
+          recentWatchlistAdds?: number;
+          trendingScore?: number;
+          watchlistCount?: number;
+          userHasVoted?: boolean;
+          userWatching?: boolean;
+        }
+      | undefined,
+  ) {
+    if (!summary) return;
+    setPromotedRows((rows) =>
+      rows.map((row) =>
+        row.coinId === coinId
+          ? (() => {
+              const rawVotes = summary.weeklyVotes ?? row.rawVotes;
+              return {
+                ...row,
+                rawVotes,
+                votes: rawVotes * getBoostVoteFactor(row.boost),
+                totalVotes: summary.totalVotes ?? row.totalVotes,
+                recentVotes: summary.recentVotes ?? row.recentVotes,
+                recentWatchlistAdds: summary.recentWatchlistAdds ?? row.recentWatchlistAdds,
+                trendingScore: summary.trendingScore ?? row.trendingScore,
+                trend: summary.trendingScore ?? row.trend,
+                watchCount: summary.watchlistCount ?? row.watchCount,
+                hasVoted: summary.userHasVoted ?? row.hasVoted,
+                isWatching: summary.userWatching ?? row.isWatching,
+              };
+            })()
+          : row,
+      ),
+    );
+    if (summary.userHasVoted === true) {
+      setPromotedVoted((current) => (current.includes(coinId) ? current : [...current, coinId]));
+    }
+    if (summary.userHasVoted === false) {
+      setPromotedVoted((current) => current.filter((id) => id !== coinId));
+    }
+    setPromotedWatched((current) => {
+      if (summary.userWatching === true) {
+        return current.includes(coinId) ? current : [...current, coinId];
+      }
+      if (summary.userWatching === false) return current.filter((id) => id !== coinId);
+      return current;
+    });
   }
 
   async function copyContract() {
@@ -216,6 +392,27 @@ export function CoinDetailPage({
           onOpenChangeRequest={() => setChangeRequestOpen(true)}
         />
       </div>
+
+      {promotedRows.length > 0 && (
+        <section className="container promoted-section coin-promoted-section">
+          <SectionTitle
+            kicker="SPONSORED PLACEMENTS"
+            title="Promoted coins"
+            subtitle="Sponsored coins with active visibility packages. Promotion does not guarantee rank or endorsement."
+          />
+          <CoinTable
+            className="promoted-table"
+            coins={promotedRows}
+            watchlist={promotedWatched}
+            watchAnimating={promotedWatchAnimating}
+            voted={promotedVoted}
+            animating={promotedVoteAnimating}
+            watch={togglePromotedWatch}
+            vote={votePromoted}
+            coinLinks={false}
+          />
+        </section>
+      )}
 
       <ChangeRequestModal
         coinName={coin.name}

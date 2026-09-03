@@ -1,5 +1,6 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
+import { InfoBand } from '@/components/layout/info-band';
 import { AccountPanel } from '@/features/account/components/account-panel';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getPublicCoinById } from '@/features/coins/server/coin-list';
@@ -111,6 +112,7 @@ export default async function DashboardPage() {
               : undefined),
         }))}
       />
+      <InfoBand />
       <SiteFooter />
     </main>
   );

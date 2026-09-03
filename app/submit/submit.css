@@ -1166,6 +1166,77 @@
   padding: 13px 24px;
 }
 
+.submission-step-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.submission-step-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 12px;
+  padding: 14px 22px;
+  font:
+    800 11px/1 var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    opacity 0.16s ease;
+}
+
+.submission-step-button svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  stroke-width: 2.4;
+}
+
+.submission-step-button--primary {
+  margin-left: auto;
+  border: 1px solid var(--lime);
+  background: var(--lime);
+  color: #0b0f0b;
+  box-shadow: 0 10px 28px rgba(203, 255, 74, 0.1);
+}
+
+.submission-step-button--secondary {
+  border: 1px solid #30383e;
+  background: rgba(255, 255, 255, 0.025);
+  color: #e5ecec;
+}
+
+.submission-step-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.submission-step-button--primary:hover:not(:disabled) {
+  background: #d9ff64;
+  border-color: #d9ff64;
+}
+
+.submission-step-button--secondary:hover:not(:disabled) {
+  border-color: rgba(203, 255, 74, 0.28);
+  background: rgba(203, 255, 74, 0.08);
+  color: var(--lime);
+}
+
+.submission-step-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+  transform: none;
+}
+
 .submission-success {
   overflow: hidden;
   display: grid;
@@ -1548,12 +1619,14 @@
   }
 
   .submission-logo-actions,
-  .submission-actions {
+  .submission-actions,
+  .submission-step-actions {
     flex-direction: column;
   }
 
   .submission-primary,
   .submission-secondary,
+  .submission-step-button,
   .submission-logo-actions button,
   .submission-inline-action,
   .submission-contract-remove {

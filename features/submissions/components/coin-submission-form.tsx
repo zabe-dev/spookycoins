@@ -375,24 +375,24 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
         </div>
       </div>
 
-      <section className="submission-card">
-        <div className="submission-steps" aria-label="Submission steps">
-          {steps.map((step, index) => (
-            <button
-              key={step}
-              className={index === stepIndex ? 'active' : index < stepIndex ? 'done' : ''}
-              type="button"
-              onClick={() => jumpTo(index)}
-            >
-              <span>{index + 1}</span>
-              {step}
-            </button>
-          ))}
-        </div>
+      <form className="submission-form" onSubmit={submit}>
+        <section className="submission-card">
+          <div className="submission-steps" aria-label="Submission steps">
+            {steps.map((step, index) => (
+              <button
+                key={step}
+                className={index === stepIndex ? 'active' : index < stepIndex ? 'done' : ''}
+                type="button"
+                onClick={() => jumpTo(index)}
+              >
+                <span>{index + 1}</span>
+                {step}
+              </button>
+            ))}
+          </div>
 
-        {errors.form && <div className="submission-alert">{errors.form}</div>}
+          {errors.form && <div className="submission-alert">{errors.form}</div>}
 
-        <form className="submission-form" onSubmit={submit}>
           {stepIndex === 0 && (
             <section className="submission-basics">
               <div className="submission-grid submission-basics-grid">
@@ -752,40 +752,44 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
               </SectionCard>
             </div>
           )}
+        </section>
 
-          <div className="submission-actions">
+        <div className="submission-step-actions">
+          <button
+            className="submission-step-button submission-step-button--secondary"
+            type="button"
+            onClick={goBack}
+            disabled={stepIndex === 0 || submitting}
+          >
+            <ChevronLeft aria-hidden="true" />
+            Back
+          </button>
+          {stepIndex < steps.length - 1 ? (
             <button
-              className="submission-secondary"
+              className="submission-step-button submission-step-button--primary"
               type="button"
-              onClick={goBack}
-              disabled={stepIndex === 0 || submitting}
+              onClick={goNext}
+              disabled={submitting}
             >
-              <ChevronLeft aria-hidden="true" />
-              Back
+              Next
+              <ChevronRight aria-hidden="true" />
             </button>
-            {stepIndex < steps.length - 1 ? (
-              <button
-                className="submission-primary"
-                type="button"
-                onClick={goNext}
-                disabled={submitting}
-              >
-                Next
-                <ChevronRight aria-hidden="true" />
-              </button>
-            ) : (
-              <button className="submission-primary" type="submit" disabled={submitting}>
-                {submitting ? (
-                  <Loader2 className="spin" aria-hidden="true" />
-                ) : (
-                  <Check aria-hidden="true" />
-                )}
-                Submit project
-              </button>
-            )}
-          </div>
-        </form>
-      </section>
+          ) : (
+            <button
+              className="submission-step-button submission-step-button--primary"
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <Loader2 className="spin" aria-hidden="true" />
+              ) : (
+                <Check aria-hidden="true" />
+              )}
+              Submit project
+            </button>
+          )}
+        </div>
+      </form>
 
       {logoDraft && (
         <LogoCropDialog
