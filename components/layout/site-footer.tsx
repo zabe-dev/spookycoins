@@ -23,8 +23,9 @@ export function SiteFooter({ id, variant = 'default' }: SiteFooterProps) {
         </p>
         <div>
           <Link href="/#leaderboard">Discover</Link>
-          <Link href="/advertise">Advertise</Link>
+          <Link href="/#promoted">Promoted</Link>
           <Link href="/partners">Partners</Link>
+          <Link href="/advertise">Advertise</Link>
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>
         </div>
