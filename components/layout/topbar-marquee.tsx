@@ -1,6 +1,7 @@
 'use client';
 
 import { TopbarCoinLink } from '@/components/layout/topbar-coin-link';
+import { FormattedPrice } from '@/features/coins/components/formatted-price';
 import type { TopbarSummary } from '@/features/topbar/types';
 import { useState } from 'react';
 
@@ -48,7 +49,9 @@ export function TopbarItems({
       {summary.prices.map((coin) => (
         <span key={`${duplicate ? 'copy-' : ''}${coin.symbol}`}>
           <span className="topbar-label">{coin.symbol}</span>
-          <b className="topbar-value">{formatTickerPrice(coin.price)}</b>{' '}
+          <b className="topbar-value">
+            <FormattedPrice value={formatTickerPrice(coin.price)} />
+          </b>{' '}
           <i className={(coin.change ?? 0) < 0 ? 'down' : ''}>
             {coin.change === null
               ? '—'

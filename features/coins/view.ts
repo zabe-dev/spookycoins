@@ -190,8 +190,20 @@ function formatTokenAmount(value: number | null) {
 
 function formatPrice(value: number | null) {
   if (value === null) return '—';
-  const digits = value >= 1 ? 2 : value >= 0.01 ? 4 : 8;
+  const digits =
+    value >= 1
+      ? 2
+      : value >= 0.01
+        ? 4
+        : Math.min(12, Math.max(8, countLeadingPriceZeros(value) + 4));
   return `$${value.toLocaleString('en-US', { maximumFractionDigits: digits })}`;
+}
+
+function countLeadingPriceZeros(value: number) {
+  const [, decimals = ''] = value.toFixed(12).split('.');
+  const match = decimals.match(/^0*/);
+
+  return match?.[0].length ?? 0;
 }
 
 function formatTimeAgo(value: string) {

@@ -10,6 +10,7 @@ import {
   type CoinListItem as Coin,
   type CoinSortKey as SortKey,
 } from '@/features/coins/view';
+import { FormattedPrice } from './formatted-price';
 import { BoltIcon } from './icons';
 import { TableScroller } from './table-scroller';
 
@@ -73,8 +74,12 @@ export function CoinCells({ coin, linkEnabled = true }: { coin: Coin; linkEnable
           </div>
         </div>
       </td>
-      <td className="numeric">{coin.cap}</td>
-      <td className="numeric">{coin.price}</td>
+      <td className="numeric table-strong-value">{coin.cap}</td>
+      <td className="numeric">
+        <b className="table-strong-value">
+          <FormattedPrice value={coin.price} />
+        </b>
+      </td>
       <td>
         <span className={coin.change >= 0 ? 'positive' : 'negative'}>
           {coin.change >= 0 ? '+' : ''}

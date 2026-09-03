@@ -1,3 +1,5 @@
+import { FormattedPrice } from '@/features/coins/components/formatted-price';
+
 export function Heading({
   kicker,
   title,
@@ -19,10 +21,12 @@ export function Heading({
 }
 
 export function Stat({ label, value }: { label: string; value: string }) {
+  const shouldFormatPrice = /price/i.test(label);
+
   return (
     <div>
       <span>{label}</span>
-      <b>{value}</b>
+      <b>{shouldFormatPrice ? <FormattedPrice value={value} /> : value}</b>
     </div>
   );
 }

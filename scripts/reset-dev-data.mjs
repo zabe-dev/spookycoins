@@ -5,7 +5,7 @@
  *
  * Keeps:
  * - user email from DEV_RESET_KEEP_USER_EMAIL
- * - coin: spooky
+ * - coin name from DEV_RESET_KEEP_COIN_NAME
  *
  * Everything else in app data tables is deleted in dependency-safe order.
  */
@@ -14,7 +14,7 @@ import postgres from 'postgres';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const PRESERVED_EMAIL = process.env.DEV_RESET_KEEP_USER_EMAIL;
-const PRESERVED_COIN_NAME = 'spooky';
+const PRESERVED_COIN_NAME = process.env.DEV_RESET_KEEP_COIN_NAME;
 
 if (process.env.NODE_ENV === 'production') {
   throw new Error('Refusing to reset data while NODE_ENV=production.');
@@ -26,6 +26,10 @@ if (!DATABASE_URL) {
 
 if (!PRESERVED_EMAIL) {
   throw new Error('DEV_RESET_KEEP_USER_EMAIL is required.');
+}
+
+if (!PRESERVED_COIN_NAME) {
+  throw new Error('DEV_RESET_KEEP_COIN_NAME is required.');
 }
 
 const db = postgres(DATABASE_URL, {
