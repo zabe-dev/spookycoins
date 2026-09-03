@@ -9,6 +9,7 @@ import { bannerPlacements, type BannerAdMap, type BannerPlacement } from '@/feat
 const emptyBannerMap = (): BannerAdMap => ({
   'homepage-top': [],
   'homepage-wide': [],
+  'homepage-faq-wide': [],
   'site-bottom': [],
   'coin-page-wide': [],
 });

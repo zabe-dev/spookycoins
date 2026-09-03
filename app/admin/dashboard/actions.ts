@@ -69,7 +69,13 @@ export async function updateAdminUser(formData: FormData) {
     })
     .where(eq(users.id, userId));
 
-  await audit(adminUser.id, 'user.updated', 'user', userId, { name, email, role, banned });
+  await audit(adminUser.id, 'user.updated', 'user', userId, {
+    name,
+    email,
+    role,
+    banned,
+    banReason: banned ? banReason || 'Admin action' : null,
+  });
   revalidatePath('/admin/dashboard');
 }
 
@@ -81,8 +87,13 @@ export async function deleteAdminUser(formData: FormData) {
     throw new Error('You cannot delete your own admin account.');
   }
 
+  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   await db.delete(users).where(eq(users.id, userId));
-  await audit(adminUser.id, 'user.deleted', 'user', userId, {});
+  await audit(adminUser.id, 'user.deleted', 'user', userId, {
+    email: user?.email || null,
+    role: user?.role || null,
+    banned: user?.banned || false,
+  });
   revalidatePath('/admin/dashboard');
 }
 
@@ -109,8 +120,14 @@ export async function deleteAdminCoin(formData: FormData) {
   const adminUser = await requireAdmin();
   const coinId = readNumber(formData, 'coinId');
 
+  const [coin] = await db.select().from(coins).where(eq(coins.id, coinId)).limit(1);
   await db.delete(coins).where(eq(coins.id, coinId));
-  await audit(adminUser.id, 'coin.deleted', 'coin', String(coinId), {});
+  await audit(adminUser.id, 'coin.deleted', 'coin', String(coinId), {
+    name: coin?.name || null,
+    symbol: coin?.symbol || null,
+    chain: coin?.chain || null,
+    listingStatus: coin?.listingStatus || null,
+  });
   revalidatePath('/admin/dashboard');
   revalidatePath('/');
 }
@@ -121,6 +138,8 @@ export async function updateAdminSubmission(formData: FormData) {
   const status = readEnum(formData, 'status', submissionStatuses);
   const reviewReason = readOptional(formData, 'reviewReason');
   let approvedCoinId: number | null = null;
+  let previousStatus: string | null = null;
+  let requesterEmail: string | null = null;
 
   if (status === 'rejected' && !reviewReason) {
     throw new Error('A rejection reason is required.');
@@ -134,6 +153,9 @@ export async function updateAdminSubmission(formData: FormData) {
       .limit(1);
 
     if (!submission) throw new Error('Submission not found.');
+
+    previousStatus = submission.status;
+    requesterEmail = submission.requesterEmail;
 
     if (status === 'approved') {
       approvedCoinId = submission.coinId || (await createCoinFromSubmission(tx, submission));
@@ -151,8 +173,10 @@ export async function updateAdminSubmission(formData: FormData) {
   });
 
   await audit(adminUser.id, 'submission.updated', 'submission', submissionId, {
+    previousStatus,
     status,
     reviewReason,
+    requesterEmail,
     coinId: approvedCoinId,
   });
   revalidatePath('/admin/dashboard');
@@ -187,6 +211,7 @@ export async function grantCoinBoost(formData: FormData) {
     package: multiplier,
     voteMultiplier: rule.voteMultiplier,
     durationHours: rule.durationHours,
+    notes: notes || null,
   });
   revalidatePath('/admin/dashboard');
 }
@@ -194,8 +219,20 @@ export async function grantCoinBoost(formData: FormData) {
 export async function removeCoinBoost(formData: FormData) {
   const adminUser = await requireAdmin();
   const coinId = readNumber(formData, 'coinId');
+  const activeBoosts = await db
+    .select()
+    .from(coinBoosts)
+    .where(and(eq(coinBoosts.coinId, coinId), eq(coinBoosts.status, 'active')));
+
   await cancelActiveBoosts(coinId);
-  await audit(adminUser.id, 'boost.removed', 'coin', String(coinId), {});
+  await audit(adminUser.id, 'boost.removed', 'coin', String(coinId), {
+    activeBoosts: activeBoosts.map((boost) => ({
+      id: boost.id,
+      multiplier: boost.multiplier,
+      expiresAt: boost.expiresAt,
+      notes: boost.notes,
+    })),
+  });
   revalidatePath('/admin/dashboard');
 }
 
@@ -255,6 +292,7 @@ export async function addPromotedCoin(formData: FormData) {
   await audit(adminUser.id, 'promotion.added', 'coin', String(coinId), {
     durationDays,
     priority,
+    notes: notes || null,
   });
   revalidatePath('/admin/dashboard');
 }
@@ -262,8 +300,21 @@ export async function addPromotedCoin(formData: FormData) {
 export async function removePromotedCoin(formData: FormData) {
   const adminUser = await requireAdmin();
   const coinId = readNumber(formData, 'coinId');
+  const activePromotions = await db
+    .select()
+    .from(coinPromotions)
+    .where(and(eq(coinPromotions.coinId, coinId), eq(coinPromotions.status, 'active')));
+
   await cancelActivePromotions(coinId);
-  await audit(adminUser.id, 'promotion.removed', 'coin', String(coinId), {});
+  await audit(adminUser.id, 'promotion.removed', 'coin', String(coinId), {
+    activePromotions: activePromotions.map((promotion) => ({
+      id: promotion.id,
+      placement: promotion.placement,
+      priority: promotion.priority,
+      expiresAt: promotion.expiresAt,
+      notes: promotion.notes,
+    })),
+  });
   revalidatePath('/admin/dashboard');
 }
 
@@ -317,7 +368,14 @@ export async function createBannerAd(formData: FormData) {
     notes: notes || null,
   });
 
-  await audit(adminUser.id, 'banner.created', 'banner', title, { placement, priority });
+  await audit(adminUser.id, 'banner.created', 'banner', title, {
+    placement,
+    priority,
+    status: 'active',
+    startsAt,
+    expiresAt,
+    notes: notes || null,
+  });
   revalidateBannerPaths();
 }
 
@@ -359,7 +417,14 @@ export async function updateBannerAd(formData: FormData) {
     })
     .where(eq(bannerAds.id, bannerId));
 
-  await audit(adminUser.id, 'banner.updated', 'banner', bannerId, { placement, status, priority });
+  await audit(adminUser.id, 'banner.updated', 'banner', bannerId, {
+    placement,
+    status,
+    priority,
+    startsAt,
+    expiresAt,
+    notes: notes || null,
+  });
   revalidateBannerPaths();
 }
 
@@ -367,8 +432,15 @@ export async function deleteBannerAd(formData: FormData) {
   const adminUser = await requireAdmin();
   const bannerId = readRequired(formData, 'bannerId');
 
+  const [banner] = await db.select().from(bannerAds).where(eq(bannerAds.id, bannerId)).limit(1);
   await db.delete(bannerAds).where(eq(bannerAds.id, bannerId));
-  await audit(adminUser.id, 'banner.deleted', 'banner', bannerId, {});
+  await audit(adminUser.id, 'banner.deleted', 'banner', bannerId, {
+    title: banner?.title || null,
+    placement: banner?.placement || null,
+    status: banner?.status || null,
+    targetUrl: banner?.targetUrl || null,
+    notes: banner?.notes || null,
+  });
   revalidateBannerPaths();
 }
 

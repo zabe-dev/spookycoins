@@ -419,21 +419,20 @@ export function CoinDetailPage({
         />
       </div>
 
-      {promotedRows.length > 0 && (
-        <section className="promoted-section coin-promoted-section">
-          <CoinTable
-            className="promoted-table"
-            coins={promotedRows}
-            watchlist={promotedWatched}
-            watchAnimating={promotedWatchAnimating}
-            voted={promotedVoted}
-            animating={promotedVoteAnimating}
-            watch={togglePromotedWatch}
-            vote={votePromoted}
-            coinLinks={false}
-          />
-        </section>
-      )}
+      <section className="promoted-section coin-promoted-section">
+        <CoinTable
+          className="promoted-table"
+          coins={promotedRows}
+          watchlist={promotedWatched}
+          watchAnimating={promotedWatchAnimating}
+          voted={promotedVoted}
+          animating={promotedVoteAnimating}
+          watch={togglePromotedWatch}
+          vote={votePromoted}
+          coinLinks={false}
+          emptyMessage="No promoted coins right now."
+        />
+      </section>
 
       <ChangeRequestModal
         coinId={coin.coinId}

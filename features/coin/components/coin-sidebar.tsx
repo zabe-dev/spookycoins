@@ -101,6 +101,7 @@ export function CoinSidebar({
             <Info label="Presale coin" value={coin.presale.paymentToken || '—'} />
             <Info label="Soft cap" value={formatPresaleCap(coin.presale.softCap)} />
             <Info label="Hard cap" value={formatPresaleCap(coin.presale.hardCap)} />
+            <Info label="Start date" value={formatPresaleDateTime(coin.presaleStartTimestamp)} />
             <Info label="End date" value={formatPresaleDateTime(coin.presaleEndTimestamp)} />
           </>
         )}

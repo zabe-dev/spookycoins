@@ -1,4 +1,5 @@
-export type BannerPlacement = 'homepage-top' | 'homepage-wide' | 'site-bottom' | 'coin-page-wide';
+export type BannerPlacement =
+  'homepage-top' | 'homepage-wide' | 'homepage-faq-wide' | 'site-bottom' | 'coin-page-wide';
 
 export type PublicBannerAd = {
   id: string;
@@ -15,6 +16,7 @@ export type BannerAdMap = Record<BannerPlacement, PublicBannerAd[]>;
 export const bannerPlacements = [
   'homepage-top',
   'homepage-wide',
+  'homepage-faq-wide',
   'site-bottom',
   'coin-page-wide',
 ] as const satisfies readonly BannerPlacement[];
@@ -22,6 +24,7 @@ export const bannerPlacements = [
 export const bannerPlacementLabels: Record<BannerPlacement, string> = {
   'homepage-top': 'Homepage top rotating',
   'homepage-wide': 'Homepage wide banner',
+  'homepage-faq-wide': 'Homepage FAQ wide banner',
   'site-bottom': 'Fixed bottom banner',
   'coin-page-wide': 'Coin page wide banner',
 };

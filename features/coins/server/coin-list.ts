@@ -4,6 +4,7 @@ import { NETWORKS } from '@/features/coins/networks';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getCoinInteractionSummaries } from '@/features/coins/server/interactions';
 import { refreshStaleMarketSnapshots } from '@/features/coins/server/market-sync';
+import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import type {
   BoostMultiplier,
   Coin,
@@ -59,6 +60,7 @@ async function getPublicCoinRecords(
   userId?: string | null,
   priorityCoinId?: number,
 ): Promise<Coin[]> {
+  await processExpiredPresales();
   await processExpiredCoinDeletionRequests();
 
   const now = new Date();

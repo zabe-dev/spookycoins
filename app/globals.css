@@ -2775,27 +2775,31 @@ img.admin-project-logo {
   position: fixed;
   z-index: 1000;
   display: grid;
-  width: min(320px, calc(100vw - 48px));
+  width: min(420px, calc(100vw - 48px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
-  gap: 10px;
-  border: 1px solid #30383e;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(22, 27, 31, 0.99), rgba(9, 12, 14, 0.99));
-  padding: 13px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  gap: 14px;
+  border: 1px solid #30383c;
+  border-radius: 13px;
+  background: #0d1013;
+  padding: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
 }
 .admin-confirm-popover strong {
   display: block;
-  color: #f2f4f5;
-  font-size: 12px;
+  margin-right: 32px;
+  color: #eef1f2;
+  font:
+    700 20px var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.035em;
 }
 .admin-confirm-popover p,
 .admin-confirm-popover small {
   margin: 0;
-  color: #9da7ad;
-  font-size: 10px;
-  line-height: 1.55;
+  color: #77818a;
+  font-size: 12px;
+  line-height: 1.6;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -2820,28 +2824,35 @@ img.admin-project-logo {
 }
 .admin-confirm-popover label {
   display: grid;
-  gap: 6px;
-  color: #cdd5da;
-  font-size: 9px;
-  font-weight: 800;
+  gap: 8px;
+  color: #c6cdd1;
+  font-size: 10px;
+  font-weight: 750;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.055em;
 }
 .admin-confirm-popover input,
 .admin-confirm-popover select,
 .admin-confirm-popover textarea {
   min-width: 0;
   width: 100%;
-  min-height: 36px;
-  border: 1px solid #2b3338;
+  min-height: 44px;
+  border: 1px solid #23292e;
   border-radius: 10px;
   outline: 0;
-  background: rgba(6, 8, 10, 0.82);
-  padding: 9px 10px;
+  background: #0d1113;
+  padding: 0 13px;
   color: #eef1f2;
-  font-size: 11px;
+  font:
+    12px var(--font-poppins),
+    sans-serif;
   text-transform: none;
   letter-spacing: 0;
+}
+.admin-confirm-popover input:focus,
+.admin-confirm-popover select:focus,
+.admin-confirm-popover textarea:focus {
+  border-color: rgba(196, 255, 68, 0.55);
 }
 .admin-confirm-popover select {
   appearance: none;
@@ -2851,37 +2862,38 @@ img.admin-project-logo {
   background-position: right 12px center;
 }
 .admin-confirm-popover textarea {
-  min-height: 76px;
+  min-height: 116px;
+  padding: 13px;
   resize: vertical;
 }
 .admin-confirm-popover > div {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
   gap: 8px;
 }
 .admin-confirm-popover > .admin-banner-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   justify-content: stretch;
-  gap: 10px;
+  gap: 15px;
 }
 .admin-banner-form-wide {
   grid-column: 1 / -1;
 }
 .admin-confirm-popover button {
-  border: 0;
-  border-radius: 8px;
+  min-height: 42px;
+  border: 1px solid #23292e;
+  border-radius: 10px;
   background: var(--lime);
-  padding: 9px 11px;
-  color: #10130c;
-  font-size: 9px;
-  font-weight: 850;
+  padding: 11px 14px;
+  color: #090c0c;
+  font-size: 11px;
+  font-weight: 750;
   cursor: pointer;
 }
 .admin-confirm-popover button[type='button'] {
-  border: 1px solid #30383e;
-  background: transparent;
-  color: #c7d0d5;
+  background: #111519;
+  color: #eef1f2;
 }
 .admin-confirm-popover button:disabled {
   cursor: wait;
@@ -2889,7 +2901,7 @@ img.admin-project-logo {
 }
 .admin-confirm-actions {
   align-items: center;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 .admin-detail-modal-backdrop {
   position: fixed;
@@ -2897,54 +2909,59 @@ img.admin-project-logo {
   z-index: 1100;
   display: grid;
   place-items: center;
-  background: rgba(5, 7, 8, 0.78);
-  padding: 18px;
+  background: rgba(3, 5, 6, 0.78);
+  padding: 24px;
+  backdrop-filter: blur(5px);
 }
 .admin-detail-modal {
   width: min(980px, 100%);
-  max-height: min(820px, calc(100dvh - 36px));
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
-  border: 1px solid #30383e;
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(22, 27, 31, 0.99), rgba(9, 12, 14, 0.99));
-  padding: 18px;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58);
+  border: 1px solid #30383c;
+  border-radius: 13px;
+  background: #0d1013;
+  padding: 0;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
 }
 .admin-detail-modal-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  padding-bottom: 16px;
+  border-bottom: 1px solid #23292e;
+  padding: 25px 25px 20px;
 }
 .admin-detail-modal-head small {
   color: var(--lime);
-  font-size: 9px;
-  font-weight: 850;
+  font-size: 10px;
+  font-weight: 750;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
 }
 .admin-detail-modal-head h2 {
-  margin: 6px 0 4px;
-  color: #f2f4f5;
-  font-size: 24px;
+  margin: 7px 40px 0 0;
+  color: #eef1f2;
+  font:
+    700 24px var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.035em;
 }
 .admin-detail-modal-head p {
-  margin: 0;
-  color: #87919a;
-  font-size: 11px;
+  margin: 8px 0 0;
+  color: #77818a;
+  font-size: 12px;
+  line-height: 1.6;
 }
 .admin-detail-modal-head button {
   display: inline-grid;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid #30383e;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.025);
-  color: #c7d0d5;
+  border: 1px solid #23292e;
+  border-radius: 7px;
+  background: #111519;
+  color: #77818a;
   cursor: pointer;
 }
 .admin-detail-modal-head button svg {
@@ -2955,7 +2972,7 @@ img.admin-project-logo {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  margin-top: 16px;
+  padding: 20px 25px 25px;
 }
 .admin-detail-section {
   border: 1px solid rgba(255, 255, 255, 0.055);
@@ -2996,7 +3013,7 @@ img.admin-project-logo {
   white-space: pre-wrap;
 }
 .admin-raw-json {
-  margin-top: 14px;
+  margin: 0 25px 25px;
   border: 1px solid rgba(255, 255, 255, 0.055);
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.22);
@@ -3727,6 +3744,10 @@ img.admin-project-logo {
   }
   .admin-detail-sections {
     grid-template-columns: 1fr;
+    padding: 18px;
+  }
+  .admin-raw-json {
+    margin: 0 18px 18px;
   }
   .admin-detail-section p {
     grid-template-columns: 1fr;

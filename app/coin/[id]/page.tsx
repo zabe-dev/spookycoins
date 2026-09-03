@@ -57,7 +57,7 @@ export default async function CoinPage({ params }: CoinPageParams) {
     getActiveBannerAds(),
   ]);
   const promotedCoins = allCoins
-    .filter((item) => item.promoted && item.coinId !== coin.id)
+    .filter((item) => item.promoted)
     .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name))
     .map((item, index) => ({ ...item, rank: index + 1 }));
 

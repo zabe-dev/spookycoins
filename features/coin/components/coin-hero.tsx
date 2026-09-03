@@ -105,9 +105,9 @@ export function CoinHero({
           <SecurityChip label="KYC" icon="bi:person-check" url={coin.security.kycUrl} />
           <SecurityChip label="Audit" icon="bi:shield-check" url={coin.security.auditUrl} />
           {coin.lifecycle === 'presale' ? (
-            <DateStat
-              label="PRESALE END DATE"
-              value={formatPresaleDateTime(coin.presaleEndTimestamp)}
+            <PresaleSchedule
+              startDate={formatPresaleDateTime(coin.presaleStartTimestamp)}
+              endDate={formatPresaleDateTime(coin.presaleEndTimestamp)}
             />
           ) : (
             <div className="coin-hero-stat coin-price-block">
@@ -143,28 +143,44 @@ function SecurityChip({
   icon: string;
   url: string | null;
 }) {
-  const content = (
-    <>
-      <span>{label}</span>
-      <b>
+  const valueLabel = url ? label.toUpperCase() : `NO ${label.toUpperCase()}`;
+  const boxContent = (
+    <b>
+      <i>
         <IconifyIcon icon={icon} aria-hidden="true" />
-        {label}
-      </b>
-    </>
+      </i>
+      {valueLabel}
+    </b>
   );
 
-  if (!url) return <span className="coin-security-chip muted">{content}</span>;
-
   return (
-    <a className="coin-security-chip" href={url} target="_blank" rel="noreferrer">
-      {content}
-    </a>
+    <span className={`coin-security-chip ${url ? '' : 'muted'}`}>
+      <span>{label}</span>
+      {url ? (
+        <a className="coin-security-chip-box" href={url} target="_blank" rel="noreferrer">
+          {boxContent}
+        </a>
+      ) : (
+        <span className="coin-security-chip-box" aria-disabled="true">
+          {boxContent}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function PresaleSchedule({ startDate, endDate }: { startDate: string; endDate: string }) {
+  return (
+    <div className="coin-hero-stat coin-presale-schedule">
+      <DateStat label="Presale start" value={startDate} />
+      <DateStat label="Presale end" value={endDate} />
+    </div>
   );
 }
 
 function DateStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="coin-hero-stat coin-date-block">
+    <div className="coin-date-block">
       <small>{label}</small>
       <b>{value}</b>
     </div>

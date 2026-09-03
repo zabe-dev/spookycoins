@@ -1665,7 +1665,7 @@ function usePopoverPosition(open: boolean, buttonRef: RefObject<HTMLButtonElemen
       if (!button) return;
 
       const rect = button.getBoundingClientRect();
-      const width = Math.min(340, window.innerWidth - 32);
+      const width = Math.min(420, window.innerWidth - 32);
       const left = Math.min(Math.max(16, rect.left), window.innerWidth - width - 16);
       const gap = 10;
       const viewportPadding = 16;

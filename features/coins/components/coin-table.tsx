@@ -131,6 +131,7 @@ export type CoinTableProps = {
   header?: ReactNode;
   className?: string;
   coinLinks?: boolean;
+  emptyMessage?: string;
 };
 
 export function CoinTable({
@@ -144,6 +145,7 @@ export function CoinTable({
   header,
   className,
   coinLinks = true,
+  emptyMessage,
 }: CoinTableProps) {
   const router = useRouter();
 
@@ -174,32 +176,40 @@ export function CoinTable({
           )}
         </thead>
         <tbody>
-          {coins.map((coin) => {
-            const hasVoted = voted.includes(coin.coinId);
-            return (
-              <tr
-                key={coin.coinId}
-                className={`${coin.boost ? 'boosted-row' : ''} clickable-coin-row`}
-                onClick={(event) => openCoinRow(event, coin.coinId)}
-              >
-                <CoinCells coin={coin} linkEnabled={coinLinks} />
-                <td>
-                  <WatchlistButton
-                    active={watchlist.includes(coin.coinId)}
-                    animating={watchAnimating === coin.coinId}
-                    onClick={() => watch(coin.coinId)}
-                  />
-                </td>
-                <td>
-                  <VoteButton
-                    active={hasVoted}
-                    animating={animating === coin.coinId}
-                    onClick={() => vote(coin.coinId)}
-                  />
-                </td>
-              </tr>
-            );
-          })}
+          {coins.length > 0 ? (
+            coins.map((coin) => {
+              const hasVoted = voted.includes(coin.coinId);
+              return (
+                <tr
+                  key={coin.coinId}
+                  className={`${coin.boost ? 'boosted-row' : ''} clickable-coin-row`}
+                  onClick={(event) => openCoinRow(event, coin.coinId)}
+                >
+                  <CoinCells coin={coin} linkEnabled={coinLinks} />
+                  <td>
+                    <WatchlistButton
+                      active={watchlist.includes(coin.coinId)}
+                      animating={watchAnimating === coin.coinId}
+                      onClick={() => watch(coin.coinId)}
+                    />
+                  </td>
+                  <td>
+                    <VoteButton
+                      active={hasVoted}
+                      animating={animating === coin.coinId}
+                      onClick={() => vote(coin.coinId)}
+                    />
+                  </td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td className="coins-table-empty" colSpan={11}>
+                {emptyMessage || 'No coins to display.'}
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </TableScroller>

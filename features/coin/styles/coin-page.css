@@ -114,6 +114,8 @@
 .contract-stat {
   min-width: 170px;
   max-width: 210px;
+  display: grid;
+  gap: 6px;
 }
 .coin-heading-trade-presale .contract-stat {
   min-width: 170px;
@@ -192,13 +194,25 @@
   color: var(--copy);
   text-decoration: none;
 }
+.coin-security-chip-box {
+  min-width: 96px;
+  min-height: 32px;
+  display: inline-flex;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+.coin-security-chip.muted .coin-security-chip-box {
+  cursor: default;
+}
 .coin-security-chip b {
-  min-width: 62px;
-  padding: 8px 9px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 9px 0 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 8px;
   border: 1px solid rgba(196, 255, 68, 0.22);
   border-radius: 8px;
   background: rgba(196, 255, 68, 0.055);
@@ -219,6 +233,16 @@
   font-weight: 750;
   white-space: nowrap;
 }
+.coin-security-chip b i {
+  display: inline-grid;
+  width: 30px;
+  min-height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border-right: 1px solid rgba(196, 255, 68, 0.2);
+  color: inherit;
+  font-style: normal;
+}
 .coin-security-chip b svg {
   width: 12px;
   height: 12px;
@@ -226,7 +250,10 @@
 .coin-security-chip.muted b {
   color: var(--sub);
 }
-.coin-security-chip:hover {
+.coin-security-chip.muted b i {
+  border-right-color: var(--border);
+}
+.coin-security-chip-box:hover b {
   border-color: rgba(196, 255, 68, 0.44);
 }
 .coin-heading-actions {
@@ -627,21 +654,28 @@
     var(--font-fira-mono);
 }
 .coin-date-block {
-  min-width: 126px;
-  margin-left: 20px;
+  display: grid;
+  gap: 4px;
 }
 .coin-date-block small {
   color: var(--sub);
-  font-size: 8px;
+  font-size: 7px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 .coin-date-block b {
   color: var(--copy);
   font:
-    500 15px var(--font-jetbrains-mono),
+    500 11px var(--font-jetbrains-mono),
     var(--font-fira-mono);
   white-space: nowrap;
+}
+.coin-presale-schedule {
+  min-width: 126px;
+  margin-left: 20px;
+  display: grid;
+  gap: 6px;
 }
 .coin-primary-actions {
   display: flex;
@@ -1336,23 +1370,77 @@
     flex-direction: column;
   }
   .coin-heading-trade {
+    display: grid;
     width: 100%;
-    justify-content: space-between;
+    align-self: stretch;
+    align-items: stretch;
+    align-content: stretch;
+    justify-content: stretch;
+    justify-items: stretch;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+    padding-top: 16px;
+    padding-left: 0;
+  }
+  .coin-heading-trade > * {
+    width: 100%;
+    max-width: none;
   }
   .coin-heading-trade-presale {
+    width: 100%;
     min-width: 0;
   }
+  .coin-heading-trade-presale .contract-stat {
+    width: 100%;
+    max-width: none;
+  }
   .contract-stat {
+    width: 100%;
     min-width: 0;
     max-width: none;
-    flex: 1;
+    flex: 0 0 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .coin-security-chip,
+  .coin-price-block,
+  .coin-date-block {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
   .contract-stat .contract-box {
-    width: auto;
+    width: 178px;
     margin-left: auto;
+  }
+  .coin-price-block {
+    flex-direction: row;
+    gap: 14px;
+    margin-left: 0;
+    padding: 0;
+  }
+  .coin-date-block {
+    gap: 14px;
+  }
+  .coin-date-block b {
+    text-align: right;
+  }
+  .coin-presale-schedule {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .coin-security-chip-box {
+    width: 96px;
+    min-width: 96px;
+    flex: 0 0 96px;
   }
   .coin-heading-actions {
     justify-content: flex-start;
@@ -1382,11 +1470,9 @@
     padding: 17px;
   }
   .coin-heading-trade {
-    flex-direction: row;
+    align-items: stretch;
+    justify-items: stretch;
     gap: 10px;
-  }
-  .coin-heading-trade-presale {
-    display: flex;
   }
   .contract-stat,
   .coin-security-chip,
@@ -1400,16 +1486,29 @@
   .coin-date-block {
     margin-left: 0;
   }
+  .coin-presale-schedule {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+  }
   .contract-stat .contract-box {
     width: auto;
     max-width: min(62vw, 220px);
     margin-left: auto;
   }
   .coin-heading-trade-presale .contract-stat {
+    width: 100%;
+    max-width: none;
     flex: 0 0 100%;
   }
   .coin-security-chip b {
-    min-width: 62px;
+    width: 96px;
+    min-width: 96px;
+  }
+  .coin-security-chip-box {
+    width: 96px;
+    min-width: 96px;
   }
   .coin-security-chip b,
   .coin-date-block b {
