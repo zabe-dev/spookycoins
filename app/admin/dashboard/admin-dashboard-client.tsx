@@ -25,17 +25,20 @@ import {
   Eye,
   ExternalLink,
   Image as ImageIcon,
+  LayoutDashboard,
   Megaphone,
   Pause,
   Pencil,
   Play,
+  ShieldAlert,
   Search,
   Square,
   Trash2,
+  Users,
   X,
   Zap,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import {
   useEffect,
@@ -156,6 +159,7 @@ type AdminDashboardClientProps = {
   listedCoins: AdminCoinRow[];
   bannerAds: AdminBannerRow[];
   users: AdminUserRow[];
+  initialTab?: string;
 };
 
 type PopoverController = {
@@ -172,6 +176,29 @@ const boostPackages = [
   { value: 500, label: '500x', detail: 'votes ×5 · 168h' },
 ];
 
+const adminTabs = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'submissions', label: 'Submissions', icon: Eye },
+  { id: 'coins', label: 'Coins', icon: ExternalLink },
+  { id: 'promotions', label: 'Promotions', icon: Megaphone },
+  { id: 'banners', label: 'Banner ads', icon: ImageIcon },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'reports', label: 'Reports', icon: ShieldAlert },
+] as const;
+
+type AdminTab = (typeof adminTabs)[number]['id'];
+
+const tabCounts = (summary: AdminSummary) =>
+  ({
+    overview: 0,
+    submissions: summary.pendingSubmissions,
+    coins: summary.coins,
+    promotions: summary.activeBoosts + summary.promotedCoins,
+    banners: summary.activeBanners,
+    users: summary.users,
+    reports: summary.changeRequests,
+  }) satisfies Record<AdminTab, number>;
+
 export function AdminDashboardClient({
   summary,
   pendingSubmissions,
@@ -179,12 +206,99 @@ export function AdminDashboardClient({
   listedCoins,
   bannerAds,
   users,
+  initialTab,
 }: AdminDashboardClientProps) {
   const [activePopoverId, setActivePopoverId] = useState<string | null>(null);
+  const safeInitialTab: AdminTab = isAdminTab(initialTab || null)
+    ? (initialTab as AdminTab)
+    : 'overview';
+  const [activeTab, setActiveTab] = useState<AdminTab>(safeInitialTab);
+  const pathname = usePathname();
+  const router = useRouter();
   const popover = { activePopoverId, setActivePopoverId };
+  const counts = tabCounts(summary);
+  const promotedRows = useMemo(
+    () => listedCoins.filter((coin) => coin.boost || coin.promotion),
+    [listedCoins],
+  );
+
+  function switchTab(nextTab: AdminTab) {
+    setActivePopoverId(null);
+    setActiveTab(nextTab);
+    const params = new URLSearchParams(window.location.search);
+    if (nextTab === 'overview') {
+      params.delete('tab');
+    } else {
+      params.set('tab', nextTab);
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
 
   return (
-    <>
+    <div className="admin-workspace">
+      <nav className="admin-tabs" aria-label="Admin sections">
+        {adminTabs.map((tab) => {
+          const Icon = tab.icon;
+          const count = counts[tab.id];
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={activeTab === tab.id ? 'active' : ''}
+              onClick={() => switchTab(tab.id)}
+            >
+              <Icon aria-hidden="true" />
+              <span>{tab.label}</span>
+              {count > 0 && <b>{count}</b>}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="admin-tab-panel">
+        {activeTab === 'overview' && (
+          <AdminOverview
+            summary={summary}
+            pendingSubmissions={pendingSubmissions}
+            changeRequests={changeRequests}
+            promotedRows={promotedRows}
+            bannerAds={bannerAds}
+            onSelectTab={switchTab}
+          />
+        )}
+        {activeTab === 'submissions' && (
+          <PendingSubmissionsTable rows={pendingSubmissions} popover={popover} />
+        )}
+        {activeTab === 'coins' && <ListedCoinsTable rows={listedCoins} popover={popover} />}
+        {activeTab === 'promotions' && <PromotionsTable rows={listedCoins} popover={popover} />}
+        {activeTab === 'banners' && <BannerAdsTable rows={bannerAds} popover={popover} />}
+        {activeTab === 'users' && <UsersTable rows={users} popover={popover} />}
+        {activeTab === 'reports' && <ChangeRequestsTable rows={changeRequests} popover={popover} />}
+      </div>
+    </div>
+  );
+}
+
+function AdminOverview({
+  summary,
+  pendingSubmissions,
+  changeRequests,
+  promotedRows,
+  bannerAds,
+  onSelectTab,
+}: {
+  summary: AdminSummary;
+  pendingSubmissions: AdminSubmissionRow[];
+  changeRequests: AdminChangeRequestRow[];
+  promotedRows: AdminCoinRow[];
+  bannerAds: AdminBannerRow[];
+  onSelectTab: (tab: AdminTab) => void;
+}) {
+  const pausedBanners = bannerAds.filter((banner) => banner.status !== 'active').length;
+
+  return (
+    <section className="admin-overview">
       <div className="admin-dashboard-grid" aria-label="Admin summary">
         <SummaryCard label="Users" value={summary.users} />
         <SummaryCard label="Listed coins" value={summary.coins} />
@@ -195,12 +309,60 @@ export function AdminDashboardClient({
         <SummaryCard label="Change requests" value={summary.changeRequests} />
       </div>
 
-      <PendingSubmissionsTable rows={pendingSubmissions} popover={popover} />
-      <ChangeRequestsTable rows={changeRequests} popover={popover} />
-      <ListedCoinsTable rows={listedCoins} popover={popover} />
-      <BannerAdsTable rows={bannerAds} popover={popover} />
-      <UsersTable rows={users} popover={popover} />
-    </>
+      <div className="admin-attention-grid">
+        <OverviewQueueCard
+          title="Submissions"
+          value={pendingSubmissions.length}
+          label="waiting for review"
+          action="Review submissions"
+          onClick={() => onSelectTab('submissions')}
+        />
+        <OverviewQueueCard
+          title="Reports"
+          value={changeRequests.filter((request) => request.status === 'pending').length}
+          label="open requests"
+          action="Open reports"
+          onClick={() => onSelectTab('reports')}
+        />
+        <OverviewQueueCard
+          title="Promotions"
+          value={promotedRows.length}
+          label="coins with visibility"
+          action="Manage promotions"
+          onClick={() => onSelectTab('promotions')}
+        />
+        <OverviewQueueCard
+          title="Banner ads"
+          value={pausedBanners}
+          label="paused banners"
+          action="Manage banners"
+          onClick={() => onSelectTab('banners')}
+        />
+      </div>
+    </section>
+  );
+}
+
+function OverviewQueueCard({
+  title,
+  value,
+  label,
+  action,
+  onClick,
+}: {
+  title: string;
+  value: number;
+  label: string;
+  action: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className="admin-queue-card" onClick={onClick}>
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <small>{label}</small>
+      <b>{action} →</b>
+    </button>
   );
 }
 
@@ -520,37 +682,105 @@ function ListedCoinsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Po
                       >
                         <Trash2 aria-hidden="true" />
                       </ConfirmAction>
-                      <BoostAction row={row} popover={popover} />
-                      <PromoteAction row={row} popover={popover} />
-                      <ConfirmAction
-                        popover={popover}
-                        popoverId={`coin-remove-boost-${row.id}`}
-                        action={removeCoinBoost}
-                        title="Cancel active boost"
-                        tone="danger"
-                        message={`Cancel the active boost for ${row.name}? This returns it to the 1x/no-boost baseline immediately.`}
-                        fields={{ coinId: row.id }}
-                        disabled={!row.boost}
-                      >
-                        <Square aria-hidden="true" />
-                      </ConfirmAction>
-                      <ConfirmAction
-                        popover={popover}
-                        popoverId={`coin-remove-promotion-${row.id}`}
-                        action={removePromotedCoin}
-                        title="Cancel promotion"
-                        tone="danger"
-                        message={`Cancel the active promotion for ${row.name}?`}
-                        fields={{ coinId: row.id }}
-                        disabled={!row.promotion}
-                      >
-                        <X aria-hidden="true" />
-                      </ConfirmAction>
                     </ActionGroup>
                   </td>
                 </tr>
               );
             })}
+          </tbody>
+        </table>
+      )}
+    />
+  );
+}
+
+function PromotionsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: PopoverController }) {
+  return (
+    <AdminPanel
+      eyebrow="Visibility"
+      title="Promotions & boosts"
+      count={`${rows.filter((row) => row.boost || row.promotion).length} active`}
+      note="Boosts affect voting power. Promoted placements control paid visibility inventory."
+      rows={rows}
+      searchPlaceholder="Search coin, symbol, or chain"
+      search={(row) => [row.name, row.symbol, row.chain, row.category]}
+      empty="No coins available for promotions yet."
+      renderTable={(visibleRows) => (
+        <table className="admin-table admin-promotions-table">
+          <thead>
+            <tr>
+              <th>Project Name</th>
+              <th>Symbol</th>
+              <th>Chain</th>
+              <th>Status</th>
+              <th>Boost</th>
+              <th>Promoted</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => (
+              <tr key={row.id}>
+                <td>
+                  <strong>{row.name}</strong>
+                  <span className="admin-row-subtext">{row.category}</span>
+                </td>
+                <td>${row.symbol}</td>
+                <td>{row.chain || '—'}</td>
+                <td>
+                  <StatusPill tone={row.status === 'active' ? 'lime' : 'danger'}>
+                    {labelize(row.status)}
+                  </StatusPill>
+                </td>
+                <td>
+                  {row.boost ? (
+                    <StatusPill tone="purple">
+                      {row.boost.tier}x — {row.boost.remaining}
+                    </StatusPill>
+                  ) : (
+                    <span>1x / no boost</span>
+                  )}
+                </td>
+                <td>
+                  {row.promotion ? (
+                    <StatusPill tone="amber">{row.promotion.remaining} left</StatusPill>
+                  ) : (
+                    <span>Not promoted</span>
+                  )}
+                </td>
+                <td>
+                  <ActionGroup>
+                    <CoinPageLinkAction coinId={row.id} name={row.name} />
+                    <BoostAction row={row} popover={popover} />
+                    <PromoteAction row={row} popover={popover} />
+                    <ConfirmAction
+                      popover={popover}
+                      popoverId={`promotion-remove-boost-${row.id}`}
+                      action={removeCoinBoost}
+                      title="Cancel active boost"
+                      tone="danger"
+                      message={`Cancel the active boost for ${row.name}?`}
+                      fields={{ coinId: row.id }}
+                      disabled={!row.boost}
+                    >
+                      <Square aria-hidden="true" />
+                    </ConfirmAction>
+                    <ConfirmAction
+                      popover={popover}
+                      popoverId={`promotion-remove-promotion-${row.id}`}
+                      action={removePromotedCoin}
+                      title="Cancel promotion"
+                      tone="danger"
+                      message={`Cancel the active promotion for ${row.name}?`}
+                      fields={{ coinId: row.id }}
+                      disabled={!row.promotion}
+                    >
+                      <X aria-hidden="true" />
+                    </ConfirmAction>
+                  </ActionGroup>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
@@ -1469,6 +1699,10 @@ function labelize(value: string) {
 
 function isBannerPlacement(value: string | undefined): value is BannerPlacement {
   return bannerPlacements.includes(value as BannerPlacement);
+}
+
+function isAdminTab(value: string | null): value is AdminTab {
+  return adminTabs.some((tab) => tab.id === value);
 }
 
 function defaultAdminDateTime() {

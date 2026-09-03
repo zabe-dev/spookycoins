@@ -34,7 +34,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tab?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect('/');
   if (!hasAdminAccess(session.user.role)) notFound();
@@ -299,6 +304,7 @@ export default async function AdminDashboardPage() {
           listedCoins={listedCoins}
           bannerAds={adminBannerAds}
           users={adminUsers}
+          initialTab={resolvedSearchParams?.tab}
         />
       </section>
       <SiteFooter />

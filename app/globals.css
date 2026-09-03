@@ -2305,11 +2305,79 @@ body.modal-open {
   font-size: 13px;
   line-height: 1.7;
 }
+.admin-workspace {
+  margin-top: 30px;
+}
+.admin-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  border: 1px solid #252c31;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(20, 25, 28, 0.88), rgba(11, 14, 16, 0.94));
+  padding: 8px;
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+.admin-tabs button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  padding: 0 13px;
+  color: #89939a;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+.admin-tabs button:hover,
+.admin-tabs button.active {
+  border-color: rgba(203, 255, 74, 0.24);
+  background: rgba(203, 255, 74, 0.07);
+  color: #f2f4f5;
+}
+.admin-tabs button.active {
+  color: var(--lime);
+}
+.admin-tabs svg {
+  width: 15px;
+  height: 15px;
+}
+.admin-tabs b {
+  min-width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.075);
+  color: #eef1f2;
+  font-size: 8px;
+  line-height: 1;
+}
+.admin-tab-panel {
+  margin-top: 18px;
+}
+.admin-overview {
+  display: grid;
+  gap: 18px;
+}
 .admin-dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 14px;
-  margin-top: 30px;
 }
 .admin-dashboard-grid div {
   display: grid;
@@ -2335,8 +2403,57 @@ body.modal-open {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+.admin-attention-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.admin-queue-card {
+  min-height: 156px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid #252c31;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(20, 25, 28, 0.92), rgba(11, 14, 16, 0.96));
+  padding: 18px;
+  color: #f2f4f5;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+.admin-queue-card:hover {
+  border-color: rgba(203, 255, 74, 0.26);
+  background: linear-gradient(145deg, rgba(24, 31, 24, 0.96), rgba(11, 14, 16, 0.98));
+  transform: translateY(-1px);
+}
+.admin-queue-card span {
+  color: #89939a;
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.admin-queue-card strong {
+  color: #f2f4f5;
+  font:
+    760 30px/1 var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.05em;
+}
+.admin-queue-card small {
+  color: #89939a;
+  font-size: 11px;
+}
+.admin-queue-card b {
+  margin-top: auto;
+  color: var(--lime);
+  font-size: 10px;
+}
 .admin-panel {
-  margin-top: 20px;
   border: 1px solid #252c31;
   border-radius: 16px;
   background: linear-gradient(145deg, rgba(20, 25, 28, 0.96), rgba(11, 14, 16, 0.98));
@@ -2595,6 +2712,9 @@ img.admin-project-logo {
 }
 .banner-admin-table {
   min-width: 1240px;
+}
+.admin-promotions-table {
+  min-width: 1080px;
 }
 .admin-banner-preview-actions {
   display: inline-flex !important;
@@ -4038,8 +4158,34 @@ img.admin-project-logo {
   .admin-dashboard {
     padding-block: 40px 70px;
   }
+  .admin-tabs {
+    margin-inline: -2px;
+    border-radius: 14px;
+    padding: 7px;
+  }
+  .admin-tabs button {
+    min-height: 38px;
+    padding: 0 11px;
+    font-size: 9px;
+  }
   .admin-dashboard-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-attention-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-panel-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .admin-panel-title-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .admin-table-tools {
+    align-items: flex-start;
+    flex-direction: column;
   }
   .settings-shell {
     width: calc(100% - 24px);
