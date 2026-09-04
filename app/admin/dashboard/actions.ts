@@ -407,7 +407,7 @@ export async function createBannerAd(formData: FormData) {
   const adminUser = await requireAdmin();
   const placement = readEnum(formData, 'placement', bannerPlacements);
   const desktopImageUrl = readUrl(formData, 'desktopImageUrl');
-  const mobileImageUrl = readOptionalUrl(formData, 'mobileImageUrl');
+  const mobileImageUrl = readUrl(formData, 'mobileImageUrl');
   const targetUrl = readUrl(formData, 'targetUrl');
   const priority = readBoundedNumber(formData, 'priority', 1, 999);
   const durationDays = readBoundedNumber(formData, 'durationDays', 1, 365);
@@ -422,7 +422,7 @@ export async function createBannerAd(formData: FormData) {
     title,
     subtitle: null,
     desktopImageUrl,
-    mobileImageUrl: mobileImageUrl || null,
+    mobileImageUrl,
     targetUrl,
     status,
     priority,
@@ -461,7 +461,7 @@ export async function updateBannerAd(formData: FormData) {
 
   const placement = readEnum(formData, 'placement', bannerPlacements);
   const desktopImageUrl = readUrl(formData, 'desktopImageUrl');
-  const mobileImageUrl = readOptionalUrl(formData, 'mobileImageUrl');
+  const mobileImageUrl = readUrl(formData, 'mobileImageUrl');
   const targetUrl = readUrl(formData, 'targetUrl');
   const priority = readBoundedNumber(formData, 'priority', 1, 999);
   const notes = readOptional(formData, 'notes');
@@ -489,7 +489,7 @@ export async function updateBannerAd(formData: FormData) {
       title,
       subtitle: null,
       desktopImageUrl,
-      mobileImageUrl: mobileImageUrl || null,
+      mobileImageUrl,
       targetUrl,
       status,
       priority,
@@ -759,12 +759,6 @@ function readEnum<T extends readonly string[]>(formData: FormData, key: string, 
 function readUrl(formData: FormData, key: string) {
   const value = readRequired(formData, key);
   assertUrl(value, key);
-  return value;
-}
-
-function readOptionalUrl(formData: FormData, key: string) {
-  const value = readOptional(formData, key);
-  if (value) assertUrl(value, key);
   return value;
 }
 

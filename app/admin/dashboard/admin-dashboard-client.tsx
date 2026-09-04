@@ -1099,22 +1099,38 @@ function BoostAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCont
       extra={
         <div className="admin-schedule-form">
           {active ? (
-            <label>
-              Add days
-              <input
-                name="extensionDays"
-                type="number"
-                min={1}
-                max={365}
-                value={extensionDays}
-                onChange={(event) =>
-                  setExtensionDays(Math.max(1, Number(event.target.value) || 1))
-                }
-                required
-              />
-            </label>
+            <>
+              <label>
+                Start date (UTC)
+                <input type="date" value={row.boost?.startDate || startDate} disabled />
+              </label>
+              <label>
+                Add days
+                <input
+                  name="extensionDays"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={extensionDays}
+                  onChange={(event) =>
+                    setExtensionDays(Math.max(1, Number(event.target.value) || 1))
+                  }
+                  required
+                />
+              </label>
+            </>
           ) : (
             <>
+              <label>
+                Start date (UTC)
+                <input
+                  name="startDate"
+                  type="date"
+                  min={minStartDate}
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </label>
               <label>
                 Boost tier
                 <select
@@ -1129,21 +1145,11 @@ function BoostAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCont
                   ))}
                 </select>
               </label>
-              <label>
-                Start date (UTC)
-                <input
-                  name="startDate"
-                  type="date"
-                  min={minStartDate}
-                  value={startDate}
-                  onChange={(event) => setStartDate(event.target.value)}
-                />
-              </label>
             </>
           )}
-          <label>
+          <label className="admin-banner-form-wide">
             Notes
-            <input name="notes" placeholder="Internal notes" />
+            <textarea name="notes" placeholder="Internal notes" />
           </label>
           {!active && (
             <small className="admin-banner-form-wide">
@@ -1183,20 +1189,26 @@ function PromoteAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCo
       extra={
         <div className="admin-schedule-form">
           {active ? (
-            <label>
-              Add days
-              <input
-                name="extensionDays"
-                type="number"
-                min={1}
-                max={365}
-                value={extensionDays}
-                onChange={(event) =>
-                  setExtensionDays(Math.max(1, Number(event.target.value) || 1))
-                }
-                required
-              />
-            </label>
+            <>
+              <label>
+                Start date (UTC)
+                <input type="date" value={row.promotion?.startDate || startDate} disabled />
+              </label>
+              <label>
+                Add days
+                <input
+                  name="extensionDays"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={extensionDays}
+                  onChange={(event) =>
+                    setExtensionDays(Math.max(1, Number(event.target.value) || 1))
+                  }
+                  required
+                />
+              </label>
+            </>
           ) : (
             <>
               <label>
@@ -1223,9 +1235,9 @@ function PromoteAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCo
               </label>
             </>
           )}
-          <label>
+          <label className="admin-banner-form-wide">
             Notes
-            <input name="notes" placeholder="Internal notes" />
+            <textarea name="notes" placeholder="Internal notes" />
           </label>
           {!active && (
             <small className="admin-banner-form-wide">
@@ -1304,20 +1316,26 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
             />
           </label>
           {active ? (
-            <label>
-              Add days
-              <input
-                name="extensionDays"
-                type="number"
-                min={0}
-                max={365}
-                value={extensionDays}
-                onChange={(event) =>
-                  setExtensionDays(Math.max(0, Number(event.target.value) || 0))
-                }
-                required
-              />
-            </label>
+            <>
+              <label>
+                Start date (UTC)
+                <input type="date" value={row?.startDate || startDate} disabled />
+              </label>
+              <label>
+                Add days
+                <input
+                  name="extensionDays"
+                  type="number"
+                  min={0}
+                  max={365}
+                  value={extensionDays}
+                  onChange={(event) =>
+                    setExtensionDays(Math.max(0, Number(event.target.value) || 0))
+                  }
+                  required
+                />
+              </label>
+            </>
           ) : (
             <>
               <label>
@@ -1357,6 +1375,16 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
             />
           </label>
           <label className="admin-banner-form-wide">
+            Mobile image URL
+            <input
+              name="mobileImageUrl"
+              value={mobileImageUrl}
+              onChange={(event) => setMobileImageUrl(event.target.value)}
+              placeholder="https://..."
+              required
+            />
+          </label>
+          <label className="admin-banner-form-wide">
             Target URL
             <input
               name="targetUrl"
@@ -1364,15 +1392,6 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
               onChange={(event) => setTargetUrl(event.target.value)}
               placeholder="https://..."
               required
-            />
-          </label>
-          <label className="admin-banner-form-wide">
-            Mobile image URL
-            <input
-              name="mobileImageUrl"
-              value={mobileImageUrl}
-              onChange={(event) => setMobileImageUrl(event.target.value)}
-              placeholder="Optional mobile creative URL"
             />
           </label>
           <label className="admin-banner-form-wide">
@@ -1444,24 +1463,21 @@ function UserEditAction({ row, popover }: { row: AdminUserRow; popover: PopoverC
       message={changes.length ? changes.join(' ') : 'No changes selected.'}
       fields={{
         userId: row.id,
-        name,
-        email,
-        role,
         banned: row.status === 'suspended' ? 'on' : '',
       }}
       extra={
         <>
           <label>
             Name
-            <input value={name} onChange={(event) => setName(event.target.value)} />
+            <input name="name" value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label>
             Email
-            <input value={email} onChange={(event) => setEmail(event.target.value)} />
+            <input name="email" value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <label>
             Role
-            <select value={role} onChange={(event) => setRole(event.target.value)}>
+            <select name="role" value={role} onChange={(event) => setRole(event.target.value)}>
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>

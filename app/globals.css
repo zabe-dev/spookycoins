@@ -2875,6 +2875,14 @@ img.admin-project-logo {
 .admin-confirm-popover textarea:focus {
   border-color: rgba(196, 255, 68, 0.55);
 }
+.admin-confirm-popover input:disabled,
+.admin-confirm-popover select:disabled,
+.admin-confirm-popover textarea:disabled {
+  cursor: not-allowed;
+  border-color: rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(238, 241, 242, 0.58);
+}
 .admin-confirm-popover select {
   appearance: none;
   padding-right: 34px;
@@ -3139,12 +3147,23 @@ img.admin-project-logo {
   margin-top: 14px;
   color: var(--sub, #78838b);
   font-size: 10px;
+  overflow: hidden;
+}
+.admin-pagination > span {
+  flex: 0 0 auto;
+  max-width: 44%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .admin-pagination > div {
   display: flex;
-  flex-wrap: wrap;
+  flex: 1;
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  gap: 7px;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
 .admin-pagination button {
   min-height: 32px;
@@ -3171,12 +3190,22 @@ img.admin-project-logo {
 }
 @media (max-width: 640px) {
   .admin-pagination {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    gap: 8px;
   }
   .admin-pagination > div {
-    justify-content: flex-start;
-    width: 100%;
+    justify-content: flex-end;
+    width: auto;
+    gap: 4px;
+  }
+  .admin-pagination > span {
+    max-width: 38%;
+  }
+  .admin-pagination button {
+    min-height: 29px;
+    padding: 7px 9px;
+    font-size: 8px;
   }
 }
 .admin-actions-stack {

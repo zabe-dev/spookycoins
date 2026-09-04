@@ -580,8 +580,8 @@
   }
 }
 .wide-banner {
-  min-height: 120px;
-  height: 120px;
+  min-height: 90px;
+  height: 90px;
   margin-top: 18px;
   border: 1px solid #34311e;
   background: linear-gradient(100deg, #15140f, #1c1810 55%, #111519);
@@ -593,15 +593,15 @@
 }
 .wide-banner-image {
   position: relative;
-  min-height: 120px;
-  height: 120px;
+  min-height: 90px;
+  height: 90px;
   overflow: hidden;
   padding: 0;
   text-decoration: none;
 }
 .wide-banner-overlay {
-  min-height: 120px;
-  height: 120px;
+  min-height: 90px;
+  height: 90px;
   align-content: center;
   padding: 18px 22px;
 }
@@ -849,9 +849,13 @@
   padding: 16px 2px;
   color: var(--sub);
   font-size: 10px;
+  overflow: hidden;
 }
 .pagination > span {
   flex: 0 0 auto;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .pagination > div {
@@ -861,6 +865,7 @@
   justify-content: flex-end;
   gap: 4px;
   min-width: 0;
+  overflow: hidden;
 }
 .pagination button {
   display: inline-grid;
@@ -886,6 +891,16 @@
 .pagination button svg {
   width: 14px;
   height: 14px;
+}
+.pagination-ellipsis {
+  display: inline-grid;
+  min-width: 22px;
+  height: 30px;
+  place-items: center;
+  color: rgba(135, 146, 158, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+  user-select: none;
 }
 .pagination button.active {
   border-color: rgba(203, 255, 74, 0.72);
@@ -1526,10 +1541,18 @@
     width: auto;
     gap: 2px;
   }
+  .pagination > span {
+    max-width: 38%;
+  }
   .pagination button {
     min-width: 23px;
     height: 26px;
     border-radius: 7px;
+    font-size: 8px;
+  }
+  .pagination-ellipsis {
+    min-width: 14px;
+    height: 26px;
     font-size: 8px;
   }
   .info-band {
@@ -2185,8 +2208,8 @@
   .wide-banner,
   .wide-banner-image,
   .wide-banner-overlay {
-    min-height: 120px;
-    height: 120px;
+    min-height: 90px;
+    height: 90px;
   }
 }
 

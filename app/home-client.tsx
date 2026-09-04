@@ -34,6 +34,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 
 type LeaderboardView =
   'Top coins' | 'Trending coins' | 'Presale coins' | 'Most watched' | 'Launched recently';
+type PaginationItem = number | 'ellipsis-left' | 'ellipsis-right';
 
 const viewParams: Record<LeaderboardView, string> = {
   'Top coins': 'top',
@@ -91,6 +92,7 @@ export function HomeClient({
     [interactionNotice, setInteractionNotice] = useState(''),
     [adVisible, setAdVisible] = useState(true),
     [authOpen, setAuthOpen] = useState(false),
+    [paginationSize, setPaginationSize] = useState(20),
     [hotspotRefresh, setHotspotRefresh] = useState(0),
     [viewParamExplicit, setViewParamExplicit] = useState(false),
     [urlReady, setUrlReady] = useState(false);
@@ -185,6 +187,21 @@ export function HomeClient({
     const timer = window.setInterval(() => setHotspotRefresh((tick) => tick + 1), 30_000);
     return () => window.clearInterval(timer);
   }, [hotspotsVisible]);
+  useEffect(() => {
+    const updatePaginationSize = () => {
+      if (window.matchMedia('(max-width: 520px)').matches) {
+        setPaginationSize(3);
+      } else if (window.matchMedia('(max-width: 900px)').matches) {
+        setPaginationSize(7);
+      } else {
+        setPaginationSize(20);
+      }
+    };
+
+    updatePaginationSize();
+    window.addEventListener('resize', updatePaginationSize);
+    return () => window.removeEventListener('resize', updatePaginationSize);
+  }, []);
   const hotspotCoins = (() => {
     void hotspotRefresh;
 
@@ -230,7 +247,7 @@ export function HomeClient({
       .slice((page - 1) * 25, page * 25)
       .map((coin, index) => ({ ...coin, rank: (page - 1) * 25 + index + 1 })),
     pages = Math.max(1, Math.ceil(displayedCoins.length / 25));
-  const visiblePageNumbers = getVisiblePageNumbers(page, pages);
+  const visiblePageItems = getVisiblePageItems(page, pages, paginationSize);
   const sortBy = (key: CoinSortKey) => {
     setSort((s) => ({
       key,
@@ -721,11 +738,21 @@ export function HomeClient({
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
               <ChevronLeft aria-hidden="true" />
             </button>
-            {visiblePageNumbers.map((n) => (
-              <button key={n} className={page === n ? 'active' : ''} onClick={() => setPage(n)}>
-                {n}
-              </button>
-            ))}
+            {visiblePageItems.map((item) =>
+              typeof item === 'number' ? (
+                <button
+                  key={item}
+                  className={page === item ? 'active' : ''}
+                  onClick={() => setPage(item)}
+                >
+                  {item}
+                </button>
+              ) : (
+                <span className="pagination-ellipsis" key={item} aria-hidden="true">
+                  ...
+                </span>
+              ),
+            )}
             <button disabled={page === pages} onClick={() => setPage((p) => p + 1)}>
               <ChevronRight aria-hidden="true" />
             </button>
@@ -800,13 +827,32 @@ function sortByNewestLaunch(a: CoinListItem, b: CoinListItem) {
   return dateValue(b.launchTimestamp) - dateValue(a.launchTimestamp);
 }
 
-function getVisiblePageNumbers(currentPage: number, totalPages: number) {
-  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
-  if (currentPage <= 3) return [1, 2, 3, 4, totalPages];
-  if (currentPage >= totalPages - 2) {
-    return [1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+function getVisiblePageItems(
+  currentPage: number,
+  totalPages: number,
+  maxVisibleNumbers: number,
+): PaginationItem[] {
+  const visibleNumbers = Math.max(3, maxVisibleNumbers);
+  if (totalPages <= visibleNumbers) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
   }
-  return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
+
+  const innerSlots = Math.max(1, visibleNumbers - 2);
+  let start = Math.max(2, currentPage - Math.floor(innerSlots / 2));
+  const end = Math.min(totalPages - 1, start + innerSlots - 1);
+
+  if (end - start + 1 < innerSlots) {
+    start = Math.max(2, end - innerSlots + 1);
+  }
+
+  const items: PaginationItem[] = [1];
+  if (start > 2) items.push('ellipsis-left');
+  for (let pageNumber = start; pageNumber <= end; pageNumber += 1) {
+    items.push(pageNumber);
+  }
+  if (end < totalPages - 1) items.push('ellipsis-right');
+  items.push(totalPages);
+  return items;
 }
 
 function isLaunchedRecentlyCandidate(coin: CoinListItem) {

@@ -61,7 +61,7 @@ const bannerPlacements = [
   },
   {
     placement: 'Full-width banner',
-    size: '1320 × 120 desktop · 320 × 120 mobile',
+    size: '1320 × 90 desktop · 320 × 90 mobile',
     price: '$60/day',
     mobile: 'Runs across wide banner spots.',
     note: 'A larger placement used across homepage, coin pages, dashboard, and watchlists.',
