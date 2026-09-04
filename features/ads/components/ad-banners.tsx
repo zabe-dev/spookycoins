@@ -24,6 +24,29 @@ function useSelectedAd(ads: PublicBannerAd[] = [], offset = 0, rotating = false)
   return activeAds[(index + offset) % activeAds.length] ?? activeAds[0];
 }
 
+function useSelectedBasicAdPair(ads: PublicBannerAd[] = [], offset = 0) {
+  const activeAds = useMemo(() => ads.filter((ad) => ad.desktopImageUrl), [ads]);
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (activeAds.length < 2) return;
+    const timer = window.setInterval(() => setIndex((current) => current + 1), 7000);
+    return () => window.clearInterval(timer);
+  }, [activeAds.length]);
+
+  if (activeAds.length === 0) {
+    return { firstAd: null, secondAd: null };
+  }
+
+  const firstIndex = (index + offset) % activeAds.length;
+  const secondIndex = activeAds.length > 1 ? (firstIndex + 1) % activeAds.length : -1;
+
+  return {
+    firstAd: activeAds[firstIndex] ?? activeAds[0],
+    secondAd: secondIndex >= 0 ? activeAds[secondIndex] : null,
+  };
+}
+
 function AdBadge() {
   return <span className="ad-creative-badge">Ad</span>;
 }
@@ -144,8 +167,7 @@ function BasicBannerSlot({
 }
 
 export function BasicAdBannerPair({ ads = [], offset = 0 }: BannerProps) {
-  const firstAd = useSelectedAd(ads, offset, true);
-  const secondAd = useSelectedAd(ads, offset + 1, true);
+  const { firstAd, secondAd } = useSelectedBasicAdPair(ads, offset);
 
   return (
     <div className="container basic-ad-grid">
