@@ -35,7 +35,11 @@ export async function POST(_request: Request, { params }: RouteContext) {
     });
 
     if (!result.ok) {
-      return apiError(result.code, result.message, 429);
+      return apiError(result.code, result.message, 429, {
+        coinId,
+        nextVoteAt: result.nextVoteAt,
+        summary: result.summary,
+      });
     }
 
     return apiSuccess(

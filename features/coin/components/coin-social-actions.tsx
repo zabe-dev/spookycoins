@@ -1,11 +1,12 @@
 import { Icon as IconifyIcon } from '@iconify/react';
-import { Flag, Share2 } from 'lucide-react';
+import { Compass, Flag, Share2 } from 'lucide-react';
 import type { CoinProjectLink } from '@/features/coins/types';
 
-type SocialKind = 'share' | 'report';
+type SocialKind = 'explorer' | 'share' | 'report';
 type ProjectLinkKind = CoinProjectLink['type'];
 
 const icons = {
+  explorer: Compass,
   share: Share2,
   report: Flag,
 };
@@ -39,17 +40,25 @@ function ProjectLinkIcon({ kind }: { kind: ProjectLinkKind }) {
 
 export function CoinSocialActions({
   links = [],
+  explorerUrl,
   onShare,
   onReport,
 }: {
   links?: CoinProjectLink[];
+  explorerUrl?: string | null;
   onShare: () => void;
   onReport: () => void;
 }) {
   return (
     <div className="coin-social-actions">
-      {links.length > 0 && (
+      {(links.length > 0 || explorerUrl) && (
         <div className="official-links">
+          {explorerUrl && (
+            <a className="explorer-action" href={explorerUrl} target="_blank" rel="noreferrer">
+              <Icon kind="explorer" />
+              <span>Explorer</span>
+            </a>
+          )}
           {links.map((link) => (
             <a
               className={`project-link-action project-link-${link.type}`}

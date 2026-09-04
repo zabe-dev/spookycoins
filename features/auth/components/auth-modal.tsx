@@ -24,6 +24,14 @@ const emailPasswordSchema = z.object({
   password: z.string().min(8, 'Password needs at least 8 characters.'),
 });
 
+const signupSchema = emailPasswordSchema.extend({
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Name needs at least 2 characters.')
+    .max(60, 'Name must be 60 characters or less.'),
+});
+
 const emailSchema = z.object({
   email: z.string().trim().email('Use a real email address so we can send the reset code.'),
 });
@@ -181,7 +189,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   async function submitEmailPassword(form: FormData) {
-    const parsedCredentials = emailPasswordSchema.safeParse({
+    const parsedCredentials = (mode === 'signup' ? signupSchema : emailPasswordSchema).safeParse({
+      name: String(form.get('name') || ''),
       email: String(form.get('email') || ''),
       password: String(form.get('password') || ''),
     });
@@ -204,8 +213,8 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         throw new Error(error.message || 'Login failed.');
       }
 
-      // signup path — unchanged, still needs finally to reset loading since no navigation happens
-      const name = getNameFromEmail(email);
+      const name =
+        mode === 'signup' ? (parsedCredentials.data as z.infer<typeof signupSchema>).name : '';
       const { error } = await authClient.signUp.email({ email, password, name });
       if (!error) {
         try {
@@ -508,6 +517,20 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
             </label>
           ) : (
             <>
+              {mode === 'signup' && (
+                <label>
+                  Name
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="Your name"
+                    autoComplete="name"
+                    minLength={2}
+                    maxLength={60}
+                    required
+                  />
+                </label>
+              )}
               <label>
                 Email address
                 <input
@@ -553,10 +576,6 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       </div>
     </div>
   );
-}
-
-function getNameFromEmail(email: string) {
-  return email.split('@')[0] || 'SpookyCoins user';
 }
 
 function AuthFeedbackMessage({ feedback }: { feedback: NonNullable<AuthFeedback> }) {

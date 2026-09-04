@@ -3,6 +3,7 @@
 
 import { BoltIcon } from '@/features/coins/components';
 import { FormattedPrice } from '@/features/coins/components/formatted-price';
+import { getNetworkConfig } from '@/features/coins/networks';
 import { Icon as IconifyIcon } from '@iconify/react';
 import { Check, Copy } from 'lucide-react';
 import type { CoinDetailView } from '../types';
@@ -47,6 +48,9 @@ export function CoinHero({
   onReport: () => void;
 }) {
   const hasContract = Boolean(coin.contractAddress && contractAddress && contractAddress !== '—');
+  const explorerUrl = hasContract
+    ? getNetworkConfig(coin.network).explorerAddressUrl?.(contractAddress)
+    : null;
 
   return (
     <section className="container coin-hero">
@@ -128,7 +132,12 @@ export function CoinHero({
         </div>
       </div>
       <div className="coin-heading-actions">
-        <CoinSocialActions links={coin.links} onShare={onShare} onReport={onReport} />
+        <CoinSocialActions
+          links={coin.links}
+          explorerUrl={explorerUrl}
+          onShare={onShare}
+          onReport={onReport}
+        />
       </div>
     </section>
   );

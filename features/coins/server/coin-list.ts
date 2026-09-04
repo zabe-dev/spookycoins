@@ -233,6 +233,7 @@ function mapDbCoinToCoin({
       trendingScore: interactions?.trendingScore || 0,
       watchlistCount: interactions?.watchlistCount || 0,
       userHasVoted: interactions?.userHasVoted || false,
+      nextVoteAt: interactions?.nextVoteAt || null,
       userWatching: interactions?.userWatching || false,
     },
   };

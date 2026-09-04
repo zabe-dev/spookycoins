@@ -16,13 +16,18 @@ export function apiSuccess<T>(data: T, message = 'Request completed.') {
   });
 }
 
-export function apiError(code: string, message: string, status = 400) {
-  return NextResponse.json<ApiResponse<never>>(
+export function apiError<T = never>(
+  code: string,
+  message: string,
+  status = 400,
+  data: T | null = null,
+) {
+  return NextResponse.json<ApiResponse<T>>(
     {
       success: false,
       code,
       message,
-      data: null,
+      data,
     },
     { status },
   );

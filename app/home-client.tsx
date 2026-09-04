@@ -192,7 +192,7 @@ export function HomeClient({
         .slice(0, 4),
       trending: [...marketCoins]
         .filter((coin) => coin.trendingScore > 0)
-        .sort(sortByTrendingScore)
+        .sort(sortByTrendingHotspotScore)
         .slice(0, 4),
       presales: [...marketCoins]
         .filter(isActivePresaleCandidate)
@@ -803,6 +803,19 @@ function sortByWatchCount(a: CoinListItem, b: CoinListItem) {
 
 function sortByTrendingScore(a: CoinListItem, b: CoinListItem) {
   return b.trendingScore - a.trendingScore || b.votes - a.votes || a.name.localeCompare(b.name);
+}
+
+function sortByTrendingHotspotScore(a: CoinListItem, b: CoinListItem) {
+  return (
+    getTrendingHotspotScore(b) - getTrendingHotspotScore(a) ||
+    b.rawVotes - a.rawVotes ||
+    b.watchCount - a.watchCount ||
+    a.name.localeCompare(b.name)
+  );
+}
+
+function getTrendingHotspotScore(coin: CoinListItem) {
+  return coin.trendingScore || coin.recentVotes * 3 + coin.recentWatchlistAdds * 2;
 }
 
 function sortByVotes(a: CoinListItem, b: CoinListItem) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { PremiumAdBanner } from '@/features/ads/components/ad-banners';
@@ -41,6 +41,7 @@ export function CoinDetailPage({
   const isSuspended = canonicalCoin.listingStatus !== 'active';
   const [voted, setVoted] = useState(coin.hasVoted);
   const [watched, setWatched] = useState(coin.isWatching);
+  const [nextVoteAt, setNextVoteAt] = useState<string | null>(coin.nextVoteAt);
   const [notice, setNotice] = useState('');
   const [authOpen, setAuthOpen] = useState(false);
   const [contractCopied, setContractCopied] = useState(false);
@@ -48,6 +49,21 @@ export function CoinDetailPage({
   const [changeRequestIntent, setChangeRequestIntent] = useState<'change' | 'report'>('change');
   const [voteAnimating, setVoteAnimating] = useState(false);
   const [watchAnimating, setWatchAnimating] = useState(false);
+
+  useEffect(() => {
+    if (!voted || !nextVoteAt) return;
+    const remainingMs = new Date(nextVoteAt).getTime() - Date.now();
+    if (!Number.isFinite(remainingMs)) return;
+    const timer = window.setTimeout(
+      () => {
+        setVoted(false);
+        setNextVoteAt(null);
+        setCoin((current) => ({ ...current, hasVoted: false, nextVoteAt: null }));
+      },
+      Math.max(0, remainingMs),
+    );
+    return () => window.clearTimeout(timer);
+  }, [nextVoteAt, voted]);
 
   async function vote() {
     if (voted) return;
@@ -76,6 +92,12 @@ export function CoinDetailPage({
     const response = await fetch(`/api/coins/${coin.coinId}/vote`, { method: 'POST' });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (body.code === 'VOTE_COOLDOWN') {
+        if (body.data?.nextVoteAt) setNextVoteAt(body.data.nextVoteAt);
+        updateInteractionSummary(body.data?.summary);
+        return;
+      }
+      if (body.data?.nextVoteAt) setNextVoteAt(body.data.nextVoteAt);
       setVoted(false);
       setCoin((current) => ({
         ...current,
@@ -90,6 +112,7 @@ export function CoinDetailPage({
       return;
     }
 
+    if (body.data?.nextVoteAt) setNextVoteAt(body.data.nextVoteAt);
     updateInteractionSummary(body.data?.summary);
   }
 
@@ -258,6 +281,7 @@ export function CoinDetailPage({
           trendingScore?: number;
           watchlistCount?: number;
           userHasVoted?: boolean;
+          nextVoteAt?: string | null;
           userWatching?: boolean;
         }
       | undefined,
@@ -276,10 +300,12 @@ export function CoinDetailPage({
         trend: summary.trendingScore ?? current.trend,
         watchCount: summary.watchlistCount ?? current.watchCount,
         hasVoted: summary.userHasVoted ?? current.hasVoted,
+        nextVoteAt: summary.nextVoteAt ?? current.nextVoteAt,
         isWatching: summary.userWatching ?? current.isWatching,
       };
     });
     if (typeof summary.userHasVoted === 'boolean') setVoted(summary.userHasVoted);
+    if ('nextVoteAt' in summary) setNextVoteAt(summary.nextVoteAt ?? null);
     if (typeof summary.userWatching === 'boolean') setWatched(summary.userWatching);
   }
 
@@ -294,6 +320,7 @@ export function CoinDetailPage({
           trendingScore?: number;
           watchlistCount?: number;
           userHasVoted?: boolean;
+          nextVoteAt?: string | null;
           userWatching?: boolean;
         }
       | undefined,
@@ -315,6 +342,7 @@ export function CoinDetailPage({
                 trend: summary.trendingScore ?? row.trend,
                 watchCount: summary.watchlistCount ?? row.watchCount,
                 hasVoted: summary.userHasVoted ?? row.hasVoted,
+                nextVoteAt: summary.nextVoteAt ?? row.nextVoteAt,
                 isWatching: summary.userWatching ?? row.isWatching,
               };
             })()
@@ -353,7 +381,7 @@ export function CoinDetailPage({
       await navigator.clipboard.writeText(url);
       setNotice('Coin page link copied.');
     } catch {
-      setNotice('Could not share this coin right now.');
+      return;
     }
   }
 
@@ -412,6 +440,7 @@ export function CoinDetailPage({
           watched={watched}
           voteAnimating={voteAnimating}
           watchAnimating={watchAnimating}
+          nextVoteAt={nextVoteAt}
           actionsDisabled={isSuspended}
           onVote={vote}
           onToggleWatch={toggleWatch}

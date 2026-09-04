@@ -124,6 +124,7 @@ export type CoinCommunityData = {
   trendingScore: number;
   watchlistCount: number;
   userHasVoted?: boolean;
+  nextVoteAt?: string | null;
   userWatching?: boolean;
 };
 

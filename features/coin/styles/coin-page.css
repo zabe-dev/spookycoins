@@ -284,23 +284,29 @@
 .coin-social-actions a,
 .coin-social-actions button {
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 12px;
   display: flex;
   place-items: center;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface2);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.028);
   color: var(--sub);
   cursor: pointer;
   font-size: 9px;
-  font-weight: 650;
+  font-weight: 750;
+  letter-spacing: 0.02em;
   text-decoration: none;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
 }
 .coin-social-actions a:hover,
 .coin-social-actions button:hover {
-  border-color: #465057;
+  border-color: rgba(196, 255, 68, 0.24);
+  background: rgba(255, 255, 255, 0.045);
   color: var(--copy);
 }
 .coin-social-actions svg {
@@ -318,18 +324,47 @@
   stroke: none;
 }
 .coin-social-actions .share-action {
-  border-color: rgba(196, 255, 68, 0.32);
-  background: rgba(196, 255, 68, 0.08);
-  color: var(--lime);
+  border-color: rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.028);
+  color: #b7c0c6;
 }
 .coin-social-actions .report-action {
-  border-color: rgba(230, 110, 115, 0.28);
-  background: rgba(230, 110, 115, 0.07);
-  color: #e98a8e;
+  border-color: rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.028);
+  color: #b7c0c6;
+}
+.coin-social-actions .detail-watch {
+  border-color: rgba(255, 255, 255, 0.075);
+  background: rgba(255, 255, 255, 0.028);
+  color: #b7c0c6;
+  white-space: nowrap;
+}
+.coin-social-actions .detail-watch > span:last-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+.coin-social-actions .detail-watch.active {
+  color: #ffc83d;
+  border-color: currentColor;
+  background: rgba(255, 200, 61, 0.055);
+}
+.coin-social-actions .share-action:hover {
+  border-color: rgba(255, 156, 43, 0.44);
+  background: rgba(255, 156, 43, 0.08);
+  color: #ffad45;
+}
+.coin-social-actions .detail-watch:hover {
+  color: #ffc83d;
+  border-color: rgba(255, 200, 61, 0.44);
+  background: rgba(255, 200, 61, 0.075);
 }
 .coin-social-actions .report-action:hover {
-  color: #e66e73;
-  border-color: rgba(230, 110, 115, 0.55);
+  color: #ff9a9f;
+  border-color: rgba(230, 110, 115, 0.42);
+  background: rgba(230, 110, 115, 0.07);
 }
 .coin-social-actions .project-link-action {
   color: var(--copy);
@@ -724,13 +759,44 @@
 .coin-primary-actions .detail-watch > span:last-child {
   white-space: nowrap;
 }
+.vote-wait-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 12px;
+}
+.vote-wait-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: vote-dot-bounce 0.9s ease-in-out infinite;
+}
+.vote-wait-dots i:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.vote-wait-dots i:nth-child(3) {
+  animation-delay: 0.24s;
+}
+@keyframes vote-dot-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
 .detail-watch {
   background: var(--surface);
   color: var(--copy);
 }
 .detail-watch.active {
   color: #ffc83d;
-  border-color: rgba(255, 200, 61, 0.35);
+  border-color: currentColor;
 }
 .detail-watch:disabled,
 .detail-vote:disabled,
@@ -753,7 +819,7 @@
 .detail-watch.just-watched,
 .detail-vote.just-voted,
 .sidebar-vote.just-voted {
-  animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
+  animation: none;
 }
 .coin-layout {
   display: grid;
@@ -1164,6 +1230,17 @@
 .voting-card .detail-watch svg {
   flex: 0 0 auto;
 }
+.voting-card .detail-watch.active {
+  border-color: currentColor;
+}
+.detail-watch.just-watched .action-burst i,
+.detail-vote.just-voted .action-burst i,
+.sidebar-vote.just-voted .action-burst i,
+.detail-watch.just-watched > span:last-child,
+.detail-vote.just-voted .action-button__label,
+.sidebar-vote.just-voted .action-button__label {
+  animation: none;
+}
 .vote-rule {
   display: block;
   margin-top: 10px;
@@ -1172,22 +1249,44 @@
   font-size: 9px;
 }
 .boost-card-detail {
+  position: relative;
   padding: 17px;
   display: grid;
   grid-template-columns: 38px 1fr;
   gap: 12px;
   align-items: start;
-  border-color: rgba(255, 196, 47, 0.28);
-  background: linear-gradient(135deg, rgba(255, 196, 47, 0.09), transparent 58%), var(--surface);
+  overflow: hidden;
+  border-color: var(--border);
+  background: #17130b;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.035) inset,
+    0 14px 34px rgba(0, 0, 0, 0.24);
+}
+.boost-card-detail::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff9f1c, #fff1a8, #ffc42f, transparent);
+  background-size: 220% 100%;
+  opacity: 0.92;
+  animation: boost-bottom-glow 4.8s ease-in-out infinite;
+}
+.boost-card-copy {
+  position: relative;
+  z-index: 1;
 }
 .boost-card-icon {
+  position: relative;
+  z-index: 1;
   width: 38px;
   height: 38px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 196, 47, 0.24);
+  border: 1px solid rgba(255, 196, 47, 0.46);
   border-radius: 12px;
-  background: rgba(255, 196, 47, 0.08);
+  background: #241b0a;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
 .boost-card-icon svg {
   width: 19px;
@@ -1206,12 +1305,27 @@
   margin: 3px 0;
   font-size: 16px;
 }
+.boost-card-detail h3 {
+  color: #fff3bf;
+}
 .boost-card-detail p,
 .boost-cta-card p {
   margin: 0;
   color: var(--sub);
   font-size: 9px;
   line-height: 1.55;
+}
+.boost-card-detail p {
+  color: #d8cda9;
+}
+@keyframes boost-bottom-glow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 .boost-cta-card {
   padding: 17px;
@@ -1555,7 +1669,8 @@
 @media (prefers-reduced-motion: reduce) {
   .detail-watch.just-watched,
   .detail-vote.just-voted,
-  .sidebar-vote.just-voted {
+  .sidebar-vote.just-voted,
+  .boost-card-detail::before {
     animation: none;
   }
 }

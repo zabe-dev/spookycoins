@@ -13,6 +13,7 @@ export function CoinSidebar({
   watched,
   voteAnimating,
   watchAnimating,
+  nextVoteAt,
   actionsDisabled = false,
   onVote,
   onToggleWatch,
@@ -23,6 +24,7 @@ export function CoinSidebar({
   watched: boolean;
   voteAnimating: boolean;
   watchAnimating: boolean;
+  nextVoteAt: string | null;
   actionsDisabled?: boolean;
   onVote: () => void;
   onToggleWatch: () => void;
@@ -52,6 +54,7 @@ export function CoinSidebar({
           onClick={onVote}
           appearance="sidebar"
           coinName={coin.symbol}
+          cooldownUntil={nextVoteAt}
           disabled={actionsDisabled}
         />
         <WatchlistButton
@@ -75,7 +78,7 @@ export function CoinSidebar({
           <div className="boost-card-copy">
             <small>ACTIVE BOOST</small>
             <h3>{coin.boost}× vote boost</h3>
-            <p>This coin gets extra voting power while the boost is active.</p>
+            <p>Votes count higher while active.</p>
           </div>
         </section>
       ) : (
@@ -86,7 +89,7 @@ export function CoinSidebar({
           <div>
             <small>BOOST VISIBILITY</small>
             <h3>Boost this coin</h3>
-            <p>Boost this project and make every vote count for more.</p>
+            <p>Make every vote count more.</p>
           </div>
           <Link href="/advertise">View boost packages ↗</Link>
         </section>

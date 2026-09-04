@@ -14,6 +14,7 @@ type InteractionSummary = {
   trendingScore: number;
   watchlistCount: number;
   userHasVoted: boolean;
+  nextVoteAt: string | null;
   userWatching: boolean;
 };
 
@@ -31,6 +32,7 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
       trendingScore: 0,
       watchlistCount: 0,
       userHasVoted: false,
+      nextVoteAt: null,
       userWatching: false,
     });
   });
@@ -82,7 +84,7 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
       .groupBy(coinWatchlists.coinId),
     userId
       ? db
-          .select({ coinId: coinVotes.coinId })
+          .select({ coinId: coinVotes.coinId, createdAt: coinVotes.createdAt })
           .from(coinVotes)
           .where(
             and(
@@ -91,6 +93,7 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
               sql`${coinVotes.createdAt} > ${cooldownStartIso}::timestamptz`,
             ),
           )
+          .orderBy(desc(coinVotes.createdAt))
       : Promise.resolve([]),
     userId
       ? db
@@ -127,7 +130,17 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
   summaries.forEach((summary) => {
     summary.trendingScore = summary.recentVotes * 3 + summary.recentWatchlistAdds * 2;
   });
-  userVotes.forEach((row) => setSummaryValue(summaries, row.coinId, 'userHasVoted', true));
+  userVotes.forEach((row) => {
+    const summary = summaries.get(row.coinId);
+    if (summary?.userHasVoted) return;
+    setSummaryValue(summaries, row.coinId, 'userHasVoted', true);
+    setSummaryValue(
+      summaries,
+      row.coinId,
+      'nextVoteAt',
+      addHours(row.createdAt, voteCooldownHours).toISOString(),
+    );
+  });
   userWatchlist.forEach((row) => setSummaryValue(summaries, row.coinId, 'userWatching', true));
 
   return summaries;

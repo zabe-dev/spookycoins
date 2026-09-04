@@ -1,5 +1,5 @@
 import { NETWORKS } from './networks';
-import type { Coin, CoinCategory } from './types';
+import type { Coin, CoinCategory, NetworkId } from './types';
 
 const logoColors = ['cyan', 'orange', 'pink', 'blue', 'green', 'yellow', 'red', 'violet'] as const;
 
@@ -12,6 +12,7 @@ export type CoinListItem = {
   lifecycle: 'launched' | 'presale';
   listingStatus: string;
   chain: string;
+  network: NetworkId;
   networkName: string;
   chainIcon: string | null;
   logo: string;
@@ -43,6 +44,7 @@ export type CoinListItem = {
   trendingScore: number;
   watchCount: number;
   hasVoted: boolean;
+  nextVoteAt: string | null;
   isWatching: boolean;
   age: string;
   submittedTimestamp: string;
@@ -108,6 +110,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     lifecycle: coin.lifecycle,
     listingStatus: coin.listingStatus,
     chain: NETWORKS[coin.network].shortName,
+    network: coin.network,
     networkName: NETWORKS[coin.network].name,
     chainIcon: NETWORKS[coin.network].iconUrl,
     logo: coin.symbol.slice(0, 1),
@@ -146,6 +149,7 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
     trendingScore: coin.community.trendingScore,
     watchCount: coin.community.watchlistCount,
     hasVoted: Boolean(coin.community.userHasVoted),
+    nextVoteAt: coin.community.nextVoteAt || null,
     isWatching: Boolean(coin.community.userWatching),
     age: formatTimeAgo(coin.submittedAt),
     submittedTimestamp: coin.submittedAt,

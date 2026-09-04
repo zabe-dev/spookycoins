@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Check, Star } from 'lucide-react';
 
 export function ActionBurst() {
@@ -53,6 +53,7 @@ export function VoteButton({
   onClick,
   appearance = 'table',
   coinName,
+  cooldownUntil,
 }: {
   active: boolean;
   animating?: boolean;
@@ -60,17 +61,27 @@ export function VoteButton({
   onClick: () => void;
   appearance?: 'table' | 'detail' | 'sidebar';
   coinName?: string;
+  cooldownUntil?: string | null;
 }) {
   const baseClass =
     appearance === 'table' ? 'vote-btn' : appearance === 'sidebar' ? 'sidebar-vote' : 'detail-vote';
+  const countdownLabel = useVoteCountdown(cooldownUntil);
+  const waitingDots = (
+    <span className="vote-wait-dots" aria-label="Waiting for vote cooldown">
+      <i />
+      <i />
+      <i />
+    </span>
+  );
   const label =
     appearance === 'sidebar'
       ? active
-        ? 'Vote recorded'
+        ? countdownLabel || waitingDots
         : `Vote for ${coinName ?? 'coin'}`
       : active
         ? 'Voted'
         : 'Vote +1';
+  const showCheck = active && appearance !== 'sidebar';
 
   return (
     <button
@@ -81,8 +92,31 @@ export function VoteButton({
       <ActionBurst />
       <span className="action-button__label">
         {label}
-        {active && <Check aria-hidden="true" />}
+        {showCheck && <Check aria-hidden="true" />}
       </span>
     </button>
   );
+}
+
+function useVoteCountdown(cooldownUntil?: string | null) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!cooldownUntil) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [cooldownUntil]);
+
+  if (!cooldownUntil) return '';
+  const remainingMs = new Date(cooldownUntil).getTime() - now;
+  if (!Number.isFinite(remainingMs) || remainingMs <= 0) return '';
+
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
 }

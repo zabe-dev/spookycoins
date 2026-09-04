@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
-import { formatVotes, getBoostVoteFactor, type CoinListItem as Coin } from '@/features/coins/view';
+import { formatVotes, type CoinListItem as Coin } from '@/features/coins/view';
 import Link from 'next/link';
 import { BoltIcon, DiscoveryIcon } from './icons';
 
@@ -90,7 +90,7 @@ function Metric({
             metric === 'watchlist'
               ? coin.watchCount
               : metric === 'trend'
-                ? boostedTotalVotes(coin)
+                ? coin.totalVotes
                 : coin.votes,
           )}
         </b>
@@ -113,8 +113,4 @@ function formatMetric(
     return coin.presaleEnd === '—' ? 'No end date' : `${coin.presaleEnd}`;
   if (metric === 'watchlist') return `${formatVotes(coin.watchCount)} watches`;
   return `${formatVotes(coin.votes)} votes`;
-}
-
-function boostedTotalVotes(coin: Coin) {
-  return coin.totalVotes * getBoostVoteFactor(coin.boost);
 }
