@@ -514,7 +514,7 @@ function formatInputDate(date: Date) {
 function formatBannerSchedule(startsAt: Date, expiresAt: Date | null, now: Date) {
   if (startsAt > now) return `Starts in ${formatTimeRemaining(startsAt, now)}`;
   if (!expiresAt) return 'Active';
-  if (expiresAt <= now) return 'Inactive';
+  if (expiresAt <= now) return 'Expired';
   return `${formatTimeRemaining(expiresAt, now)} left`;
 }
 

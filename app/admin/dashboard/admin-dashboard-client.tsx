@@ -805,7 +805,7 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
       eyebrow="Banner inventory"
       title="Banner ads"
       count={`${rows.length} total`}
-      note="Manage paid banner placements. Scheduled ads go live automatically, active ads can be extended, and expired ads become inactive."
+      note="Manage paid banner placements. Scheduled ads go live automatically, active ads can be extended, and finished ads show as expired."
       rows={rows}
       searchPlaceholder="Search type, URL, or status"
       search={(row) => [row.placement, row.placementLabel, row.targetUrl, row.status]}
@@ -848,7 +848,7 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
                             : 'neutral'
                       }
                     >
-                      {labelize(row.status)}
+                      {formatAdStatus(row.status)}
                     </StatusPill>
                     <span className="admin-row-subtext">{row.schedule}</span>
                   </td>
@@ -1266,7 +1266,7 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
       tone={editing ? 'neutral' : 'boost'}
       message={
         inactive
-          ? 'This ad has already ended. Create a new booking if the advertiser wants to run again.'
+          ? 'This ad has expired. Create a new booking if the advertiser wants to run again.'
           : active
             ? `Add more days to this active ${row?.placementLabel || 'banner'} booking.`
             : editing
@@ -1290,35 +1290,6 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
                 </option>
               ))}
             </select>
-          </label>
-          <label className="admin-banner-form-wide">
-            Desktop image URL
-            <input
-              name="desktopImageUrl"
-              value={desktopImageUrl}
-              onChange={(event) => setDesktopImageUrl(event.target.value)}
-              placeholder="https://..."
-              required
-            />
-          </label>
-          <label className="admin-banner-form-wide">
-            Mobile image URL
-            <input
-              name="mobileImageUrl"
-              value={mobileImageUrl}
-              onChange={(event) => setMobileImageUrl(event.target.value)}
-              placeholder="Optional mobile creative URL"
-            />
-          </label>
-          <label className="admin-banner-form-wide">
-            Target URL
-            <input
-              name="targetUrl"
-              value={targetUrl}
-              onChange={(event) => setTargetUrl(event.target.value)}
-              placeholder="https://..."
-              required
-            />
           </label>
           <label>
             Priority
@@ -1375,6 +1346,35 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
               </label>
             </>
           )}
+          <label className="admin-banner-form-wide">
+            Desktop image URL
+            <input
+              name="desktopImageUrl"
+              value={desktopImageUrl}
+              onChange={(event) => setDesktopImageUrl(event.target.value)}
+              placeholder="https://..."
+              required
+            />
+          </label>
+          <label className="admin-banner-form-wide">
+            Target URL
+            <input
+              name="targetUrl"
+              value={targetUrl}
+              onChange={(event) => setTargetUrl(event.target.value)}
+              placeholder="https://..."
+              required
+            />
+          </label>
+          <label className="admin-banner-form-wide">
+            Mobile image URL
+            <input
+              name="mobileImageUrl"
+              value={mobileImageUrl}
+              onChange={(event) => setMobileImageUrl(event.target.value)}
+              placeholder="Optional mobile creative URL"
+            />
+          </label>
           <label className="admin-banner-form-wide">
             Notes
             <textarea
@@ -1785,6 +1785,11 @@ function labelize(value: string) {
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function formatAdStatus(value: string) {
+  if (value === 'inactive') return 'Expired';
+  return labelize(value);
 }
 
 function isBannerPlacement(value: string | undefined): value is BannerPlacement {

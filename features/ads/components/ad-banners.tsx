@@ -44,7 +44,6 @@ export function PremiumAdBanner({ ads = [], offset = 0 }: BannerProps) {
 
   return (
     <div className="banner-ad">
-      <AdBadge />
       <small>AD SPACE</small>
       <div className="ad-placeholder-copy">
         <b>Reach crypto&apos;s earliest coin hunters.</b>
@@ -72,7 +71,6 @@ export function WideAdBanner({ ads = [], offset = 0 }: BannerProps) {
 
   return (
     <div className="container wide-banner">
-      <AdBadge />
       <small>FULL-WIDTH ADVERTISEMENT</small>
       <div>
         <b>Reach crypto&apos;s earliest coin hunters.</b>
@@ -100,7 +98,6 @@ export function CoinPageAdBanner({ ads = [], offset = 0 }: BannerProps) {
 
   return (
     <div className="coin-page-ad-banner">
-      <AdBadge />
       <small>COIN PAGE AD</small>
       <b>Put your project beside active coin research.</b>
       <Link href="/advertise">View ad packages ↗</Link>

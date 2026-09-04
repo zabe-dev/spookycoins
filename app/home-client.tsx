@@ -230,6 +230,7 @@ export function HomeClient({
       .slice((page - 1) * 25, page * 25)
       .map((coin, index) => ({ ...coin, rank: (page - 1) * 25 + index + 1 })),
     pages = Math.max(1, Math.ceil(displayedCoins.length / 25));
+  const visiblePageNumbers = getVisiblePageNumbers(page, pages);
   const sortBy = (key: CoinSortKey) => {
     setSort((s) => ({
       key,
@@ -720,7 +721,7 @@ export function HomeClient({
             <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
               <ChevronLeft aria-hidden="true" />
             </button>
-            {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+            {visiblePageNumbers.map((n) => (
               <button key={n} className={page === n ? 'active' : ''} onClick={() => setPage(n)}>
                 {n}
               </button>
@@ -797,6 +798,15 @@ function BottomAd({
 
 function sortByNewestLaunch(a: CoinListItem, b: CoinListItem) {
   return dateValue(b.launchTimestamp) - dateValue(a.launchTimestamp);
+}
+
+function getVisiblePageNumbers(currentPage: number, totalPages: number) {
+  if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  if (currentPage <= 3) return [1, 2, 3, 4, totalPages];
+  if (currentPage >= totalPages - 2) {
+    return [1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  }
+  return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
 }
 
 function isLaunchedRecentlyCandidate(coin: CoinListItem) {
