@@ -127,6 +127,9 @@ export const marketSources = pgTable(
     sourceImageUrl: text('source_image_url'),
     lastMarketSyncAt: timestamp('last_market_sync_at', { withTimezone: true }),
     lastMetadataSyncAt: timestamp('last_metadata_sync_at', { withTimezone: true }),
+    lastErrorCode: text('last_error_code'),
+    lastErrorMessage: text('last_error_message'),
+    lastErrorAt: timestamp('last_error_at', { withTimezone: true }),
     ...timestamps,
   },
   (table) => [

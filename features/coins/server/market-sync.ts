@@ -2,13 +2,16 @@ import 'server-only';
 
 import type { NetworkId } from '@/features/coins/types';
 import { db } from '@/lib/db/client';
-import { coins, marketSnapshots } from '@/lib/db/schema';
+import { coins, marketSnapshots, marketSources } from '@/lib/db/schema';
 import { desc, inArray, sql } from 'drizzle-orm';
 
 type MarketSyncCoin = Pick<
   typeof coins.$inferSelect,
   'id' | 'chain' | 'contractAddress' | 'listingStatus'
->;
+> & {
+  marketSourceExternalId?: string | null;
+  marketSourceLastErrorCode?: string | null;
+};
 
 type MarketSnapshotRow = typeof marketSnapshots.$inferSelect;
 
@@ -23,6 +26,14 @@ type MobulaTokenDetails = {
   holdersCount?: unknown;
   rank?: unknown;
 };
+
+type MobulaFetchResult =
+  | { ok: true; details: MobulaTokenDetails }
+  | {
+      ok: false;
+      code: 'invalid-address-format' | 'request-failed' | 'missing-data' | 'network-error';
+      message: string;
+    };
 
 const mobulaChainIds: Partial<Record<NetworkId, string>> = {
   ethereum: 'evm:1',
@@ -52,6 +63,8 @@ const defaultSyncLimit = Number(process.env.MARKET_DATA_SYNC_LIMIT || 7);
 const maxSyncLimit = Number(process.env.MARKET_DATA_MAX_SYNC_LIMIT || 120);
 const requestSpacingMs = Math.max(1_050, Number(process.env.MOBULA_REQUEST_SPACING_MS || 1_050));
 const lockId = 880_550_110;
+const mobulaProvider = 'mobula';
+const invalidAddressErrorCode = 'invalid-address-format';
 
 // Log tag so these are easy to grep in server logs.
 const LOG_TAG = '[mobula-sync]';
@@ -171,14 +184,26 @@ async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
       continue;
     }
 
-    const details = await fetchMobulaTokenDetails(chainId, address);
-    if (!details) {
+    const externalId = marketSourceExternalId(chainId, address);
+    if (hasKnownInvalidAddressError(coin, externalId)) {
+      console.warn(
+        `${LOG_TAG} coin ${coin.id}: skipping known invalid Mobula address ${chainId}/${address}`,
+      );
+      continue;
+    }
+
+    const result = await fetchMobulaTokenDetails(chainId, address);
+    if (!result.ok) {
+      if (result.code === invalidAddressErrorCode) {
+        await recordMarketSourceError(coin.id, externalId, result.code, result.message);
+      }
       console.warn(
         `${LOG_TAG} coin ${coin.id}: no data returned from Mobula for ${chainId}/${address}`,
       );
       continue;
     }
 
+    const details = result.details;
     const [snapshot] = await db
       .insert(marketSnapshots)
       .values({
@@ -196,6 +221,7 @@ async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
       .returning();
 
     if (snapshot) {
+      await recordMarketSourceSuccess(coin.id, externalId);
       refreshed.set(coin.id, snapshot);
       console.log(
         `${LOG_TAG} coin ${coin.id}: snapshot inserted (price=${snapshot.priceUsd ?? 'null'})`,
@@ -208,9 +234,14 @@ async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
   return refreshed;
 }
 
-async function fetchMobulaTokenDetails(chainId: string, address: string) {
+async function fetchMobulaTokenDetails(
+  chainId: string,
+  address: string,
+): Promise<MobulaFetchResult> {
   const apiKey = process.env.MOBULA_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    return { ok: false, code: 'request-failed', message: 'MOBULA_API_KEY is not set.' };
+  }
 
   await waitForMobulaSlot();
 
@@ -236,7 +267,18 @@ async function fetchMobulaTokenDetails(chainId: string, address: string) {
       console.warn(
         `${LOG_TAG} Mobula request failed: ${response.status} ${response.statusText} for ${chainId}/${address} — ${body.slice(0, 300)}`,
       );
-      return null;
+      if (isInvalidAddressFormatResponse(body)) {
+        return {
+          ok: false,
+          code: invalidAddressErrorCode,
+          message: cleanErrorMessage(body) || 'Invalid address format.',
+        };
+      }
+      return {
+        ok: false,
+        code: 'request-failed',
+        message: `${response.status} ${response.statusText}`,
+      };
     }
 
     const payload = await response.json();
@@ -244,16 +286,20 @@ async function fetchMobulaTokenDetails(chainId: string, address: string) {
       console.warn(
         `${LOG_TAG} Mobula response missing "data" for ${chainId}/${address}: ${JSON.stringify(payload).slice(0, 300)}`,
       );
-      return null;
+      return { ok: false, code: 'missing-data', message: 'Mobula response did not include data.' };
     }
-    return payload.data as MobulaTokenDetails;
+    return { ok: true, details: payload.data as MobulaTokenDetails };
   } catch (error) {
     const isAbort = error instanceof Error && error.name === 'AbortError';
     console.warn(
       `${LOG_TAG} Mobula request ${isAbort ? 'timed out' : 'threw'} for ${chainId}/${address}`,
       isAbort ? '' : error,
     );
-    return null;
+    return {
+      ok: false,
+      code: 'network-error',
+      message: isAbort ? 'Mobula request timed out.' : 'Mobula request failed.',
+    };
   } finally {
     clearTimeout(timeout);
   }
@@ -262,7 +308,13 @@ async function fetchMobulaTokenDetails(chainId: string, address: string) {
 function shouldRefreshCoin(coin: MarketSyncCoin, snapshot: MarketSnapshotRow | undefined) {
   if (coin.listingStatus !== 'active') return false;
   if (!coin.contractAddress?.trim()) return false;
-  if (!getMobulaChainId(coin.chain)) return false;
+  const chainId = getMobulaChainId(coin.chain);
+  if (!chainId) return false;
+  if (
+    hasKnownInvalidAddressError(coin, marketSourceExternalId(chainId, coin.contractAddress.trim()))
+  ) {
+    return false;
+  }
   if (!snapshot) return true;
   return Date.now() - snapshot.recordedAt.getTime() > cacheSeconds * 1_000;
 }
@@ -285,8 +337,13 @@ async function selectStaleSyncCoins(limit: number): Promise<MarketSyncCoin[]> {
       c.id,
       c.chain,
       c.contract_address as "contractAddress",
-      c.listing_status as "listingStatus"
+      c.listing_status as "listingStatus",
+      source.external_id as "marketSourceExternalId",
+      source.last_error_code as "marketSourceLastErrorCode"
     from ${coins} c
+    left join ${marketSources} source
+      on source.coin_id = c.id
+     and source.provider = ${mobulaProvider}
     left join lateral (
       select ms.recorded_at
       from ${marketSnapshots} ms
@@ -298,6 +355,27 @@ async function selectStaleSyncCoins(limit: number): Promise<MarketSyncCoin[]> {
       and c.contract_address is not null
       and btrim(c.contract_address) <> ''
       and c.chain in (${supportedChainSql})
+      and not coalesce((
+        source.last_error_code = ${invalidAddressErrorCode}
+        and source.external_id = (
+          case c.chain
+            when 'ethereum' then 'evm:1:'
+            when 'bsc' then 'evm:56:'
+            when 'polygon' then 'evm:137:'
+            when 'avalanche' then 'evm:43114:'
+            when 'arbitrum' then 'evm:42161:'
+            when 'base' then 'evm:8453:'
+            when 'optimism' then 'evm:10:'
+            when 'fantom' then 'evm:250:'
+            when 'kcc' then 'evm:321:'
+            when 'hood' then 'evm:4663:'
+            when 'tron' then 'tron:728126428:'
+            when 'solana' then 'solana:solana:'
+            when 'sui' then 'sui:sui:'
+            else ''
+          end || btrim(c.contract_address)
+        )
+      ), false)
       and (
         latest_snapshot.recorded_at is null
         or latest_snapshot.recorded_at < ${staleBeforeIso}::timestamptz
@@ -305,6 +383,95 @@ async function selectStaleSyncCoins(limit: number): Promise<MarketSyncCoin[]> {
     order by latest_snapshot.recorded_at asc nulls first, c.id asc
     limit ${limit}
   `);
+}
+
+function hasKnownInvalidAddressError(coin: MarketSyncCoin, externalId: string) {
+  return (
+    coin.marketSourceLastErrorCode === invalidAddressErrorCode &&
+    coin.marketSourceExternalId === externalId
+  );
+}
+
+function marketSourceExternalId(chainId: string, address: string) {
+  return `${chainId}:${address.trim()}`;
+}
+
+async function recordMarketSourceError(
+  coinId: number,
+  externalId: string,
+  code: string,
+  message: string,
+) {
+  const now = new Date();
+
+  await db
+    .insert(marketSources)
+    .values({
+      coinId,
+      provider: mobulaProvider,
+      externalId,
+      lastErrorCode: code,
+      lastErrorMessage: message.slice(0, 500),
+      lastErrorAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [marketSources.coinId, marketSources.provider],
+      set: {
+        externalId,
+        lastErrorCode: code,
+        lastErrorMessage: message.slice(0, 500),
+        lastErrorAt: now,
+        updatedAt: now,
+      },
+    });
+}
+
+async function recordMarketSourceSuccess(coinId: number, externalId: string) {
+  const now = new Date();
+
+  await db
+    .insert(marketSources)
+    .values({
+      coinId,
+      provider: mobulaProvider,
+      externalId,
+      lastMarketSyncAt: now,
+      lastErrorCode: null,
+      lastErrorMessage: null,
+      lastErrorAt: null,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [marketSources.coinId, marketSources.provider],
+      set: {
+        externalId,
+        lastMarketSyncAt: now,
+        lastErrorCode: null,
+        lastErrorMessage: null,
+        lastErrorAt: null,
+        updatedAt: now,
+      },
+    });
+}
+
+function isInvalidAddressFormatResponse(body: string) {
+  return body.toLowerCase().includes('invalid address format');
+}
+
+function cleanErrorMessage(body: string) {
+  if (!body.trim()) return '';
+
+  try {
+    const payload = JSON.parse(body);
+    if (typeof payload?.error === 'string') return payload.error;
+    if (typeof payload?.message === 'string') return payload.message;
+    if (typeof payload?.error?.message === 'string') return payload.error.message;
+  } catch {
+    // Mobula can return text bodies; fall through to trimmed text.
+  }
+
+  return body.replace(/\s+/g, ' ').trim().slice(0, 500);
 }
 
 async function waitForMobulaSlot() {
