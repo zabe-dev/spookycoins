@@ -29,7 +29,7 @@ export const bannerPlacementLabels: Record<BannerPlacement, string> = {
 export const legacyBannerPlacementMap: Record<string, BannerPlacement> = {
   'homepage-top': 'premium',
   'homepage-wide': 'wide',
-  'homepage-faq-wide': 'wide',
+  'homepage-guide-wide': 'wide',
   'site-bottom': 'fixed',
   'coin-page-wide': 'wide',
 };

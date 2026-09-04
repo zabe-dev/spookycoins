@@ -1,8 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
-import { InfoBand } from '@/components/layout/info-band';
-import { SiteFaq } from '@/components/layout/site-faq';
+import { DiscoveryGuide } from '@/components/layout/discovery-guide';
 import { WideAdBanner } from '@/features/ads/components/ad-banners';
 import type { BannerAdMap } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
@@ -743,8 +742,7 @@ export function HomeClient({
         </div>
       </section>
       <WideAdBanner ads={bannerAds.wide} offset={1} />
-      <SiteFaq />
-      <InfoBand />
+      <DiscoveryGuide />
       <SiteFooter id="footer" variant="home" />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </main>

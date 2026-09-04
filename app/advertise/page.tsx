@@ -68,10 +68,10 @@ const bannerPlacements = [
   },
   {
     placement: 'Fixed bottom banner',
-    size: '1320 × 90 desktop · 320 × 90 mobile',
+    size: '1920 × 90 desktop · 320 × 90 mobile',
     price: '$75/day',
     mobile: 'Stays visible until closed.',
-    note: 'A sticky bottom placement shown across the site for campaigns that need constant presence.',
+    note: 'An edge-to-edge sticky placement shown across the site for campaigns that need constant presence.',
   },
   {
     placement: 'Coin page ad',
