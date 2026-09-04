@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { PublicBannerAd } from '@/features/ads/types';
 
 type BannerProps = {
@@ -103,4 +103,64 @@ export function CoinPageAdBanner({ ads = [], offset = 0 }: BannerProps) {
       <Link href="/advertise">View ad packages ↗</Link>
     </div>
   );
+}
+
+export function FixedAdBanner({ ads = [], offset = 0 }: BannerProps) {
+  const ad = useRotatingAd(ads, offset);
+  const visibleFromStorage = useSyncExternalStore(
+    subscribeFixedAdStorage,
+    getFixedAdSnapshot,
+    () => false,
+  );
+  const [dismissed, setDismissed] = useState(false);
+  const visible = visibleFromStorage && !dismissed;
+
+  if (!visible) return null;
+
+  return (
+    <aside className="fixed-ad-banner">
+      <div className="fixed-ad-banner-inner">
+        {ad ? (
+          <Link className="fixed-ad-banner-creative" href={ad.targetUrl} target="_blank">
+            <AdBadge />
+            <picture>
+              {ad.mobileImageUrl && (
+                <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />
+              )}
+              <img src={ad.desktopImageUrl} alt={ad.title || 'Advertisement'} />
+            </picture>
+          </Link>
+        ) : (
+          <div className="fixed-ad-banner-placeholder">
+            <small>AD SPACE</small>
+            <b>SPOOKY</b>
+            <span>Reach crypto&apos;s earliest coin hunters.</span>
+            <Link href="/advertise">View ad packages ↗</Link>
+          </div>
+        )}
+        <button
+          className="fixed-ad-banner-close"
+          type="button"
+          onClick={() => {
+            window.localStorage.setItem('spooky-fixed-ad-closed', '1');
+            setDismissed(true);
+          }}
+          aria-label="Close ad"
+        >
+          ×
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function subscribeFixedAdStorage(callback: () => void) {
+  if (typeof window === 'undefined') return () => undefined;
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getFixedAdSnapshot() {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem('spooky-fixed-ad-closed') !== '1';
 }

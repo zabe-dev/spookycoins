@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { FixedAdBanner } from '@/features/ads/components/ad-banners';
+import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { Fira_Mono, JetBrains_Mono, Poppins, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
@@ -69,17 +71,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const bannerAds = await getActiveBannerAds();
+
   return (
     <html lang="en">
       <body
         className={`${poppins.variable} ${spaceGrotesk.variable} ${firaMono.variable} ${jetBrainsMono.variable} antialiased`}
       >
         {children}
+        <FixedAdBanner ads={bannerAds.fixed} />
       </body>
     </html>
   );

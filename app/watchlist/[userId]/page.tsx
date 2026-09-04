@@ -1,12 +1,11 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
-import { InfoBand } from '@/components/layout/info-band';
-import { SiteFaq } from '@/components/layout/site-faq';
 import { PublicWatchlistTable } from '@/features/account/components/account-panel';
 import { WideAdBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
+import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import { db } from '@/lib/db/client';
 import { users } from '@/lib/db/schema';
 import { auth } from '@/lib/auth/server';
@@ -27,6 +26,7 @@ export const metadata: Metadata = {
 export default async function PublicWatchlistPage({ params }: WatchlistPageParams) {
   const { userId } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
+  await processExpiredPresales();
   await processExpiredCoinDeletionRequests();
 
   const [owner] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -60,10 +60,10 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
             </div>
           )}
         </section>
+        <div className="account-table-ad account-table-ad-inline">
+          <WideAdBanner ads={bannerAds.wide} offset={3} />
+        </div>
       </section>
-      <WideAdBanner ads={bannerAds.wide} offset={3} />
-      <SiteFaq />
-      <InfoBand />
       <SiteFooter />
     </main>
   );

@@ -136,7 +136,6 @@
 .advertise-banner-intro {
   max-width: none !important;
 }
-
 .advertise-card-icon {
   display: grid;
   width: 42px;
@@ -178,7 +177,7 @@
 
 .advertise-banner-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 10px;
 }
 
@@ -524,11 +523,9 @@
 
   .advertise-grid,
   .advertise-wide,
-  .advertise-policy,
-  .advertise-banner-grid {
+  .advertise-policy {
     grid-template-columns: 1fr;
   }
-
   .advertise-policy-golden {
     order: 0;
   }

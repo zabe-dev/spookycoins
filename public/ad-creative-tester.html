@@ -1,0 +1,1341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpookyCoins — Ad Creative Tester</title>
+    <style>
+      :root {
+        --bg: #07090b;
+        --panel: #0e1114;
+        --panel-2: #151a1e;
+        --panel-3: #1b2229;
+        --line: #26313b;
+        --line-strong: #3a4652;
+        --ink: #f4f6f8;
+        --muted: #8d97a3;
+        --soft: #b5bec8;
+        --lime: #cbff4a;
+        --lime-soft: rgba(203, 255, 74, 0.15);
+        --gold: #f6bd41;
+        --red: #ff6b78;
+        --cyan: #35d3ff;
+        --cyan-soft: rgba(53, 211, 255, 0.12);
+        --mono: "SF Mono", "Fira Mono", Consolas, Menlo, monospace;
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+        background:
+          radial-gradient(circle at 12% 20%, rgba(203, 255, 74, 0.05), transparent 26%),
+          radial-gradient(circle at 88% 4%, rgba(53, 211, 255, 0.055), transparent 24%),
+          var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        line-height: 1.5;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .page {
+        width: min(100%, 1400px);
+        margin: 0 auto;
+        padding: 42px 18px 120px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 28px;
+        align-items: end;
+        margin-bottom: 24px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--lime);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(34px, 4vw, 62px);
+        line-height: 0.95;
+        letter-spacing: -0.055em;
+      }
+
+      .hero-copy {
+        max-width: 780px;
+        margin: 0;
+        color: var(--soft);
+        font-size: 16px;
+      }
+
+      .quick-card {
+        width: min(100%, 390px);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(14, 17, 20, 0.88);
+        padding: 18px;
+      }
+
+      .quick-card h2 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .quick-card p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .spec-list {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+      }
+
+      .spec-list div {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-top: 8px;
+        color: var(--soft);
+        font-size: 12px;
+      }
+
+      .spec-list strong {
+        color: var(--ink);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 12px;
+        z-index: 30;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(8, 10, 12, 0.92);
+        padding: 12px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+        margin-bottom: 28px;
+      }
+
+      .readout {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .readout b {
+        color: var(--ink);
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field span {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .url-row {
+        display: flex;
+        min-width: 0;
+      }
+
+      .url-row input {
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        border: 1px solid var(--line);
+        border-right: 0;
+        border-radius: 14px 0 0 14px;
+        background: #080b0e;
+        color: var(--ink);
+        padding: 0 14px;
+        outline: none;
+      }
+
+      .url-row input:focus {
+        border-color: var(--lime);
+      }
+
+      .btn {
+        height: 44px;
+        border: 1px solid var(--line-strong);
+        border-radius: 14px;
+        background: var(--panel-2);
+        color: var(--ink);
+        padding: 0 16px;
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition:
+          transform 0.16s ease,
+          border-color 0.16s ease,
+          background 0.16s ease;
+      }
+
+      .url-row .btn {
+        border-radius: 0 14px 14px 0;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: var(--lime);
+        background: #1b231d;
+      }
+
+      .btn-primary {
+        border-color: rgba(203, 255, 74, 0.55);
+        background: var(--lime);
+        color: #0b0d0f;
+      }
+
+      .btn-primary:hover {
+        background: #d7ff68;
+        color: #0b0d0f;
+      }
+
+      .slots {
+        display: grid;
+        gap: 24px;
+      }
+
+      .slot {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(14, 17, 20, 0.84);
+        overflow: hidden;
+      }
+
+      .slot-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: start;
+        padding: 20px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent);
+      }
+
+      .slot-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 6px;
+        font-size: 20px;
+        letter-spacing: -0.025em;
+      }
+
+      .slot-title span {
+        display: inline-grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 12px;
+        background: var(--lime-soft);
+        color: var(--lime);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .slot-desc {
+        margin: 0;
+        max-width: 72ch;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .slot-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--soft);
+        padding: 0 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .slot-body {
+        padding: 20px;
+      }
+
+      .uploads {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .upload {
+        display: grid;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.025);
+        padding: 12px;
+      }
+
+      .upload-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .upload-label {
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .upload small {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .upload-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .file-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        border: 1px solid rgba(203, 255, 74, 0.34);
+        border-radius: 12px;
+        background: rgba(203, 255, 74, 0.08);
+        color: var(--lime);
+        padding: 0 12px;
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .file-button input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .clear {
+        display: none;
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--muted);
+        padding: 0 12px;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .status {
+        min-height: 18px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .status.ok {
+        color: var(--lime);
+      }
+
+      .status.warn {
+        color: var(--gold);
+      }
+
+      .status.bad {
+        color: var(--red);
+      }
+
+      .preview-area {
+        display: grid;
+        gap: 12px;
+      }
+
+      .site-frame {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background:
+          linear-gradient(45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
+          linear-gradient(-45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.035) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.035) 75%),
+          #080b0e;
+        background-size: 16px 16px;
+        background-position:
+          0 0,
+          0 8px,
+          8px -8px,
+          -8px 0;
+        padding: 18px;
+        overflow-x: auto;
+      }
+
+      .site-frame.fixed-frame {
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        border-left: 0;
+        border-right: 0;
+        border-radius: 0;
+      }
+
+      .ad-canvas {
+        --slot-w: 728px;
+        --slot-h: 90px;
+        position: relative;
+        width: min(100%, var(--slot-w));
+        height: var(--slot-h);
+        margin: 0 auto;
+        border-radius: 12px;
+        background: #10151a;
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+          0 14px 34px rgba(0, 0, 0, 0.28);
+        overflow: hidden;
+      }
+
+      .ad-canvas.fixed {
+        width: 100vw;
+        max-width: none;
+        border-radius: 0;
+      }
+
+      .ad-canvas img {
+        display: none;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      .ad-canvas.contain img {
+        object-fit: contain;
+      }
+
+      .ad-canvas.has-image img.active {
+        display: block;
+      }
+
+      .ad-canvas .empty {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .ad-canvas.has-image .empty {
+        display: none;
+      }
+
+      .ad-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 5;
+        display: inline-flex;
+        align-items: center;
+        height: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        background: rgba(12, 14, 16, 0.72);
+        color: #e8edf2;
+        padding: 0 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        backdrop-filter: blur(10px);
+      }
+
+      .fixed-close {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        z-index: 6;
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 999px;
+        background: rgba(7, 9, 11, 0.72);
+        color: var(--ink);
+        transform: translateY(-50%);
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .safe-zone {
+        position: absolute;
+        z-index: 4;
+        top: 10px;
+        right: 20px;
+        bottom: 10px;
+        left: 20px;
+        border: 1px dashed rgba(203, 255, 74, 0.9);
+        background: rgba(203, 255, 74, 0.045);
+        pointer-events: none;
+      }
+
+      .safe-zone::before {
+        content: "safe zone";
+        position: absolute;
+        right: 8px;
+        bottom: 5px;
+        color: var(--lime);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .danger-zone {
+        position: absolute;
+        z-index: 3;
+        border: 1px dashed rgba(255, 107, 120, 0.72);
+        background: rgba(255, 107, 120, 0.08);
+        pointer-events: none;
+      }
+
+      .danger-zone.badge-area {
+        top: 6px;
+        left: 6px;
+        width: 58px;
+        height: 32px;
+        border-radius: 999px;
+      }
+
+      .danger-zone.close-area {
+        top: 18px;
+        right: 8px;
+        width: 48px;
+        height: 54px;
+        border-radius: 999px;
+      }
+
+      .measure {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .measure b {
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .safe-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13px;
+      }
+
+      .safe-table th,
+      .safe-table td {
+        border-top: 1px solid var(--line);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .safe-table th {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .safe-table td {
+        color: var(--soft);
+      }
+
+      .safe-table .mono {
+        color: var(--ink);
+        font-family: var(--mono);
+      }
+
+      .rules {
+        margin-top: 24px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(14, 17, 20, 0.84);
+        padding: 22px;
+      }
+
+      .rules h2 {
+        margin: 0 0 14px;
+        font-size: 20px;
+        letter-spacing: -0.025em;
+      }
+
+      .rules-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .rule-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.025);
+        padding: 14px;
+      }
+
+      .rule-card strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--ink);
+        font-size: 13px;
+      }
+
+      .rule-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+
+      .two-previews {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+        gap: 14px;
+        align-items: start;
+      }
+
+      .mobile-shell {
+        width: 360px;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: #07090b;
+        padding: 14px;
+      }
+
+      .mobile-shell .ad-canvas {
+        width: 320px;
+      }
+
+      .slot-wide .desktop .ad-canvas,
+      .slot-fixed .desktop .ad-canvas {
+        --slot-w: 1320px;
+        --slot-h: 90px;
+      }
+
+      .slot-premium .desktop .ad-canvas {
+        --slot-w: 728px;
+        --slot-h: 90px;
+      }
+
+      .slot-coin .desktop .ad-canvas,
+      .slot-coin .mobile-shell .ad-canvas {
+        --slot-w: 300px;
+        --slot-h: 250px;
+      }
+
+      .slot-coin .ad-canvas img {
+        object-fit: contain;
+      }
+
+      .slot-coin .safe-zone {
+        inset: 16px;
+      }
+
+      .slot-coin .danger-zone {
+        display: none;
+      }
+
+      .desktop-label,
+      .mobile-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .desktop-label b,
+      .mobile-label b {
+        color: var(--ink);
+      }
+
+      @media (max-width: 980px) {
+        .hero,
+        .toolbar,
+        .two-previews,
+        .rules-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .quick-card {
+          width: 100%;
+        }
+
+        .toolbar {
+          position: static;
+        }
+
+        .uploads {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .page {
+          padding: 28px 14px 90px;
+        }
+
+        .slot-header {
+          grid-template-columns: 1fr;
+        }
+
+        .slot-badges {
+          justify-content: flex-start;
+        }
+
+        .site-frame {
+          padding: 12px;
+        }
+
+        .measure {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">SpookyCoins · Advertiser preview</p>
+          <h1>Test your ad creative before sending it.</h1>
+          <p class="hero-copy">
+            Upload each creative size and preview how it behaves in the real SpookyCoins
+            placements. The green outline marks the safest area for logos, headlines, coin
+            tickers, and call-to-action text. Keep important content inside it.
+          </p>
+        </div>
+
+        <aside class="quick-card" aria-label="Creative count guide">
+          <h2>How many images?</h2>
+          <p>
+            If you book every placement, prepare seven files. If you book one placement, only
+            send the files listed for that placement.
+          </p>
+          <dl class="spec-list">
+            <div><dt>Premium top</dt><dd><strong>728×90 + 320×90</strong></dd></div>
+            <div><dt>Wide rotation</dt><dd><strong>1320×90 + 320×90</strong></dd></div>
+            <div><dt>Fixed bottom</dt><dd><strong>1320×90 + 320×90</strong></dd></div>
+            <div><dt>Coin page</dt><dd><strong>300×250</strong></dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="toolbar" aria-label="Preview controls">
+        <div class="readout">
+          <span>Window: <b id="windowWidth">—</b>px</span>
+          <span>Mode: <b id="mode">—</b></span>
+        </div>
+        <label class="field">
+          <span>Optional image URL</span>
+          <span class="url-row">
+            <input id="imageUrl" type="url" placeholder="https://example.com/ad.png" />
+            <button class="btn" id="loadUrl" type="button">Preview</button>
+          </span>
+        </label>
+        <button class="btn btn-primary" id="clearAll" type="button">Clear all</button>
+      </section>
+
+      <div class="slots">
+        <section class="slot slot-premium" data-slot="premium">
+          <div class="slot-header">
+            <div>
+              <h2 class="slot-title"><span>01</span> Premium top banner</h2>
+              <p class="slot-desc">
+                Appears near the top of the page. Two ads can sit beside each other on wide
+                screens, so keep the message clean and centered.
+              </p>
+            </div>
+            <div class="slot-badges">
+              <span class="badge">Desktop 728×90</span>
+              <span class="badge">Mobile 320×90</span>
+              <span class="badge">Height fixed at 90px</span>
+            </div>
+          </div>
+          <div class="slot-body">
+            <div class="uploads">
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Desktop creative</span>
+                  <small>728×90</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="premium" data-size="desktop" /></label>
+                  <button class="clear" type="button" data-clear="premium-desktop">Clear</button>
+                </div>
+                <span class="status" id="premium-desktop-status">No file selected</span>
+              </div>
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Mobile creative</span>
+                  <small>320×90</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="premium" data-size="mobile" /></label>
+                  <button class="clear" type="button" data-clear="premium-mobile">Clear</button>
+                </div>
+                <span class="status" id="premium-mobile-status">No file selected</span>
+              </div>
+            </div>
+            <div class="two-previews">
+              <div class="desktop">
+                <div class="desktop-label"><span>Desktop/tablet preview</span><b>728×90</b></div>
+                <div class="site-frame">
+                  <div class="ad-canvas" data-canvas="premium-desktop">
+                    <img alt="Premium top desktop preview" />
+                    <span class="empty">Upload or paste an image URL</span>
+                    <span class="ad-badge">Ad</span>
+                    <span class="danger-zone badge-area"></span>
+                    <span class="safe-zone"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="mobile-shell">
+                <div class="mobile-label"><span>Mobile preview</span><b>320×90</b></div>
+                <div class="ad-canvas" data-canvas="premium-mobile">
+                  <img alt="Premium top mobile preview" />
+                  <span class="empty">Mobile creative</span>
+                  <span class="ad-badge">Ad</span>
+                  <span class="danger-zone badge-area"></span>
+                  <span class="safe-zone"></span>
+                </div>
+              </div>
+            </div>
+            <table class="safe-table">
+              <thead><tr><th>Safe zone</th><th>Keep clear</th><th>Fit behavior</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="mono">Desktop: ~600×70 · Mobile: ~280×70</td>
+                  <td>Top-left ad badge area</td>
+                  <td>Image fills the 90px-tall slot. Edge content can feel cramped.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="slot slot-wide" data-slot="wide">
+          <div class="slot-header">
+            <div>
+              <h2 class="slot-title"><span>02</span> Wide banner rotation</h2>
+              <p class="slot-desc">
+                Used across full-row placements like the homepage, coin pages, dashboards, and
+                watchlists. This is the main horizontal brand canvas.
+              </p>
+            </div>
+            <div class="slot-badges">
+              <span class="badge">Desktop 1320×90</span>
+              <span class="badge">Mobile 320×90</span>
+              <span class="badge">Height fixed at 90px</span>
+            </div>
+          </div>
+          <div class="slot-body">
+            <div class="uploads">
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Desktop creative</span>
+                  <small>1320×90</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="wide" data-size="desktop" /></label>
+                  <button class="clear" type="button" data-clear="wide-desktop">Clear</button>
+                </div>
+                <span class="status" id="wide-desktop-status">No file selected</span>
+              </div>
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Mobile creative</span>
+                  <small>320×90</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="wide" data-size="mobile" /></label>
+                  <button class="clear" type="button" data-clear="wide-mobile">Clear</button>
+                </div>
+                <span class="status" id="wide-mobile-status">No file selected</span>
+              </div>
+            </div>
+            <div class="two-previews">
+              <div class="desktop">
+                <div class="desktop-label"><span>Desktop/tablet preview</span><b>1320×90</b></div>
+                <div class="site-frame">
+                  <div class="ad-canvas" data-canvas="wide-desktop">
+                    <img alt="Wide desktop preview" />
+                    <span class="empty">Upload or paste an image URL</span>
+                    <span class="ad-badge">Ad</span>
+                    <span class="danger-zone badge-area"></span>
+                    <span class="safe-zone"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="mobile-shell">
+                <div class="mobile-label"><span>Mobile preview</span><b>320×90</b></div>
+                <div class="ad-canvas" data-canvas="wide-mobile">
+                  <img alt="Wide mobile preview" />
+                  <span class="empty">Mobile creative</span>
+                  <span class="ad-badge">Ad</span>
+                  <span class="danger-zone badge-area"></span>
+                  <span class="safe-zone"></span>
+                </div>
+              </div>
+            </div>
+            <table class="safe-table">
+              <thead><tr><th>Safe zone</th><th>Keep clear</th><th>Fit behavior</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="mono">Desktop: ~1180×70 · Mobile: ~280×70</td>
+                  <td>Top-left ad badge area</td>
+                  <td>Image fills the 90px-tall slot. Use the mobile creative for small screens.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="slot slot-fixed" data-slot="fixed">
+          <div class="slot-header">
+            <div>
+              <h2 class="slot-title"><span>03</span> Fixed bottom banner</h2>
+              <p class="slot-desc">
+                Sticks to the bottom of the browser and stretches edge-to-edge. Keep important
+                text away from the close button on the right.
+              </p>
+            </div>
+            <div class="slot-badges">
+              <span class="badge">Desktop 1320×90</span>
+              <span class="badge">Mobile 320×90</span>
+              <span class="badge">Height fixed at 90px</span>
+            </div>
+          </div>
+          <div class="slot-body">
+            <div class="uploads">
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Desktop creative</span>
+                  <small>1320×90</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="fixed" data-size="desktop" /></label>
+                  <button class="clear" type="button" data-clear="fixed-desktop">Clear</button>
+                </div>
+                <span class="status" id="fixed-desktop-status">No file selected</span>
+              </div>
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Mobile creative</span>
+                  <small>320×90</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="fixed" data-size="mobile" /></label>
+                  <button class="clear" type="button" data-clear="fixed-mobile">Clear</button>
+                </div>
+                <span class="status" id="fixed-mobile-status">No file selected</span>
+              </div>
+            </div>
+            <div class="two-previews">
+              <div class="desktop">
+                <div class="desktop-label"><span>Desktop edge-to-edge preview</span><b>1320×90 inside full browser width</b></div>
+                <div class="site-frame fixed-frame">
+                  <div class="ad-canvas fixed" data-canvas="fixed-desktop">
+                    <img alt="Fixed desktop preview" />
+                    <span class="empty">Full-width fixed banner preview</span>
+                    <span class="ad-badge">Ad</span>
+                    <span class="fixed-close">×</span>
+                    <span class="danger-zone badge-area"></span>
+                    <span class="danger-zone close-area"></span>
+                    <span class="safe-zone"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="mobile-shell">
+                <div class="mobile-label"><span>Mobile fixed preview</span><b>320×90</b></div>
+                <div class="ad-canvas" data-canvas="fixed-mobile">
+                  <img alt="Fixed mobile preview" />
+                  <span class="empty">Mobile creative</span>
+                  <span class="ad-badge">Ad</span>
+                  <span class="fixed-close">×</span>
+                  <span class="danger-zone badge-area"></span>
+                  <span class="danger-zone close-area"></span>
+                  <span class="safe-zone"></span>
+                </div>
+              </div>
+            </div>
+            <table class="safe-table">
+              <thead><tr><th>Safe zone</th><th>Keep clear</th><th>Fit behavior</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="mono">Desktop: center ~80% × 70px · Mobile: ~250×70</td>
+                  <td>Top-left ad badge and right-side close button</td>
+                  <td>Desktop stretches across the browser. Keep the message centered.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="slot slot-coin" data-slot="coin">
+          <div class="slot-header">
+            <div>
+              <h2 class="slot-title"><span>04</span> Coin page ad</h2>
+              <p class="slot-desc">
+                Appears in the coin detail layout. This placement is taller, so it can carry more
+                artwork, but the message should still be readable at a glance.
+              </p>
+            </div>
+            <div class="slot-badges">
+              <span class="badge">300×250</span>
+              <span class="badge">Same image on all screens</span>
+            </div>
+          </div>
+          <div class="slot-body">
+            <div class="uploads">
+              <div class="upload">
+                <div class="upload-top">
+                  <span class="upload-label">Coin page creative</span>
+                  <small>300×250</small>
+                </div>
+                <div class="upload-actions">
+                  <label class="file-button">Upload<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" data-slot="coin" data-size="single" /></label>
+                  <button class="clear" type="button" data-clear="coin-single">Clear</button>
+                </div>
+                <span class="status" id="coin-single-status">No file selected</span>
+              </div>
+            </div>
+            <div class="two-previews">
+              <div class="desktop">
+                <div class="desktop-label"><span>Coin page preview</span><b>300×250</b></div>
+                <div class="site-frame">
+                  <div class="ad-canvas contain" data-canvas="coin-single">
+                    <img alt="Coin page ad preview" />
+                    <span class="empty">Upload or paste an image URL</span>
+                    <span class="ad-badge">Ad</span>
+                    <span class="safe-zone"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="mobile-shell">
+                <div class="mobile-label"><span>Mobile coin page preview</span><b>300×250</b></div>
+                <div class="ad-canvas contain" data-mirror="coin-single">
+                  <img alt="Coin page mobile preview" />
+                  <span class="empty">Same creative</span>
+                  <span class="ad-badge">Ad</span>
+                  <span class="safe-zone"></span>
+                </div>
+              </div>
+            </div>
+            <table class="safe-table">
+              <thead><tr><th>Safe zone</th><th>Keep clear</th><th>Fit behavior</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="mono">~268×218, centered</td>
+                  <td>Top-left ad badge area</td>
+                  <td>Image is contained inside the 300×250 slot.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <section class="rules">
+        <h2>Creative rules</h2>
+        <div class="rules-grid">
+          <div class="rule-card">
+            <strong>Use separate mobile files</strong>
+            <p>Small screens need simpler copy. Do not rely on a desktop banner shrinking down.</p>
+          </div>
+          <div class="rule-card">
+            <strong>Keep text in the green box</strong>
+            <p>If the headline, ticker, logo, or CTA leaves the safe zone, it may feel cramped.</p>
+          </div>
+          <div class="rule-card">
+            <strong>Stay lightweight</strong>
+            <p>PNG, JPG, GIF, or WEBP is fine. Aim for 150–200KB per image when possible.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const MAX_BYTES = 200 * 1024;
+      const SPECS = {
+        premium: {
+          desktop: { width: 728, height: 90 },
+          mobile: { width: 320, height: 90 },
+        },
+        wide: {
+          desktop: { width: 1320, height: 90 },
+          mobile: { width: 320, height: 90 },
+        },
+        fixed: {
+          desktop: { width: 1320, height: 90 },
+          mobile: { width: 320, height: 90 },
+        },
+        coin: {
+          single: { width: 300, height: 250 },
+        },
+      };
+
+      const activeUrls = new Map();
+
+      function key(slot, size) {
+        return `${slot}-${size}`;
+      }
+
+      function updateReadout() {
+        const width = window.innerWidth;
+        document.getElementById("windowWidth").textContent = width;
+        document.getElementById("mode").textContent = width < 760 ? "Mobile" : "Desktop";
+      }
+
+      function getCanvas(slot, size) {
+        return document.querySelector(`[data-canvas="${key(slot, size)}"]`);
+      }
+
+      function setStatus(slot, size, message, variant) {
+        const status = document.getElementById(`${key(slot, size)}-status`);
+        if (!status) return;
+        status.textContent = message;
+        status.className = `status ${variant || ""}`.trim();
+      }
+
+      function showClear(slot, size, shouldShow) {
+        const clear = document.querySelector(`[data-clear="${key(slot, size)}"]`);
+        if (clear) clear.style.display = shouldShow ? "inline-flex" : "none";
+      }
+
+      function setImage(slot, size, src, fromUrl = false) {
+        const canvas = getCanvas(slot, size);
+        if (!canvas) return;
+
+        const img = canvas.querySelector("img");
+        img.src = src;
+        img.classList.add("active");
+        canvas.classList.add("has-image");
+
+        document.querySelectorAll(`[data-mirror="${key(slot, size)}"]`).forEach((mirror) => {
+          const mirrorImg = mirror.querySelector("img");
+          mirrorImg.src = src;
+          mirrorImg.classList.add("active");
+          mirror.classList.add("has-image");
+        });
+
+        showClear(slot, size, !fromUrl);
+      }
+
+      function clearImage(slot, size) {
+        const cacheKey = key(slot, size);
+        if (activeUrls.has(cacheKey)) {
+          URL.revokeObjectURL(activeUrls.get(cacheKey));
+          activeUrls.delete(cacheKey);
+        }
+
+        const canvas = getCanvas(slot, size);
+        if (canvas) {
+          const img = canvas.querySelector("img");
+          img.removeAttribute("src");
+          img.classList.remove("active");
+          canvas.classList.remove("has-image");
+        }
+
+        document.querySelectorAll(`[data-mirror="${cacheKey}"]`).forEach((mirror) => {
+          const img = mirror.querySelector("img");
+          img.removeAttribute("src");
+          img.classList.remove("active");
+          mirror.classList.remove("has-image");
+        });
+
+        setStatus(slot, size, "No file selected", "");
+        showClear(slot, size, false);
+
+        const input = document.querySelector(`input[data-slot="${slot}"][data-size="${size}"]`);
+        if (input) input.value = "";
+      }
+
+      function readImage(file) {
+        return new Promise((resolve) => {
+          const src = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = () =>
+            resolve({
+              src,
+              width: img.naturalWidth,
+              height: img.naturalHeight,
+            });
+          img.onerror = () =>
+            resolve({
+              src,
+              width: 0,
+              height: 0,
+              error: true,
+            });
+          img.src = src;
+        });
+      }
+
+      function validate(file, spec, image) {
+        const warnings = [];
+
+        if (image.error) {
+          warnings.push("could not read this file as an image");
+          return warnings;
+        }
+
+        if (image.width !== spec.width || image.height !== spec.height) {
+          warnings.push(`uploaded ${image.width}×${image.height}, expected ${spec.width}×${spec.height}`);
+        }
+
+        if (file.size > MAX_BYTES) {
+          warnings.push(`${Math.round(file.size / 1024)}KB, target is 150–200KB max`);
+        }
+
+        return warnings;
+      }
+
+      document.querySelectorAll('input[type="file"][data-slot]').forEach((input) => {
+        input.addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const slot = input.dataset.slot;
+          const size = input.dataset.size;
+          const spec = SPECS[slot][size];
+          const image = await readImage(file);
+          const warnings = validate(file, spec, image);
+
+          if (warnings.length) {
+            URL.revokeObjectURL(image.src);
+            setStatus(slot, size, warnings.join(" · "), "bad");
+            input.value = "";
+            return;
+          }
+
+          const cacheKey = key(slot, size);
+          if (activeUrls.has(cacheKey)) URL.revokeObjectURL(activeUrls.get(cacheKey));
+          activeUrls.set(cacheKey, image.src);
+
+          setImage(slot, size, image.src);
+          setStatus(slot, size, `${file.name} looks good`, "ok");
+        });
+      });
+
+      document.querySelectorAll("[data-clear]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const [slot, size] = button.dataset.clear.split("-");
+          clearImage(slot, size);
+        });
+      });
+
+      document.getElementById("clearAll").addEventListener("click", () => {
+        Object.entries(SPECS).forEach(([slot, sizes]) => {
+          Object.keys(sizes).forEach((size) => clearImage(slot, size));
+        });
+        document.getElementById("imageUrl").value = "";
+      });
+
+      document.getElementById("loadUrl").addEventListener("click", () => {
+        const src = document.getElementById("imageUrl").value.trim();
+        if (!src) return;
+
+        Object.entries(SPECS).forEach(([slot, sizes]) => {
+          Object.keys(sizes).forEach((size) => {
+            setImage(slot, size, src, true);
+            setStatus(slot, size, "Previewing URL — exact size not checked", "warn");
+          });
+        });
+      });
+
+      updateReadout();
+      window.addEventListener("resize", updateReadout);
+    </script>
+  </body>
+</html>

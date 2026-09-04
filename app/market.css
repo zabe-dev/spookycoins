@@ -262,6 +262,7 @@
   backdrop-filter: blur(10px);
 }
 .banner-ad-image {
+  box-sizing: content-box;
   padding: 0;
   color: #fff;
   text-decoration: none;
@@ -275,8 +276,14 @@
 }
 .banner-ad-image img,
 .wide-banner-image img,
-.ad-banner-image img,
 .bottom-ad-creative img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+.ad-banner-image img {
   width: 100%;
   height: 100%;
   display: block;
@@ -592,6 +599,7 @@
   gap: 22px;
 }
 .wide-banner-image {
+  box-sizing: content-box;
   position: relative;
   min-height: 90px;
   height: 90px;

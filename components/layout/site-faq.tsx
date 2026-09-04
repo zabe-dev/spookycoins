@@ -46,7 +46,7 @@ export function SiteFaq() {
   return (
     <section className="container home-faq" aria-labelledby="site-faq-title">
       <div className="home-faq-head">
-        <small>FAQ</small>
+        <small>FAQs</small>
         <h2 id="site-faq-title">Frequently Asked Questions</h2>
         <p>
           Quick answers about rankings, boosts, submissions, and the data shown around SpookyCoins.

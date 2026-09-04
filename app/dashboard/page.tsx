@@ -1,12 +1,11 @@
-import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
-import { InfoBand } from '@/components/layout/info-band';
-import { SiteFaq } from '@/components/layout/site-faq';
+import { SiteHeader } from '@/components/layout/site-header';
 import { AccountPanel } from '@/features/account/components/account-panel';
 import { WideAdBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
-import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getPublicCoinById } from '@/features/coins/server/coin-list';
+import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
+import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import { toCoinListItem } from '@/features/coins/view';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
@@ -27,6 +26,7 @@ export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect('/');
 
+  await processExpiredPresales();
   await processExpiredCoinDeletionRequests();
 
   const submissions = await db
@@ -115,10 +115,8 @@ export default async function DashboardPage() {
               ? pendingDeletionByCoinId.get(submission.coinId)
               : undefined),
         }))}
+        afterTable={<WideAdBanner ads={bannerAds.wide} offset={2} />}
       />
-      <WideAdBanner ads={bannerAds.wide} offset={2} />
-      <SiteFaq />
-      <InfoBand />
       <SiteFooter />
     </main>
   );

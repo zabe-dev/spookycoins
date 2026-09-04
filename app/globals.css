@@ -73,6 +73,155 @@ h3,
 .site-shell.with-bottom-ad {
   padding-bottom: 82px;
 }
+.fixed-ad-banner {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  background: rgba(8, 10, 11, 0.96);
+  border-top: 1px solid #333a3f;
+  padding: 0 0 env(safe-area-inset-bottom);
+  pointer-events: none;
+  backdrop-filter: blur(14px);
+}
+.fixed-ad-banner-inner {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 90px;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: auto;
+}
+.ad-creative-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 18px;
+  border: 1px solid rgba(237, 242, 244, 0.16);
+  border-radius: 999px;
+  background: rgba(5, 7, 8, 0.72);
+  color: rgba(237, 242, 244, 0.82);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+.fixed-ad-banner-creative,
+.fixed-ad-banner-placeholder {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  height: 90px;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  color: var(--copy);
+  text-decoration: none;
+}
+.fixed-ad-banner-creative {
+  box-sizing: content-box;
+}
+.fixed-ad-banner-creative picture {
+  position: absolute;
+  inset: 0;
+}
+.fixed-ad-banner-creative img {
+  display: block;
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  object-position: center;
+}
+.fixed-ad-banner-placeholder {
+  padding: 0 58px 0 18px;
+}
+.fixed-ad-banner-placeholder small {
+  flex: 0 0 auto;
+  color: var(--sub);
+  font-size: 7px;
+  letter-spacing: 0.15em;
+}
+.fixed-ad-banner-placeholder b {
+  color: var(--copy);
+  font-size: 11px;
+}
+.fixed-ad-banner-placeholder span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--copy);
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fixed-ad-banner-placeholder a {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 7px;
+  background: var(--cyan);
+  padding: 9px 13px;
+  color: #081013;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.fixed-ad-banner-close {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  z-index: 3;
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  transform: translateY(-50%);
+  place-items: center;
+  border: 1px solid #363d42;
+  border-radius: 50%;
+  background: #171b1e;
+  color: #a9b0b5;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+@media (max-width: 620px) {
+  .fixed-ad-banner {
+    padding-inline: 0;
+  }
+  .fixed-ad-banner-inner,
+  .fixed-ad-banner-creative,
+  .fixed-ad-banner-creative img,
+  .fixed-ad-banner-placeholder {
+    height: 90px;
+  }
+  .fixed-ad-banner-placeholder {
+    gap: 8px;
+    padding: 0 46px 0 10px;
+  }
+  .fixed-ad-banner-placeholder small {
+    display: none;
+  }
+  .fixed-ad-banner-placeholder b,
+  .fixed-ad-banner-placeholder span,
+  .fixed-ad-banner-placeholder a {
+    font-size: 9px;
+  }
+}
 .ambient {
   position: absolute;
   border-radius: 50%;
@@ -2801,8 +2950,7 @@ img.admin-project-logo {
   gap: 12px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%), #0d1013;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%), #0d1013;
   padding: 16px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
 }
@@ -2895,9 +3043,8 @@ img.admin-project-logo {
   padding: 12px;
   resize: vertical;
 }
-.admin-confirm-popover > div:not(.admin-banner-form):not(.admin-schedule-form):not(
-    .admin-confirm-actions
-  ) {
+.admin-confirm-popover
+  > div:not(.admin-banner-form):not(.admin-schedule-form):not(.admin-confirm-actions) {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 8px;
@@ -3373,6 +3520,22 @@ img.admin-project-logo {
 .container.settings-shell.account-shell:not(.public-watchlist-shell) {
   width: min(1320px, calc(100% - 40px));
 }
+.settings-shell.account-shell,
+.container.settings-shell.account-shell {
+  padding-bottom: 15px;
+}
+.account-table-ad {
+  margin-top: 0;
+  margin-bottom: 28px;
+}
+.account-table-ad-inline {
+  margin-top: 15px;
+  margin-bottom: 0;
+}
+.account-table-ad .wide-banner {
+  margin-top: 0;
+  width: 100%;
+}
 
 .inline-feedback {
   display: inline-flex;
@@ -3814,6 +3977,10 @@ img.admin-project-logo {
   overflow: visible;
 }
 @media (max-width: 760px) {
+  .account-table-ad {
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
   .container.settings-shell.public-watchlist-shell,
   .public-watchlist-shell {
     width: calc(100% - 24px);

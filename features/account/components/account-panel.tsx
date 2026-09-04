@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 
 type InlineNotice = {
   tone: 'success' | 'error' | 'info';
@@ -42,10 +42,12 @@ export function WatchlistPanel({
   userId,
   coins,
   isSignedIn,
+  afterTable,
 }: {
   userId: string;
   coins: PublicWatchedCoin[];
   isSignedIn: boolean;
+  afterTable?: ReactNode;
 }) {
   const [watchlistNotice, setWatchlistNotice] = useState<InlineNotice | null>(null);
   const watchlistPath = `/watchlist/${userId}`;
@@ -88,11 +90,18 @@ export function WatchlistPanel({
           </div>
         )}
       </section>
+      {afterTable && <div className="account-table-ad account-table-ad-inline">{afterTable}</div>}
     </section>
   );
 }
 
-export function AccountPanel({ submissions }: { submissions: AccountSubmission[] }) {
+export function AccountPanel({
+  submissions,
+  afterTable,
+}: {
+  submissions: AccountSubmission[];
+  afterTable?: ReactNode;
+}) {
   const [submissionNotice, setSubmissionNotice] = useState<InlineNotice | null>(null);
   const [deleteModal, setDeleteModal] = useState<AccountSubmission | null>(null);
   const [deletionOverrides, setDeletionOverrides] = useState<Record<string, string | null>>({});
@@ -132,6 +141,7 @@ export function AccountPanel({ submissions }: { submissions: AccountSubmission[]
           </div>
         )}
       </section>
+      {afterTable && <div className="account-table-ad account-table-ad-inline">{afterTable}</div>}
       {deleteModal && (
         <DeleteSubmissionModal
           submission={deleteModal}

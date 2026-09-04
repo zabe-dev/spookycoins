@@ -15,6 +15,7 @@ const emptyBannerMap = (): BannerAdMap => ({
   premium: [],
   wide: [],
   'coin-page': [],
+  fixed: [],
 });
 
 export const getActiveBannerAds = unstable_cache(

@@ -44,14 +44,14 @@ export async function processExpiredPresales() {
       for (const coin of expiredCoins) {
         await tx
           .update(coins)
-          .set({ isPresale: false, launchDate: coin.endDate, updatedAt: new Date() })
+          .set({ isPresale: false, launchDate: null, updatedAt: new Date() })
           .where(eq(coins.id, coin.id));
 
         if (coin.submission?.coinData) {
           await tx
             .update(coinSubmissions)
             .set({
-              coinData: buildLaunchedSubmissionData(coin.submission.coinData, coin.endDate),
+              coinData: buildLaunchedSubmissionData(coin.submission.coinData),
               updatedAt: new Date(),
             })
             .where(
@@ -87,16 +87,38 @@ function firstSubmissionByCoin(rows: SubmissionRow[]) {
 function getPresaleEndDate(value: unknown) {
   if (!isRecord(value)) return null;
   const market = isRecord(value.market) ? value.market : {};
-  const presale = isRecord(market.presale) ? market.presale : {};
-  const endDate = readString(presale.endDate);
-  const endTime = readString(presale.endTime) || '00:00';
+  const rootPresale = isRecord(value.presale) ? value.presale : {};
+  const marketPresale = isRecord(market.presale) ? market.presale : {};
+  const endDate =
+    readString(marketPresale.endDate) ||
+    readString(rootPresale.endDate) ||
+    readString(market.presaleEndDate) ||
+    readString(value.presaleEndDate);
+  const endTime =
+    readString(marketPresale.endTime) ||
+    readString(rootPresale.endTime) ||
+    readString(market.presaleEndTime) ||
+    readString(value.presaleEndTime) ||
+    '00:00';
   if (!endDate) return null;
 
-  const date = new Date(`${endDate}T${endTime}:00.000Z`);
+  const date = parseUtcDateTime(endDate, endTime);
   return Number.isFinite(date.getTime()) ? date : null;
 }
 
-function buildLaunchedSubmissionData(value: unknown, launchDate: Date) {
+function parseUtcDateTime(dateValue: string, timeValue: string) {
+  const normalizedDate = dateValue.trim();
+  if (normalizedDate.includes('T')) return new Date(normalizedDate);
+
+  const normalizedTime = timeValue.trim();
+  const timeWithSeconds = /^\d{2}:\d{2}$/.test(normalizedTime)
+    ? `${normalizedTime}:00`
+    : normalizedTime;
+
+  return new Date(`${normalizedDate}T${timeWithSeconds || '00:00:00'}.000Z`);
+}
+
+function buildLaunchedSubmissionData(value: unknown) {
   if (!isRecord(value)) return value;
   const basic = isRecord(value.basic) ? value.basic : {};
   const market = isRecord(value.market) ? value.market : {};
@@ -110,7 +132,8 @@ function buildLaunchedSubmissionData(value: unknown, launchDate: Date) {
     market: {
       ...market,
       type: 'launched',
-      launchDate: launchDate.toISOString(),
+      launchDate: '',
+      presale: null,
     },
   };
 }

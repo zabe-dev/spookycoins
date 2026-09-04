@@ -26,8 +26,7 @@ import {
   type CoinSortKey,
 } from '@/features/coins/view';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
-import Link from 'next/link';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
@@ -90,9 +89,7 @@ export function HomeClient({
     ),
     [watchAnimating, setWatchAnimating] = useState<number | null>(null),
     [interactionNotice, setInteractionNotice] = useState(''),
-    [adVisible, setAdVisible] = useState(true),
     [authOpen, setAuthOpen] = useState(false),
-    [paginationSize, setPaginationSize] = useState(20),
     [hotspotRefresh, setHotspotRefresh] = useState(0),
     [viewParamExplicit, setViewParamExplicit] = useState(false),
     [urlReady, setUrlReady] = useState(false);
@@ -187,21 +184,6 @@ export function HomeClient({
     const timer = window.setInterval(() => setHotspotRefresh((tick) => tick + 1), 30_000);
     return () => window.clearInterval(timer);
   }, [hotspotsVisible]);
-  useEffect(() => {
-    const updatePaginationSize = () => {
-      if (window.matchMedia('(max-width: 520px)').matches) {
-        setPaginationSize(3);
-      } else if (window.matchMedia('(max-width: 900px)').matches) {
-        setPaginationSize(7);
-      } else {
-        setPaginationSize(20);
-      }
-    };
-
-    updatePaginationSize();
-    window.addEventListener('resize', updatePaginationSize);
-    return () => window.removeEventListener('resize', updatePaginationSize);
-  }, []);
   const hotspotCoins = (() => {
     void hotspotRefresh;
 
@@ -215,7 +197,7 @@ export function HomeClient({
         .sort(sortByTrendingScore)
         .slice(0, 4),
       presales: [...marketCoins]
-        .filter((coin) => coin.lifecycle === 'presale')
+        .filter(isActivePresaleCandidate)
         .sort(sortByPresaleEnd)
         .slice(0, 4),
       watched: [...marketCoins].sort(sortByWatchCount).slice(0, 4),
@@ -224,7 +206,7 @@ export function HomeClient({
   const filtered = useMemo(() => {
     const list = marketCoins.filter(
       (c) =>
-        (view === 'Presale coins' ? c.lifecycle === 'presale' : true) &&
+        (view === 'Presale coins' ? isActivePresaleCandidate(c) : true) &&
         (category === 'All' || c.category === category) &&
         (chain === 'All chains' || c.chain === chain) &&
         (!search ||
@@ -236,7 +218,8 @@ export function HomeClient({
       return [...list].filter((coin) => coin.watchCount > 0).sort(sortByWatchCount);
     if (view === 'Launched recently')
       return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByNewestLaunch);
-    if (view === 'Presale coins') return [...list].sort(sortByPresaleEnd);
+    if (view === 'Presale coins')
+      return [...list].filter(isActivePresaleCandidate).sort(sortByPresaleEnd);
     return [...list].sort(sortByVotes);
   }, [category, chain, marketCoins, search, view]);
   const displayedCoins = useMemo(
@@ -247,7 +230,7 @@ export function HomeClient({
       .slice((page - 1) * 25, page * 25)
       .map((coin, index) => ({ ...coin, rank: (page - 1) * 25 + index + 1 })),
     pages = Math.max(1, Math.ceil(displayedCoins.length / 25));
-  const visiblePageItems = getVisiblePageItems(page, pages, paginationSize);
+  const visiblePageItems = getVisiblePageItems(page, pages);
   const sortBy = (key: CoinSortKey) => {
     setSort((s) => ({
       key,
@@ -424,7 +407,7 @@ export function HomeClient({
     setHotspotIndex((i) => (delta > 0 ? i + 1 : i + 3) % 4);
   };
   return (
-    <main className={adVisible ? 'market-page with-bottom-ad' : 'market-page'}>
+    <main className="market-page">
       <div className="container ad-grid">
         <Ad ads={bannerAds.premium} />
         <div className="desktop-only">
@@ -763,63 +746,8 @@ export function HomeClient({
       <SiteFaq />
       <InfoBand />
       <SiteFooter id="footer" variant="home" />
-      {adVisible && (
-        <BottomAd onClose={() => setAdVisible(false)} />
-      )}
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </main>
-  );
-}
-
-function BottomAd({
-  ad,
-  onClose,
-}: {
-  ad?: BannerAdMap['wide'][number];
-  onClose: () => void;
-}) {
-  if (ad) {
-    return (
-      <aside className="bottom-ad bottom-ad-image">
-        <div className="container bottom-ad-inner">
-          <Link className="bottom-ad-creative" href={ad.targetUrl} target="_blank">
-            <span className="ad-creative-badge">Ad</span>
-            <picture>
-              {ad.mobileImageUrl && (
-                <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />
-              )}
-              <img src={ad.desktopImageUrl} alt={ad.title} />
-            </picture>
-            <span>
-              <b>{ad.title}</b>
-              {ad.subtitle && <em>{ad.subtitle}</em>}
-            </span>
-          </Link>
-          <button className="ad-close" onClick={onClose} aria-label="Close ad">
-            <X aria-hidden="true" />
-          </button>
-        </div>
-      </aside>
-    );
-  }
-
-  return (
-    <aside className="bottom-ad">
-      <div className="container bottom-ad-inner">
-        <small>AD SPACE</small>
-        <b>SPOOKY</b>
-        <div className="bottom-ad-copy">
-          <span className="bottom-ad-copy-main">Reach crypto&apos;s earliest coin hunters.</span>
-          <span>Premium inventory · Measured impressions and clicks</span>
-        </div>
-        <Link className="ad-cta" href="/advertise">
-          View ad packages ↗
-        </Link>
-        <button className="ad-close" onClick={onClose} aria-label="Close ad">
-          <X aria-hidden="true" />
-        </button>
-      </div>
-    </aside>
   );
 }
 
@@ -827,37 +755,48 @@ function sortByNewestLaunch(a: CoinListItem, b: CoinListItem) {
   return dateValue(b.launchTimestamp) - dateValue(a.launchTimestamp);
 }
 
-function getVisiblePageItems(
-  currentPage: number,
-  totalPages: number,
-  maxVisibleNumbers: number,
-): PaginationItem[] {
-  const visibleNumbers = Math.max(3, maxVisibleNumbers);
+function getVisiblePageItems(currentPage: number, totalPages: number): PaginationItem[] {
+  const visibleNumbers = 6;
   if (totalPages <= visibleNumbers) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
   }
 
-  const innerSlots = Math.max(1, visibleNumbers - 2);
-  let start = Math.max(2, currentPage - Math.floor(innerSlots / 2));
-  const end = Math.min(totalPages - 1, start + innerSlots - 1);
-
-  if (end - start + 1 < innerSlots) {
-    start = Math.max(2, end - innerSlots + 1);
+  if (currentPage <= 5) {
+    return [1, 2, 3, 4, 5, 'ellipsis-right', totalPages];
   }
 
-  const items: PaginationItem[] = [1];
-  if (start > 2) items.push('ellipsis-left');
-  for (let pageNumber = start; pageNumber <= end; pageNumber += 1) {
-    items.push(pageNumber);
+  if (currentPage >= totalPages - 4) {
+    return [
+      1,
+      'ellipsis-left',
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
   }
-  if (end < totalPages - 1) items.push('ellipsis-right');
-  items.push(totalPages);
-  return items;
+
+  return [
+    1,
+    'ellipsis-left',
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    currentPage + 2,
+    'ellipsis-right',
+    totalPages,
+  ];
 }
 
 function isLaunchedRecentlyCandidate(coin: CoinListItem) {
   const launchTime = dateValue(coin.launchTimestamp);
   return coin.lifecycle === 'launched' && launchTime > 0 && launchTime <= Date.now();
+}
+
+function isActivePresaleCandidate(coin: CoinListItem) {
+  const endTime = dateValue(coin.presaleEndTimestamp);
+  return coin.lifecycle === 'presale' && endTime > Date.now();
 }
 
 function sortByPresaleEnd(a: CoinListItem, b: CoinListItem) {
