@@ -4,7 +4,11 @@
 .coin-page-ad-banner {
   position: relative;
   display: flex;
-  min-height: 260px;
+  width: 100%;
+  max-width: 300px;
+  height: 250px;
+  min-height: 250px;
+  margin: 0 auto;
   overflow: hidden;
   border: 1px solid #34311e;
   border-radius: 12px;
