@@ -1,7 +1,10 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { InfoBand } from '@/components/layout/info-band';
+import { SiteFaq } from '@/components/layout/site-faq';
 import { AccountPanel } from '@/features/account/components/account-panel';
+import { WideAdBanner } from '@/features/ads/components/ad-banners';
+import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getPublicCoinById } from '@/features/coins/server/coin-list';
 import { toCoinListItem } from '@/features/coins/view';
@@ -79,9 +82,10 @@ export default async function DashboardPage() {
         .filter((coinId): coinId is number => typeof coinId === 'number'),
     ),
   );
-  const listedCoinRows = await Promise.all(
-    listedCoinIds.map(async (coinId) => getPublicCoinById(coinId, session.user.id)),
-  );
+  const [listedCoinRows, bannerAds] = await Promise.all([
+    Promise.all(listedCoinIds.map(async (coinId) => getPublicCoinById(coinId, session.user.id))),
+    getActiveBannerAds(),
+  ]);
   const coinById = new Map(
     listedCoinRows
       .filter((coin): coin is NonNullable<(typeof listedCoinRows)[number]> => Boolean(coin))
@@ -112,6 +116,8 @@ export default async function DashboardPage() {
               : undefined),
         }))}
       />
+      <WideAdBanner ads={bannerAds.wide} offset={2} />
+      <SiteFaq />
       <InfoBand />
       <SiteFooter />
     </main>

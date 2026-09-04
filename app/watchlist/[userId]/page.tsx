@@ -1,7 +1,10 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { InfoBand } from '@/components/layout/info-band';
+import { SiteFaq } from '@/components/layout/site-faq';
 import { PublicWatchlistTable } from '@/features/account/components/account-panel';
+import { WideAdBanner } from '@/features/ads/components/ad-banners';
+import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { db } from '@/lib/db/client';
@@ -29,7 +32,10 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
   const [owner] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!owner) notFound();
 
-  const rows = await getWatchlistTableRows(userId, session?.user.id);
+  const [rows, bannerAds] = await Promise.all([
+    getWatchlistTableRows(userId, session?.user.id),
+    getActiveBannerAds(),
+  ]);
   const ownerName = owner.name.trim() || 'Hunter';
 
   return (
@@ -55,6 +61,8 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
           )}
         </section>
       </section>
+      <WideAdBanner ads={bannerAds.wide} offset={3} />
+      <SiteFaq />
       <InfoBand />
       <SiteFooter />
     </main>
