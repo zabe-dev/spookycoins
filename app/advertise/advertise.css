@@ -133,6 +133,10 @@
   margin-bottom: 0;
 }
 
+.advertise-banner-intro {
+  max-width: none !important;
+}
+
 .advertise-card-icon {
   display: grid;
   width: 42px;
@@ -174,7 +178,7 @@
 
 .advertise-banner-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -217,6 +221,13 @@
   line-height: 1.55;
 }
 
+.advertise-creative-card {
+  border-color: rgba(203, 255, 74, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(203, 255, 74, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.025) !important;
+}
+
 .advertise-table div {
   display: grid;
   grid-template-columns: 1fr 0.9fr 0.7fr;
@@ -257,6 +268,24 @@
   color: var(--sub) !important;
   font-weight: 400;
   line-height: 1.7;
+}
+
+.advertise-creative-test {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 12px;
+  border-bottom: 1px dotted currentColor;
+  color: var(--lime);
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  transition:
+    color 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.advertise-creative-test:hover {
+  opacity: 0.78;
 }
 
 .advertise-boosts {

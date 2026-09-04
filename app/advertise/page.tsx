@@ -53,39 +53,25 @@ const boostRates = [
 
 const bannerPlacements = [
   {
-    placement: 'Homepage top rotating',
-    size: '965 × 90',
+    placement: 'Top banner',
+    size: '728 × 90 desktop · 320 × 90 mobile',
     price: '$45/day',
-    mobile: 'keeps 90px height',
-    note: 'Top-of-page rotating banner inventory.',
+    mobile: 'Shown in the premium top rotation.',
+    note: 'Best for quick visibility before hunters start scanning the page.',
   },
   {
-    placement: 'Homepage wide banner',
-    size: '1320 × 120',
+    placement: 'Full-width banner',
+    size: '1320 × 120 desktop · 320 × 120 mobile',
     price: '$60/day',
-    mobile: 'responsive full width',
-    note: 'Full-width placement between homepage sections.',
+    mobile: 'Runs across wide banner spots.',
+    note: 'A larger placement used across homepage, coin pages, dashboard, and watchlists.',
   },
   {
-    placement: 'Homepage FAQ wide banner',
-    size: '1320 × 120',
-    price: '$45/day',
-    mobile: 'responsive full width',
-    note: 'Full-width placement before the FAQ section.',
-  },
-  {
-    placement: 'Coin page wide banner',
-    size: '1320 × 120',
+    placement: 'Coin page ad',
+    size: '300 × 250 desktop · 300 × 250 mobile',
     price: '$35/day',
-    mobile: 'responsive full width',
-    note: 'Appears on individual coin pages.',
-  },
-  {
-    placement: 'Fixed bottom banner',
-    size: 'breakpoint based',
-    price: '$75/day',
-    mobile: 'site breakpoint layout',
-    note: 'Sticky bottom placement across the site.',
+    mobile: 'Same creative size on all screens.',
+    note: 'A compact coin-page placement beside deeper project research.',
   },
 ];
 
@@ -129,12 +115,12 @@ export default function AdvertisePage() {
             </span>
             <div>
               <h2>Banner ad placements</h2>
-              <p>
-                Banner ads are now available as managed placements. Send us your creative, target
-                URL, preferred dates, and we&apos;ll review everything before it goes live.
-              </p>
             </div>
           </div>
+          <p className="advertise-banner-intro">
+            Banner ads are now available as managed placements. Send us your creative, target URL,
+            preferred dates, and we&apos;ll review everything before it goes live.
+          </p>
           <div className="advertise-banner-grid">
             {bannerPlacements.map((banner) => (
               <div key={banner.placement}>
@@ -145,6 +131,23 @@ export default function AdvertisePage() {
                 <small>{banner.note}</small>
               </div>
             ))}
+            <div className="advertise-creative-card">
+              <b>Test creative</b>
+              <strong>Preview</strong>
+              <span>Check desktop and mobile fit</span>
+              <span>Before sending files</span>
+              <small>
+                Open the tester to make sure your banner responds cleanly before booking.
+              </small>
+              <a
+                className="advertise-creative-test"
+                href="https://test-ad-creative.zabe.dev"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Test creative ↗
+              </a>
+            </div>
           </div>
           <p className="advertise-note">
             *Banner ads follow the same multi-day discount model as promoted coins. Pricing is

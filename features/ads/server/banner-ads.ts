@@ -19,6 +19,7 @@ const emptyBannerMap = (): BannerAdMap => ({
 
 export const getActiveBannerAds = unstable_cache(
   async (): Promise<BannerAdMap> => {
+    await syncBannerAdStatuses();
     const nowIso = new Date().toISOString();
     const rows = await db
       .select()
@@ -55,14 +56,39 @@ export const getActiveBannerAds = unstable_cache(
 
     return map;
   },
-  ['active-banner-ads-v1'],
+  ['active-banner-ads-v2'],
   { revalidate: 60, tags: ['banner-ads'] },
 );
 
 export async function getAdminBannerAds() {
+  await syncBannerAdStatuses();
   return db.select().from(bannerAds).orderBy(asc(bannerAds.placement), asc(bannerAds.priority));
 }
 
 export function isBannerPlacement(value: string): value is BannerPlacement {
   return bannerPlacements.includes(value as BannerPlacement);
+}
+
+async function syncBannerAdStatuses() {
+  const nowIso = new Date().toISOString();
+  await Promise.all([
+    db
+      .update(bannerAds)
+      .set({ status: 'inactive', updatedAt: new Date() })
+      .where(
+        sql`${bannerAds.status} <> 'inactive'
+          and ${bannerAds.expiresAt} is not null
+          and ${bannerAds.expiresAt} <= ${nowIso}::timestamptz`,
+      )
+      .catch(() => undefined),
+    db
+      .update(bannerAds)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(
+        sql`${bannerAds.status} = 'scheduled'
+          and ${bannerAds.startsAt} <= ${nowIso}::timestamptz
+          and (${bannerAds.expiresAt} is null or ${bannerAds.expiresAt} > ${nowIso}::timestamptz)`,
+      )
+      .catch(() => undefined),
+  ]);
 }

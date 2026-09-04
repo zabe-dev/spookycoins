@@ -1161,6 +1161,7 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
   const editing = Boolean(row);
   const inactive = row?.status === 'inactive';
   const active = row?.status === 'active';
+  const minStartDate = todayUtcInputDate();
 
   return (
     <ConfirmAction
@@ -1255,16 +1256,17 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
           ) : (
             <>
               <label>
-                Start date
+                Start date (UTC)
                 <input
                   name="startDate"
                   type="date"
+                  min={minStartDate}
                   value={startDate}
                   onChange={(event) => setStartDate(event.target.value)}
                 />
               </label>
               <label>
-                Duration
+                Duration (days)
                 <input
                   name="durationDays"
                   type="number"
@@ -1697,4 +1699,10 @@ function isBannerPlacement(value: string | undefined): value is BannerPlacement 
 
 function isAdminTab(value: string | null): value is AdminTab {
   return adminTabs.some((tab) => tab.id === value);
+}
+
+function todayUtcInputDate() {
+  const date = new Date();
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }

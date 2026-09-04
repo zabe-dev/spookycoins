@@ -18,12 +18,14 @@ import { CoinSidebar } from './coin-sidebar';
 export function CoinDetailPage({
   coinRecord,
   promotedCoins,
-  bannerAds,
+  wideBannerAds,
+  coinPageBannerAds,
   isSignedIn,
 }: {
   coinRecord: Coin;
   promotedCoins: CoinListItem[];
-  bannerAds: PublicBannerAd[];
+  wideBannerAds: PublicBannerAd[];
+  coinPageBannerAds: PublicBannerAd[];
   isSignedIn: boolean;
 }) {
   const canonicalCoin = coinRecord;
@@ -398,7 +400,7 @@ export function CoinDetailPage({
         </div>
       )}
 
-      <CoinAd ads={bannerAds} />
+      <CoinAd ads={wideBannerAds} />
 
       <div className="container coin-layout">
         <div className="coin-main-column">
@@ -416,6 +418,7 @@ export function CoinDetailPage({
           onVote={vote}
           onToggleWatch={toggleWatch}
           onOpenChangeRequest={() => openChangeRequest('change')}
+          bannerAds={coinPageBannerAds}
         />
       </div>
 
