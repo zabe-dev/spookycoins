@@ -2645,9 +2645,48 @@ body.modal-open {
   font-size: 10px;
 }
 .admin-request-cell {
-  max-width: 340px;
-  text-align: left !important;
+  width: 120px;
+  max-width: 120px;
+  overflow: hidden;
+  text-align: center !important;
   line-height: 1.45;
+  white-space: normal;
+}
+.admin-read-report-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid rgba(203, 255, 74, 0.22);
+  border-radius: 9px;
+  background: rgba(203, 255, 74, 0.06);
+  padding: 0 10px;
+  color: var(--lime);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+.admin-read-report-button:hover {
+  border-color: rgba(203, 255, 74, 0.42);
+  background: rgba(203, 255, 74, 0.11);
+}
+.admin-read-more-button {
+  border: 0;
+  border-bottom: 1px dotted currentColor;
+  background: transparent;
+  padding: 0;
+  color: var(--lime);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-read-more-button:hover {
+  color: #e1ff8f;
 }
 .admin-status-pill {
   display: inline-flex !important;
@@ -2795,6 +2834,42 @@ img.admin-project-logo {
 .banner-admin-table {
   min-width: 1240px;
 }
+.admin-reports-table {
+  min-width: 1240px;
+  table-layout: fixed;
+}
+.admin-reports-table th:nth-child(1),
+.admin-reports-table td:nth-child(1) {
+  width: 150px;
+}
+.admin-reports-table th:nth-child(2),
+.admin-reports-table td:nth-child(2) {
+  width: 180px;
+}
+.admin-reports-table th:nth-child(3),
+.admin-reports-table td:nth-child(3) {
+  width: 120px;
+}
+.admin-reports-table th:nth-child(4),
+.admin-reports-table td:nth-child(4) {
+  width: 120px;
+}
+.admin-reports-table th:nth-child(5),
+.admin-reports-table td:nth-child(5) {
+  width: 110px;
+}
+.admin-reports-table th:nth-child(6),
+.admin-reports-table td:nth-child(6) {
+  width: 150px;
+}
+.admin-reports-table th:nth-child(7),
+.admin-reports-table td:nth-child(7) {
+  width: 120px;
+}
+.admin-reports-table th:nth-child(8),
+.admin-reports-table td:nth-child(8) {
+  width: 190px;
+}
 .admin-promotions-table {
   min-width: 1080px;
 }
@@ -2842,6 +2917,20 @@ img.admin-project-logo {
 .admin-icon-button.boost {
   border-color: rgba(179, 107, 255, 0.35);
   color: #dcbcff;
+}
+.admin-icon-button.admin-create-button {
+  width: auto;
+  min-width: 0;
+  height: 34px;
+  display: inline-flex;
+  padding: 0 12px;
+  gap: 7px;
+  border-color: transparent;
+  background: rgba(203, 255, 74, 0.08);
+  color: var(--lime);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
 }
 .admin-icon-button:disabled {
   cursor: not-allowed;
@@ -3112,6 +3201,64 @@ img.admin-project-logo {
   line-height: 1.45;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+.admin-report-modal {
+  width: min(720px, 100%);
+}
+.admin-report-modal-body {
+  display: grid;
+  gap: 14px;
+  padding: 20px 25px 25px;
+}
+.admin-report-modal-body section {
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 15px;
+}
+.admin-report-modal-body h3 {
+  margin: 0 0 10px;
+  color: #f0f3f4;
+  font-size: 13px;
+}
+.admin-report-modal-body p {
+  margin: 0;
+  color: #c7d0d5;
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.admin-report-modal-body dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.admin-report-modal-body dl div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+  padding-top: 10px;
+}
+.admin-report-modal-body dl div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.admin-report-modal-body dt {
+  color: #78838b;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.admin-report-modal-body dd {
+  min-width: 0;
+  margin: 0;
+  color: #dce2e5;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 .admin-raw-json {
   margin: 0 25px 25px;

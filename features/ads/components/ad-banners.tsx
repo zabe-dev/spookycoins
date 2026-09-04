@@ -10,6 +10,8 @@ type BannerProps = {
   offset?: number;
 };
 
+const BASIC_AD_ROTATION_MS = 60_000;
+
 function useSelectedAd(ads: PublicBannerAd[] = [], offset = 0, rotating = false) {
   const activeAds = useMemo(() => ads.filter((ad) => ad.desktopImageUrl), [ads]);
   const [index, setIndex] = useState(0);
@@ -30,7 +32,10 @@ function useSelectedBasicAdPair(ads: PublicBannerAd[] = [], offset = 0) {
 
   useEffect(() => {
     if (activeAds.length < 2) return;
-    const timer = window.setInterval(() => setIndex((current) => current + 1), 7000);
+    const timer = window.setInterval(
+      () => setIndex((current) => current + 1),
+      BASIC_AD_ROTATION_MS,
+    );
     return () => window.clearInterval(timer);
   }, [activeAds.length]);
 
