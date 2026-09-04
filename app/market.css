@@ -240,6 +240,27 @@
   position: relative;
   overflow: hidden;
 }
+.ad-creative-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 18px;
+  border: 1px solid rgba(237, 242, 244, 0.16);
+  border-radius: 999px;
+  background: rgba(5, 7, 8, 0.72);
+  color: rgba(237, 242, 244, 0.82);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
 .banner-ad-image {
   padding: 0;
   color: #fff;
@@ -247,12 +268,14 @@
 }
 .banner-ad-image picture,
 .wide-banner-image picture,
+.ad-banner-image picture,
 .bottom-ad-creative picture {
   position: absolute;
   inset: 0;
 }
 .banner-ad-image img,
 .wide-banner-image img,
+.ad-banner-image img,
 .bottom-ad-creative img {
   width: 100%;
   height: 100%;
@@ -1587,7 +1610,7 @@
   color: #fff;
   text-decoration: none;
 }
-.bottom-ad-creative > span {
+.bottom-ad-creative > span:not(.ad-creative-badge) {
   position: relative;
   z-index: 1;
   display: grid;
@@ -2101,7 +2124,7 @@
   .bottom-ad-creative {
     height: 50px;
   }
-  .bottom-ad-creative > span {
+  .bottom-ad-creative > span:not(.ad-creative-badge) {
     padding: 7px 9px;
   }
   .bottom-ad-creative em {

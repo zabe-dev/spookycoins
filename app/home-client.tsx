@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
 import { InfoBand } from '@/components/layout/info-band';
+import { WideAdBanner } from '@/features/ads/components/ad-banners';
 import type { BannerAdMap } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import {
@@ -408,7 +409,7 @@ export function HomeClient({
       <div className="container ad-grid">
         <Ad ads={bannerAds['homepage-top']} />
         <div className="desktop-only">
-          <Ad ads={bannerAds['homepage-top']} />
+          <Ad ads={bannerAds['homepage-top']} offset={1} />
         </div>
       </div>
       <section className="container hotspots-shell">
@@ -514,7 +515,7 @@ export function HomeClient({
           coinLinks={false}
         />
       </section>
-      <WideBanner ads={bannerAds['homepage-wide']} />
+      <WideAdBanner ads={bannerAds['homepage-wide']} />
       <section className="container leaderboard" id="leaderboard">
         <div className="section-title">
           <div>
@@ -729,7 +730,7 @@ export function HomeClient({
           </div>
         </div>
       </section>
-      <WideBanner ads={bannerAds['homepage-faq-wide']} />
+      <WideAdBanner ads={bannerAds['homepage-faq-wide']} />
       <HomeFaq />
       <InfoBand />
       <SiteFooter id="footer" variant="home" />
@@ -812,41 +813,6 @@ function HomeFaq() {
   );
 }
 
-function WideBanner({
-  ads,
-}: {
-  ads?: BannerAdMap['homepage-wide'] | BannerAdMap['homepage-faq-wide'];
-}) {
-  const ad = ads?.[0];
-
-  if (ad) {
-    return (
-      <Link className="container wide-banner wide-banner-image" href={ad.targetUrl} target="_blank">
-        <picture>
-          {ad.mobileImageUrl && <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />}
-          <img src={ad.desktopImageUrl} alt={ad.title} />
-        </picture>
-        <span className="wide-banner-overlay">
-          <small>FULL-WIDTH ADVERTISEMENT</small>
-          <b>{ad.title}</b>
-          {ad.subtitle && <em>{ad.subtitle}</em>}
-        </span>
-      </Link>
-    );
-  }
-
-  return (
-    <div className="container wide-banner">
-      <small>FULL-WIDTH ADVERTISEMENT</small>
-      <div>
-        <b>Reach crypto&apos;s earliest coin hunters.</b>
-        <span>Premium inventory · Measured impressions and clicks</span>
-      </div>
-      <Link href="/advertise">View ad packages ↗</Link>
-    </div>
-  );
-}
-
 function BottomAd({
   ad,
   onClose,
@@ -859,6 +825,7 @@ function BottomAd({
       <aside className="bottom-ad bottom-ad-image">
         <div className="container bottom-ad-inner">
           <Link className="bottom-ad-creative" href={ad.targetUrl} target="_blank">
+            <span className="ad-creative-badge">Ad</span>
             <picture>
               {ad.mobileImageUrl && (
                 <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />

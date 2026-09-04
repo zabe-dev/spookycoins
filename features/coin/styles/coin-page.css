@@ -1,6 +1,39 @@
 .coin-detail-page {
   padding-bottom: 0;
 }
+.coin-page-ad-banner {
+  position: relative;
+  display: flex;
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid #34311e;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #15140f, #1c1810 55%, #111519);
+  color: var(--copy);
+  text-decoration: none;
+}
+.coin-page-ad-banner:not(.ad-banner-image) {
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px;
+}
+.coin-page-ad-banner small {
+  color: var(--sub);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+}
+.coin-page-ad-banner b {
+  max-width: 18ch;
+  color: var(--copy);
+  font-size: 15px;
+  line-height: 1.25;
+}
+.coin-page-ad-banner > a {
+  color: var(--lime);
+  font-size: 10px;
+  text-decoration: none;
+}
 .coin-breadcrumb {
   display: flex;
   gap: 8px;
