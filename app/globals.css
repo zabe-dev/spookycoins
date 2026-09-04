@@ -3122,28 +3122,49 @@ img.admin-project-logo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  color: #78838b;
+  gap: 14px;
+  margin-top: 14px;
+  color: var(--sub, #78838b);
   font-size: 10px;
 }
 .admin-pagination > div {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
 }
 .admin-pagination button {
-  border: 1px solid #30383e;
+  min-height: 32px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.025);
-  padding: 8px 10px;
-  color: #dce2e2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  padding: 8px 12px;
+  color: var(--copy, #dce2e2);
   font-size: 9px;
   font-weight: 800;
   cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
+}
+.admin-pagination button:hover:not(:disabled) {
+  border-color: rgba(203, 255, 74, 0.34);
+  color: var(--lime, #cbff4a);
 }
 .admin-pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+@media (max-width: 640px) {
+  .admin-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .admin-pagination > div {
+    justify-content: flex-start;
+    width: 100%;
+  }
 }
 .admin-actions-stack {
   display: grid;
