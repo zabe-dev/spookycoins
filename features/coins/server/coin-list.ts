@@ -83,7 +83,8 @@ async function getPublicCoinRecords(
       .where(
         and(
           inArray(coinBoosts.coinId, coinIds),
-          eq(coinBoosts.status, 'active'),
+          sql`${coinBoosts.status} in ('active', 'scheduled')`,
+          sql`${coinBoosts.startsAt} <= ${nowIso}::timestamptz`,
           sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
         ),
       )
@@ -94,7 +95,8 @@ async function getPublicCoinRecords(
       .where(
         and(
           inArray(coinPromotions.coinId, coinIds),
-          eq(coinPromotions.status, 'active'),
+          sql`${coinPromotions.status} in ('active', 'scheduled')`,
+          sql`${coinPromotions.startsAt} <= ${nowIso}::timestamptz`,
           sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
         ),
       )

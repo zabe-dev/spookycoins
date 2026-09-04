@@ -187,6 +187,7 @@ export async function grantCoinBoost(formData: FormData) {
   const adminUser = await requireAdmin();
   const coinId = readNumber(formData, 'coinId');
   const multiplier = readNumber(formData, 'multiplier');
+  const extensionDays = readOptionalBoundedNumber(formData, 'extensionDays', 0, 0, 365);
   const notes = readOptional(formData, 'notes');
 
   if (!boostMultipliers.includes(multiplier as (typeof boostMultipliers)[number])) {
@@ -194,14 +195,54 @@ export async function grantCoinBoost(formData: FormData) {
   }
 
   const rule = boostPackageRules[multiplier as keyof typeof boostPackageRules];
+  const now = new Date();
+  const [existingBoost] = await db
+    .select()
+    .from(coinBoosts)
+    .where(
+      and(
+        eq(coinBoosts.coinId, coinId),
+        sql`${coinBoosts.status} in ('active', 'scheduled')`,
+        sql`${coinBoosts.expiresAt} > ${now.toISOString()}::timestamptz`,
+      ),
+    )
+    .orderBy(desc(coinBoosts.expiresAt))
+    .limit(1);
 
-  await cancelActiveBoosts(coinId);
+  if (existingBoost) {
+    const currentStatus = getScheduleStatus(existingBoost.startsAt, existingBoost.expiresAt);
+    if (currentStatus === 'active') {
+      if (extensionDays < 1) throw new Error('Add at least 1 day to extend an active boost.');
+      await db
+        .update(coinBoosts)
+        .set({
+          expiresAt: addHours(existingBoost.expiresAt, extensionDays * 24),
+          assignedByUserId: adminUser.id,
+          notes,
+          updatedAt: now,
+        })
+        .where(eq(coinBoosts.id, existingBoost.id));
+      await audit(adminUser.id, 'boost.extended', 'coin', String(coinId), {
+        package: existingBoost.multiplier,
+        extensionDays,
+        notes: notes || null,
+      });
+      revalidatePath('/admin/dashboard');
+      return;
+    }
+  }
+
+  const startsAt = readUtcStartDateOrNow(formData, 'startDate');
+  const expiresAt = addHours(startsAt, rule.durationHours);
+  const status = getScheduleStatus(startsAt, expiresAt);
+
+  await cancelOpenBoosts(coinId);
   await db.insert(coinBoosts).values({
     coinId,
     multiplier,
-    status: 'active',
-    startsAt: new Date(),
-    expiresAt: addHours(new Date(), rule.durationHours),
+    status,
+    startsAt,
+    expiresAt,
     assignedByUserId: adminUser.id,
     notes,
   });
@@ -210,6 +251,9 @@ export async function grantCoinBoost(formData: FormData) {
     package: multiplier,
     voteMultiplier: rule.voteMultiplier,
     durationHours: rule.durationHours,
+    status,
+    startsAt,
+    expiresAt,
     notes: notes || null,
   });
   revalidatePath('/admin/dashboard');
@@ -221,7 +265,7 @@ export async function removeCoinBoost(formData: FormData) {
   const activeBoosts = await db
     .select()
     .from(coinBoosts)
-    .where(and(eq(coinBoosts.coinId, coinId), eq(coinBoosts.status, 'active')));
+    .where(and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`));
 
   await cancelActiveBoosts(coinId);
   await audit(adminUser.id, 'boost.removed', 'coin', String(coinId), {
@@ -238,51 +282,73 @@ export async function removeCoinBoost(formData: FormData) {
 export async function addPromotedCoin(formData: FormData) {
   const adminUser = await requireAdmin();
   const coinId = readNumber(formData, 'coinId');
-  const durationDays = readNumber(formData, 'durationDays');
-  const priority = readNumber(formData, 'priority');
+  const durationDays = readBoundedNumber(formData, 'durationDays', 1, 365);
+  const extensionDays = readOptionalBoundedNumber(formData, 'extensionDays', 0, 0, 365);
+  const priority = readBoundedNumber(formData, 'priority', 1, 999);
   const notes = readOptional(formData, 'notes');
-
-  if (durationDays < 1 || durationDays > 365) {
-    throw new Error('Promoted duration must be between 1 and 365 days.');
-  }
-  if (priority < 1 || priority > 999) {
-    throw new Error('Priority must be between 1 and 999.');
-  }
 
   const now = new Date();
   const nowIso = now.toISOString();
-  const [activePromotion] = await db
+  const [existingPromotion] = await db
     .select()
     .from(coinPromotions)
     .where(
       and(
         eq(coinPromotions.coinId, coinId),
-        eq(coinPromotions.status, 'active'),
+        sql`${coinPromotions.status} in ('active', 'scheduled')`,
         sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
       ),
     )
     .orderBy(desc(coinPromotions.expiresAt))
     .limit(1);
 
-  if (activePromotion) {
+  if (existingPromotion) {
+    const currentStatus = getScheduleStatus(existingPromotion.startsAt, existingPromotion.expiresAt);
+    if (currentStatus === 'active') {
+      if (extensionDays < 1) throw new Error('Add at least 1 day to extend an active promotion.');
+      await db
+        .update(coinPromotions)
+        .set({
+          priority,
+          expiresAt: addHours(existingPromotion.expiresAt, extensionDays * 24),
+          assignedByUserId: adminUser.id,
+          notes,
+          updatedAt: now,
+        })
+        .where(eq(coinPromotions.id, existingPromotion.id));
+      await audit(adminUser.id, 'promotion.extended', 'coin', String(coinId), {
+        extensionDays,
+        priority,
+        notes: notes || null,
+      });
+      revalidatePath('/admin/dashboard');
+      return;
+    }
+
+    const startsAt = readUtcStartDateOrNow(formData, 'startDate');
+    const expiresAt = addHours(startsAt, durationDays * 24);
     await db
       .update(coinPromotions)
       .set({
         priority,
-        expiresAt: addHours(activePromotion.expiresAt, durationDays * 24),
+        status: getScheduleStatus(startsAt, expiresAt),
+        startsAt,
+        expiresAt,
         assignedByUserId: adminUser.id,
         notes,
         updatedAt: now,
       })
-      .where(eq(coinPromotions.id, activePromotion.id));
+      .where(eq(coinPromotions.id, existingPromotion.id));
   } else {
+    const startsAt = readUtcStartDateOrNow(formData, 'startDate');
+    const expiresAt = addHours(startsAt, durationDays * 24);
     await db.insert(coinPromotions).values({
       coinId,
       placement: 'promoted-table',
       priority,
-      status: 'active',
-      startsAt: now,
-      expiresAt: addHours(now, durationDays * 24),
+      status: getScheduleStatus(startsAt, expiresAt),
+      startsAt,
+      expiresAt,
       assignedByUserId: adminUser.id,
       notes,
     });
@@ -302,7 +368,9 @@ export async function removePromotedCoin(formData: FormData) {
   const activePromotions = await db
     .select()
     .from(coinPromotions)
-    .where(and(eq(coinPromotions.coinId, coinId), eq(coinPromotions.status, 'active')));
+    .where(
+      and(eq(coinPromotions.coinId, coinId), sql`${coinPromotions.status} in ('active', 'scheduled')`),
+    );
 
   await cancelActivePromotions(coinId);
   await audit(adminUser.id, 'promotion.removed', 'coin', String(coinId), {
@@ -608,14 +676,23 @@ async function cancelActiveBoosts(coinId: number) {
   await db
     .update(coinBoosts)
     .set({ status: 'canceled', updatedAt: new Date() })
-    .where(and(eq(coinBoosts.coinId, coinId), eq(coinBoosts.status, 'active')));
+    .where(and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`));
+}
+
+async function cancelOpenBoosts(coinId: number) {
+  await db
+    .update(coinBoosts)
+    .set({ status: 'canceled', updatedAt: new Date() })
+    .where(and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`));
 }
 
 async function cancelActivePromotions(coinId: number) {
   await db
     .update(coinPromotions)
     .set({ status: 'canceled', updatedAt: new Date() })
-    .where(and(eq(coinPromotions.coinId, coinId), eq(coinPromotions.status, 'active')));
+    .where(
+      and(eq(coinPromotions.coinId, coinId), sql`${coinPromotions.status} in ('active', 'scheduled')`),
+    );
 }
 
 async function audit(
@@ -654,6 +731,22 @@ function readNumber(formData: FormData, key: string) {
 function readBoundedNumber(formData: FormData, key: string, min: number, max: number) {
   const value = readNumber(formData, key);
   if (value < min || value > max) throw new Error(`${key} must be between ${min} and ${max}.`);
+  return value;
+}
+
+function readOptionalBoundedNumber(
+  formData: FormData,
+  key: string,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const raw = readOptional(formData, key);
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < min || value > max) {
+    throw new Error(`${key} must be between ${min} and ${max}.`);
+  }
   return value;
 }
 

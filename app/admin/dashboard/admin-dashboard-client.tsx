@@ -97,12 +97,17 @@ export type AdminCoinRow = {
   boost: {
     tier: number;
     status: string;
+    startDate: string;
+    startsAt: string;
     expiresAt: string;
     remaining: string;
   } | null;
   promotion: {
     status: string;
     priority: number;
+    startDate: string;
+    startsAt: string;
+    durationDays: number;
     expiresAt: string;
     remaining: string;
   } | null;
@@ -703,7 +708,7 @@ function PromotionsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Pop
     <AdminPanel
       eyebrow="Visibility"
       title="Promotions & boosts"
-      count={`${rows.filter((row) => row.boost || row.promotion).length} active`}
+      count={`${rows.filter((row) => row.boost || row.promotion).length} scheduled/live`}
       note="Boosts affect voting power. Promoted placements control paid visibility inventory."
       rows={rows}
       searchPlaceholder="Search coin, symbol, or chain"
@@ -739,7 +744,7 @@ function PromotionsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Pop
                 <td>
                   {row.boost ? (
                     <StatusPill tone="purple">
-                      {row.boost.tier}x — {row.boost.remaining}
+                      {row.boost.tier}x — {labelize(row.boost.status)} · {row.boost.remaining}
                     </StatusPill>
                   ) : (
                     <span>1x / no boost</span>
@@ -747,7 +752,9 @@ function PromotionsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Pop
                 </td>
                 <td>
                   {row.promotion ? (
-                    <StatusPill tone="amber">{row.promotion.remaining} left</StatusPill>
+                    <StatusPill tone="amber">
+                      {labelize(row.promotion.status)} · {row.promotion.remaining}
+                    </StatusPill>
                   ) : (
                     <span>Not promoted</span>
                   )}
@@ -1067,38 +1074,83 @@ function AdminPanel<T>({
 }
 
 function BoostAction({ row, popover }: { row: AdminCoinRow; popover: PopoverController }) {
-  const [tier, setTier] = useState(50);
+  const [tier, setTier] = useState(row.boost?.tier || 50);
+  const [startDate, setStartDate] = useState(row.boost?.startDate || '');
+  const [extensionDays, setExtensionDays] = useState(1);
   const selected = boostPackages.find((item) => item.value === tier) || boostPackages[2];
-  const message = row.boost
-    ? `This will replace the active ${row.boost.tier}x boost, ${row.boost.remaining} remaining, with ${selected.label} for ${selected.detail.split(' · ')[1]}. Continue?`
-    : `Give ${row.name} the ${selected.label} boost package for ${selected.detail}. Continue?`;
+  const active = row.boost?.status === 'active';
+  const scheduled = row.boost?.status === 'scheduled';
+  const minStartDate = todayUtcInputDate();
+  const message = active
+    ? `Add ${extensionDays} day${extensionDays === 1 ? '' : 's'} to the active ${row.boost?.tier}x boost.`
+    : scheduled
+      ? `Update the scheduled boost for ${row.name}.`
+      : `Give ${row.name} the ${selected.label} boost package for ${selected.detail}.`;
 
   return (
     <ConfirmAction
       popover={popover}
       popoverId={`coin-boost-${row.id}`}
       action={grantCoinBoost}
-      title="Boost project"
+      title={active ? 'Extend boost' : scheduled ? 'Edit boost' : 'Boost project'}
       tone="boost"
       message={message}
       fields={{ coinId: row.id, multiplier: tier }}
       extra={
-        <>
-          <label>
-            Boost tier
-            <select value={tier} onChange={(event) => setTier(Number(event.target.value))}>
-              {boostPackages.map((boost) => (
-                <option key={boost.value} value={boost.value}>
-                  {boost.label} — {boost.detail}
-                </option>
-              ))}
-            </select>
-          </label>
+        <div className="admin-schedule-form">
+          {active ? (
+            <label>
+              Add days
+              <input
+                name="extensionDays"
+                type="number"
+                min={1}
+                max={365}
+                value={extensionDays}
+                onChange={(event) =>
+                  setExtensionDays(Math.max(1, Number(event.target.value) || 1))
+                }
+                required
+              />
+            </label>
+          ) : (
+            <>
+              <label>
+                Boost tier
+                <select
+                  name="multiplier"
+                  value={tier}
+                  onChange={(event) => setTier(Number(event.target.value))}
+                >
+                  {boostPackages.map((boost) => (
+                    <option key={boost.value} value={boost.value}>
+                      {boost.label} — {boost.detail}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Start date (UTC)
+                <input
+                  name="startDate"
+                  type="date"
+                  min={minStartDate}
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </label>
+            </>
+          )}
           <label>
             Notes
             <input name="notes" placeholder="Internal notes" />
           </label>
-        </>
+          {!active && (
+            <small className="admin-banner-form-wide">
+              Pick a start date to begin at 12:00 AM UTC. Leave it blank to start immediately.
+            </small>
+          )}
+        </div>
       }
     >
       <Zap aria-hidden="true" />
@@ -1107,38 +1159,80 @@ function BoostAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCont
 }
 
 function PromoteAction({ row, popover }: { row: AdminCoinRow; popover: PopoverController }) {
-  const [days, setDays] = useState(1);
-  const message = row.promotion
-    ? `This will add ${days} day${days === 1 ? '' : 's'} to the active promotion (${row.promotion.remaining} remaining). Continue?`
-    : `Promote ${row.name} for ${days} day${days === 1 ? '' : 's'} (${days * 24} hours). Continue?`;
+  const [days, setDays] = useState(row.promotion?.durationDays || 1);
+  const [startDate, setStartDate] = useState(row.promotion?.startDate || '');
+  const [extensionDays, setExtensionDays] = useState(1);
+  const active = row.promotion?.status === 'active';
+  const scheduled = row.promotion?.status === 'scheduled';
+  const minStartDate = todayUtcInputDate();
+  const message = active
+    ? `Add ${extensionDays} day${extensionDays === 1 ? '' : 's'} to the active promotion.`
+    : scheduled
+      ? `Update the scheduled promotion for ${row.name}.`
+      : `Promote ${row.name} for ${days} day${days === 1 ? '' : 's'}.`;
 
   return (
     <ConfirmAction
       popover={popover}
       popoverId={`coin-promote-${row.id}`}
       action={addPromotedCoin}
-      title="Promote project"
+      title={active ? 'Extend promotion' : scheduled ? 'Edit promotion' : 'Promote project'}
       tone="boost"
       message={message}
       fields={{ coinId: row.id, durationDays: days, priority: row.promotion?.priority || 1 }}
       extra={
-        <>
-          <label>
-            Days
-            <input
-              type="number"
-              min={1}
-              max={365}
-              value={days}
-              onChange={(event) => setDays(Math.max(1, Number(event.target.value) || 1))}
-            />
-          </label>
-          <small>{days * 24} hours will be added on save.</small>
+        <div className="admin-schedule-form">
+          {active ? (
+            <label>
+              Add days
+              <input
+                name="extensionDays"
+                type="number"
+                min={1}
+                max={365}
+                value={extensionDays}
+                onChange={(event) =>
+                  setExtensionDays(Math.max(1, Number(event.target.value) || 1))
+                }
+                required
+              />
+            </label>
+          ) : (
+            <>
+              <label>
+                Start date (UTC)
+                <input
+                  name="startDate"
+                  type="date"
+                  min={minStartDate}
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </label>
+              <label>
+                Duration (days)
+                <input
+                  name="durationDays"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={days}
+                  onChange={(event) => setDays(Math.max(1, Number(event.target.value) || 1))}
+                  required
+                />
+              </label>
+            </>
+          )}
           <label>
             Notes
             <input name="notes" placeholder="Internal notes" />
           </label>
-        </>
+          {!active && (
+            <small className="admin-banner-form-wide">
+              Pick a start date to begin at 12:00 AM UTC. Leave it blank to start immediately.
+            </small>
+          )}
+        </div>
       }
     >
       <Megaphone aria-hidden="true" />

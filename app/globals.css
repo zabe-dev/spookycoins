@@ -2795,14 +2795,15 @@ img.admin-project-logo {
   position: fixed;
   z-index: 1000;
   display: grid;
-  width: min(420px, calc(100vw - 48px));
+  width: min(460px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
-  gap: 14px;
-  border: 1px solid #30383c;
-  border-radius: 13px;
-  background: #0d1013;
-  padding: 20px;
+  gap: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%), #0d1013;
+  padding: 16px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
 }
 .admin-confirm-popover strong {
@@ -2810,7 +2811,7 @@ img.admin-project-logo {
   margin-right: 32px;
   color: #eef1f2;
   font:
-    700 20px var(--font-space-grotesk),
+    750 18px var(--font-space-grotesk),
     sans-serif;
   letter-spacing: -0.035em;
 }
@@ -2844,7 +2845,7 @@ img.admin-project-logo {
 }
 .admin-confirm-popover label {
   display: grid;
-  gap: 8px;
+  gap: 7px;
   color: #c6cdd1;
   font-size: 10px;
   font-weight: 750;
@@ -2856,12 +2857,12 @@ img.admin-project-logo {
 .admin-confirm-popover textarea {
   min-width: 0;
   width: 100%;
-  min-height: 44px;
+  min-height: 40px;
   border: 1px solid #23292e;
   border-radius: 10px;
   outline: 0;
   background: #0d1113;
-  padding: 0 13px;
+  padding: 0 12px;
   color: #eef1f2;
   font:
     12px var(--font-poppins),
@@ -2882,22 +2883,27 @@ img.admin-project-logo {
   background-position: right 12px center;
 }
 .admin-confirm-popover textarea {
-  min-height: 116px;
-  padding: 13px;
+  min-height: 90px;
+  padding: 12px;
   resize: vertical;
 }
-.admin-confirm-popover > div {
+.admin-confirm-popover > div:not(.admin-banner-form):not(.admin-schedule-form):not(
+    .admin-confirm-actions
+  ) {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 8px;
 }
-.admin-confirm-popover > .admin-banner-form {
+.admin-confirm-popover > .admin-banner-form,
+.admin-confirm-popover > .admin-schedule-form,
+.admin-schedule-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   justify-content: stretch;
-  gap: 15px;
+  gap: 12px;
 }
-.admin-banner-form-wide {
+.admin-banner-form-wide,
+.admin-schedule-form small {
   grid-column: 1 / -1;
 }
 .admin-confirm-popover button {
@@ -2922,6 +2928,13 @@ img.admin-project-logo {
 .admin-confirm-actions {
   align-items: center;
   margin-top: 4px;
+}
+@media (max-width: 560px) {
+  .admin-confirm-popover > .admin-banner-form,
+  .admin-confirm-popover > .admin-schedule-form,
+  .admin-schedule-form {
+    grid-template-columns: 1fr;
+  }
 }
 .admin-detail-modal-backdrop {
   position: fixed;

@@ -75,7 +75,10 @@ export default async function AdminDashboardPage({
       .select()
       .from(coinBoosts)
       .where(
-        and(eq(coinBoosts.status, 'active'), sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`),
+        and(
+          sql`${coinBoosts.status} in ('active', 'scheduled')`,
+          sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
+        ),
       )
       .orderBy(desc(coinBoosts.expiresAt)),
     db
@@ -83,7 +86,7 @@ export default async function AdminDashboardPage({
       .from(coinPromotions)
       .where(
         and(
-          eq(coinPromotions.status, 'active'),
+          sql`${coinPromotions.status} in ('active', 'scheduled')`,
           sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
         ),
       )
@@ -94,14 +97,19 @@ export default async function AdminDashboardPage({
       .select({ count: sql<number>`count(distinct ${coinBoosts.coinId})::int` })
       .from(coinBoosts)
       .where(
-        and(eq(coinBoosts.status, 'active'), sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`),
+        and(
+          sql`${coinBoosts.status} in ('active', 'scheduled')`,
+          sql`${coinBoosts.startsAt} <= ${nowIso}::timestamptz`,
+          sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
+        ),
       ),
     db
       .select({ count: sql<number>`count(distinct ${coinPromotions.coinId})::int` })
       .from(coinPromotions)
       .where(
         and(
-          eq(coinPromotions.status, 'active'),
+          sql`${coinPromotions.status} in ('active', 'scheduled')`,
+          sql`${coinPromotions.startsAt} <= ${nowIso}::timestamptz`,
           sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
         ),
       ),
@@ -226,15 +234,20 @@ export default async function AdminDashboardPage({
       boost: boost
         ? {
             tier: boost.multiplier,
-            status: 'Active',
+            status: getBannerStatus(boost.startsAt, boost.expiresAt, now),
+            startDate: formatInputDate(boost.startsAt),
+            startsAt: formatDateTime(boost.startsAt),
             expiresAt: boost.expiresAt.toISOString(),
             remaining: formatTimeRemaining(boost.expiresAt, now),
           }
         : null,
       promotion: promotion
         ? {
-            status: 'Active',
+            status: getBannerStatus(promotion.startsAt, promotion.expiresAt, now),
             priority: promotion.priority,
+            startDate: formatInputDate(promotion.startsAt),
+            startsAt: formatDateTime(promotion.startsAt),
+            durationDays: getDurationDays(promotion.startsAt, promotion.expiresAt),
             expiresAt: promotion.expiresAt.toISOString(),
             remaining: formatTimeRemaining(promotion.expiresAt, now),
           }

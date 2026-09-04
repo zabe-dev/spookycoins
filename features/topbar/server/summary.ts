@@ -151,7 +151,8 @@ async function readTopVotedCoin(): Promise<TopbarCoinLink> {
         .where(
           and(
             inArray(coinBoosts.coinId, activeCoinIds),
-            eq(coinBoosts.status, 'active'),
+            sql`${coinBoosts.status} in ('active', 'scheduled')`,
+            sql`${coinBoosts.startsAt} <= ${nowIso}::timestamptz`,
             sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
           ),
         )
@@ -194,7 +195,8 @@ async function readActiveBoosts(coinIds: number[]) {
       .where(
         and(
           inArray(coinBoosts.coinId, coinIds),
-          eq(coinBoosts.status, 'active'),
+          sql`${coinBoosts.status} in ('active', 'scheduled')`,
+          sql`${coinBoosts.startsAt} <= ${nowIso}::timestamptz`,
           sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
         ),
       );
