@@ -81,8 +81,8 @@ export default function PrivacyPolicyPage() {
             </p>
             <p>
               <strong>Service list placeholder:</strong> confirm the final providers before launch,
-              such as Neon, object storage/S3, Mobula, Binance/proxy services, Cloudflare, Better
-              Auth, analytics, and payment processors.
+              such as Neon, Cloudflare R2, Mobula, Binance/proxy services, Cloudflare, Better Auth,
+              analytics, and payment processors.
             </p>
           </LegalSection>
 

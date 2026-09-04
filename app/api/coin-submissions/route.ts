@@ -12,7 +12,7 @@ import {
   coinSubmissions,
 } from '@/lib/db/schema';
 import { getClientIp } from '@/lib/http/client-ip';
-import { uploadSubmissionLogo } from '@/lib/storage/s3';
+import { uploadSubmissionLogo } from '@/lib/storage/r2';
 import { headers } from 'next/headers';
 
 const maxSubmissionBodyBytes = 3_200_000;
