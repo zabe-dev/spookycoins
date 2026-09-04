@@ -47,8 +47,6 @@ export function CoinDetailPage({
   const [contractCopied, setContractCopied] = useState(false);
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
   const [changeRequestIntent, setChangeRequestIntent] = useState<'change' | 'report'>('change');
-  const [voteAnimating, setVoteAnimating] = useState(false);
-  const [watchAnimating, setWatchAnimating] = useState(false);
 
   useEffect(() => {
     if (!voted || !nextVoteAt) return;
@@ -86,9 +84,6 @@ export function CoinDetailPage({
       trendingScore: current.trendingScore + 3,
       trend: current.trend + 3,
     }));
-    setVoteAnimating(true);
-    window.setTimeout(() => setVoteAnimating(false), 650);
-
     const response = await fetch(`/api/coins/${coin.coinId}/vote`, { method: 'POST' });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -136,11 +131,6 @@ export function CoinDetailPage({
       trendingScore: Math.max(0, current.trendingScore + (adding ? 2 : -2)),
       trend: Math.max(0, current.trend + (adding ? 2 : -2)),
     }));
-    if (adding) {
-      setWatchAnimating(true);
-      window.setTimeout(() => setWatchAnimating(false), 650);
-    }
-
     const response = await fetch(`/api/coins/${coin.coinId}/watchlist`, { method: 'POST' });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -438,8 +428,6 @@ export function CoinDetailPage({
           coin={coin}
           voted={voted}
           watched={watched}
-          voteAnimating={voteAnimating}
-          watchAnimating={watchAnimating}
           nextVoteAt={nextVoteAt}
           actionsDisabled={isSuspended}
           onVote={vote}

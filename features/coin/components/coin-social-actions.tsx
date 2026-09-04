@@ -53,12 +53,6 @@ export function CoinSocialActions({
     <div className="coin-social-actions">
       {(links.length > 0 || explorerUrl) && (
         <div className="official-links">
-          {explorerUrl && (
-            <a className="explorer-action" href={explorerUrl} target="_blank" rel="noreferrer">
-              <Icon kind="explorer" />
-              <span>Explorer</span>
-            </a>
-          )}
           {links.map((link) => (
             <a
               className={`project-link-action project-link-${link.type}`}
@@ -71,6 +65,17 @@ export function CoinSocialActions({
               <span>{projectLinkLabels[link.type]}</span>
             </a>
           ))}
+          {explorerUrl && (
+            <a
+              className="project-link-action explorer-action"
+              href={explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Icon kind="explorer" />
+              <span>Explorer</span>
+            </a>
+          )}
         </div>
       )}
       <div className="coin-utilities">

@@ -11,8 +11,6 @@ export function CoinSidebar({
   coin,
   voted,
   watched,
-  voteAnimating,
-  watchAnimating,
   nextVoteAt,
   actionsDisabled = false,
   onVote,
@@ -22,8 +20,6 @@ export function CoinSidebar({
   coin: CoinDetailView;
   voted: boolean;
   watched: boolean;
-  voteAnimating: boolean;
-  watchAnimating: boolean;
   nextVoteAt: string | null;
   actionsDisabled?: boolean;
   onVote: () => void;
@@ -50,7 +46,6 @@ export function CoinSidebar({
         </div>
         <VoteButton
           active={voted}
-          animating={voteAnimating}
           onClick={onVote}
           appearance="sidebar"
           coinName={coin.symbol}
@@ -59,7 +54,6 @@ export function CoinSidebar({
         />
         <WatchlistButton
           active={watched}
-          animating={watchAnimating}
           onClick={onToggleWatch}
           appearance="detail"
           disabled={actionsDisabled}

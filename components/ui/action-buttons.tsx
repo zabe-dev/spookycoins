@@ -30,14 +30,15 @@ export function WatchlistButton({
   onClick: () => void;
   appearance?: 'table' | 'detail';
 }) {
+  const showsBurst = appearance === 'table';
   return (
     <button
-      className={`${appearance === 'table' ? 'watch-btn' : 'detail-watch'} action-button action-button--watch ${active ? (appearance === 'table' ? 'watched' : 'active') : ''} ${animating ? 'just-watched' : ''}`}
+      className={`${appearance === 'table' ? 'watch-btn' : 'detail-watch'} action-button action-button--watch ${active ? (appearance === 'table' ? 'watched' : 'active') : ''} ${showsBurst && animating ? 'just-watched' : ''}`}
       onClick={onClick}
       disabled={disabled}
       aria-label={active ? 'Remove from watchlist' : 'Add to watchlist'}
     >
-      <ActionBurst />
+      {showsBurst && <ActionBurst />}
       <span>
         <StarIcon filled={active} />
         {appearance === 'detail' && (active ? 'Watching' : 'Watchlist')}
@@ -59,12 +60,12 @@ export function VoteButton({
   animating?: boolean;
   disabled?: boolean;
   onClick: () => void;
-  appearance?: 'table' | 'detail' | 'sidebar';
+  appearance?: 'table' | 'sidebar';
   coinName?: string;
   cooldownUntil?: string | null;
 }) {
-  const baseClass =
-    appearance === 'table' ? 'vote-btn' : appearance === 'sidebar' ? 'sidebar-vote' : 'detail-vote';
+  const baseClass = appearance === 'table' ? 'vote-btn' : 'sidebar-vote';
+  const showsBurst = appearance === 'table';
   const countdownLabel = useVoteCountdown(cooldownUntil);
   const waitingDots = (
     <span className="vote-wait-dots" aria-label="Waiting for vote cooldown">
@@ -85,11 +86,11 @@ export function VoteButton({
 
   return (
     <button
-      className={`${baseClass} action-button action-button--vote ${active ? (appearance === 'table' ? 'voted' : 'active') : ''} ${animating ? 'just-voted' : ''}`}
+      className={`${baseClass} action-button action-button--vote ${active ? (appearance === 'table' ? 'voted' : 'active') : ''} ${showsBurst && animating ? 'just-voted' : ''}`}
       onClick={onClick}
       disabled={disabled}
     >
-      <ActionBurst />
+      {showsBurst && <ActionBurst />}
       <span className="action-button__label">
         {label}
         {showCheck && <Check aria-hidden="true" />}

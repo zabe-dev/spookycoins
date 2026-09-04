@@ -712,29 +712,11 @@
   display: grid;
   gap: 6px;
 }
-.coin-primary-actions {
-  display: flex;
-  gap: 8px;
-}
-.coin-primary-actions button {
-  height: 40px;
-  padding: 0 15px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-weight: 650;
-  font-size: 11px;
-  position: relative;
-  overflow: visible;
-}
-.coin-primary-actions .action-button,
 .sidebar-vote.action-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.coin-primary-actions .detail-watch > span:last-child,
-.coin-primary-actions .detail-vote .action-button__label,
 .sidebar-vote .action-button__label {
   display: inline-flex;
   align-items: center;
@@ -742,22 +724,8 @@
   gap: 7px;
   line-height: 1;
 }
-.coin-primary-actions .detail-watch svg,
-.coin-primary-actions .detail-vote svg,
 .sidebar-vote svg {
   flex: 0 0 auto;
-}
-.coin-primary-actions .detail-watch {
-  width: 112px;
-  min-width: 112px;
-}
-.coin-primary-actions .detail-vote {
-  width: 82px;
-  min-width: 82px;
-}
-.coin-primary-actions .action-button__label,
-.coin-primary-actions .detail-watch > span:last-child {
-  white-space: nowrap;
 }
 .vote-wait-dots {
   display: inline-flex;
@@ -799,27 +767,19 @@
   border-color: currentColor;
 }
 .detail-watch:disabled,
-.detail-vote:disabled,
 .sidebar-vote:disabled {
   cursor: not-allowed;
   opacity: 0.5;
   transform: none;
 }
-.detail-vote,
 .sidebar-vote {
   background: var(--lime);
   color: #0a0d0d;
   border-color: var(--lime) !important;
 }
-.detail-vote.active,
 .sidebar-vote.active {
   background: #20272a;
   color: var(--lime);
-}
-.detail-watch.just-watched,
-.detail-vote.just-voted,
-.sidebar-vote.just-voted {
-  animation: none;
 }
 .coin-layout {
   display: grid;
@@ -1233,14 +1193,6 @@
 .voting-card .detail-watch.active {
   border-color: currentColor;
 }
-.detail-watch.just-watched .action-burst i,
-.detail-vote.just-voted .action-burst i,
-.sidebar-vote.just-voted .action-burst i,
-.detail-watch.just-watched > span:last-child,
-.detail-vote.just-voted .action-button__label,
-.sidebar-vote.just-voted .action-button__label {
-  animation: none;
-}
 .vote-rule {
   display: block;
   margin-top: 10px;
@@ -1524,12 +1476,6 @@
   .coin-heading-actions {
     justify-content: flex-start;
   }
-  .coin-primary-actions {
-    grid-column: 1/-1;
-  }
-  .coin-primary-actions button {
-    flex: 1;
-  }
   .coin-layout {
     grid-template-columns: 1fr;
   }
@@ -1623,9 +1569,6 @@
     flex-direction: row;
     padding: 0;
   }
-  .coin-primary-actions {
-    grid-column: auto;
-  }
   .detail-logo {
     width: 56px;
     height: 56px;
@@ -1667,9 +1610,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .detail-watch.just-watched,
-  .detail-vote.just-voted,
-  .sidebar-vote.just-voted,
   .boost-card-detail::before {
     animation: none;
   }
