@@ -407,9 +407,9 @@ export function HomeClient({
   return (
     <main className={adVisible ? 'market-page with-bottom-ad' : 'market-page'}>
       <div className="container ad-grid">
-        <Ad ads={bannerAds['homepage-top']} />
+        <Ad ads={bannerAds.premium} />
         <div className="desktop-only">
-          <Ad ads={bannerAds['homepage-top']} offset={1} />
+          <Ad ads={bannerAds.premium} offset={1} />
         </div>
       </div>
       <section className="container hotspots-shell">
@@ -515,7 +515,7 @@ export function HomeClient({
           coinLinks={false}
         />
       </section>
-      <WideAdBanner ads={bannerAds['homepage-wide']} />
+      <WideAdBanner ads={bannerAds.wide} />
       <section className="container leaderboard" id="leaderboard">
         <div className="section-title">
           <div>
@@ -730,12 +730,12 @@ export function HomeClient({
           </div>
         </div>
       </section>
-      <WideAdBanner ads={bannerAds['homepage-faq-wide']} />
+      <WideAdBanner ads={bannerAds.wide} offset={1} />
       <HomeFaq />
       <InfoBand />
       <SiteFooter id="footer" variant="home" />
       {adVisible && (
-        <BottomAd ad={bannerAds['site-bottom'][0]} onClose={() => setAdVisible(false)} />
+        <BottomAd onClose={() => setAdVisible(false)} />
       )}
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </main>
@@ -817,7 +817,7 @@ function BottomAd({
   ad,
   onClose,
 }: {
-  ad?: BannerAdMap['site-bottom'][number];
+  ad?: BannerAdMap['wide'][number];
   onClose: () => void;
 }) {
   if (ad) {

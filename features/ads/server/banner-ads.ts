@@ -4,14 +4,17 @@ import { unstable_cache } from 'next/cache';
 import { asc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { bannerAds } from '@/lib/db/schema';
-import { bannerPlacements, type BannerAdMap, type BannerPlacement } from '@/features/ads/types';
+import {
+  bannerPlacements,
+  normalizeBannerPlacement,
+  type BannerAdMap,
+  type BannerPlacement,
+} from '@/features/ads/types';
 
 const emptyBannerMap = (): BannerAdMap => ({
-  'homepage-top': [],
-  'homepage-wide': [],
-  'homepage-faq-wide': [],
-  'site-bottom': [],
-  'coin-page-wide': [],
+  premium: [],
+  wide: [],
+  'coin-page': [],
 });
 
 export const getActiveBannerAds = unstable_cache(
@@ -21,7 +24,7 @@ export const getActiveBannerAds = unstable_cache(
       .select()
       .from(bannerAds)
       .where(
-        sql`${bannerAds.status} = 'active'
+        sql`${bannerAds.status} in ('active', 'scheduled')
           and ${bannerAds.startsAt} <= ${nowIso}::timestamptz
           and (${bannerAds.expiresAt} is null or ${bannerAds.expiresAt} > ${nowIso}::timestamptz)`,
       )
@@ -37,10 +40,11 @@ export const getActiveBannerAds = unstable_cache(
     const map = emptyBannerMap();
 
     rows.forEach((row) => {
-      if (!isBannerPlacement(row.placement)) return;
-      map[row.placement].push({
+      const placement = normalizeBannerPlacement(row.placement);
+      if (!placement) return;
+      map[placement].push({
         id: row.id,
-        placement: row.placement,
+        placement,
         title: row.title,
         subtitle: row.subtitle,
         desktopImageUrl: row.desktopImageUrl,

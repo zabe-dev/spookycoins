@@ -14,7 +14,7 @@ import {
   coinSubmissions,
   users,
 } from '@/lib/db/schema';
-import { bannerPlacements } from '@/features/ads/types';
+import { bannerPlacementLabels, bannerPlacements } from '@/features/ads/types';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { headers } from 'next/headers';
@@ -30,7 +30,6 @@ const submissionStatuses = [
   'rejected',
 ] as const;
 const changeRequestStatuses = ['pending', 'resolved', 'rejected'] as const;
-const bannerStatuses = ['active', 'paused'] as const;
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
 const boostPackageRules = {
   10: { durationHours: 24, voteMultiplier: 2 },
@@ -339,28 +338,25 @@ export async function updateChangeRequestStatus(formData: FormData) {
 export async function createBannerAd(formData: FormData) {
   const adminUser = await requireAdmin();
   const placement = readEnum(formData, 'placement', bannerPlacements);
-  const title = readRequired(formData, 'title');
-  const subtitle = readOptional(formData, 'subtitle');
   const desktopImageUrl = readUrl(formData, 'desktopImageUrl');
   const mobileImageUrl = readOptionalUrl(formData, 'mobileImageUrl');
   const targetUrl = readUrl(formData, 'targetUrl');
   const priority = readBoundedNumber(formData, 'priority', 1, 999);
-  const startsAt = readDateTime(formData, 'startsAt') || new Date();
-  const expiresAt = readDateTime(formData, 'expiresAt');
+  const durationDays = readBoundedNumber(formData, 'durationDays', 1, 365);
+  const startsAt = readUtcStartDateOrNow(formData, 'startDate');
+  const expiresAt = addHours(startsAt, durationDays * 24);
+  const status = getScheduleStatus(startsAt, expiresAt);
   const notes = readOptional(formData, 'notes');
-
-  if (expiresAt && expiresAt <= startsAt) {
-    throw new Error('End date must be after the start date.');
-  }
+  const title = `${bannerPlacementLabels[placement]} creative`;
 
   await db.insert(bannerAds).values({
     placement,
     title,
-    subtitle: subtitle || null,
+    subtitle: null,
     desktopImageUrl,
     mobileImageUrl: mobileImageUrl || null,
     targetUrl,
-    status: 'active',
+    status,
     priority,
     startsAt,
     expiresAt,
@@ -371,7 +367,8 @@ export async function createBannerAd(formData: FormData) {
   await audit(adminUser.id, 'banner.created', 'banner', title, {
     placement,
     priority,
-    status: 'active',
+    status,
+    durationDays,
     startsAt,
     expiresAt,
     notes: notes || null,
@@ -382,28 +379,47 @@ export async function createBannerAd(formData: FormData) {
 export async function updateBannerAd(formData: FormData) {
   const adminUser = await requireAdmin();
   const bannerId = readRequired(formData, 'bannerId');
+  const [existing] = await db.select().from(bannerAds).where(eq(bannerAds.id, bannerId)).limit(1);
+  if (!existing) throw new Error('Banner ad was not found.');
+
+  const currentStatus = getScheduleStatus(existing.startsAt, existing.expiresAt);
+  if (currentStatus === 'inactive') {
+    await db
+      .update(bannerAds)
+      .set({ status: 'inactive', updatedAt: new Date() })
+      .where(eq(bannerAds.id, bannerId));
+    throw new Error('Inactive ads cannot be edited. Create a new booking instead.');
+  }
+
   const placement = readEnum(formData, 'placement', bannerPlacements);
-  const title = readRequired(formData, 'title');
-  const subtitle = readOptional(formData, 'subtitle');
   const desktopImageUrl = readUrl(formData, 'desktopImageUrl');
   const mobileImageUrl = readOptionalUrl(formData, 'mobileImageUrl');
   const targetUrl = readUrl(formData, 'targetUrl');
-  const status = readEnum(formData, 'status', bannerStatuses);
   const priority = readBoundedNumber(formData, 'priority', 1, 999);
-  const startsAt = readDateTime(formData, 'startsAt') || new Date();
-  const expiresAt = readDateTime(formData, 'expiresAt');
   const notes = readOptional(formData, 'notes');
+  const title = `${bannerPlacementLabels[placement]} creative`;
+  let startsAt = existing.startsAt;
+  let expiresAt = existing.expiresAt;
 
-  if (expiresAt && expiresAt <= startsAt) {
-    throw new Error('End date must be after the start date.');
+  if (currentStatus === 'scheduled') {
+    const durationDays = readBoundedNumber(formData, 'durationDays', 1, 365);
+    startsAt = readUtcStartDateOrNow(formData, 'startDate');
+    expiresAt = addHours(startsAt, durationDays * 24);
+  } else {
+    const extensionDays = readBoundedNumber(formData, 'extensionDays', 0, 365);
+    if (extensionDays > 0) {
+      expiresAt = addHours(existing.expiresAt || new Date(), extensionDays * 24);
+    }
   }
+
+  const status = getScheduleStatus(startsAt, expiresAt);
 
   await db
     .update(bannerAds)
     .set({
       placement,
       title,
-      subtitle: subtitle || null,
+      subtitle: null,
       desktopImageUrl,
       mobileImageUrl: mobileImageUrl || null,
       targetUrl,
@@ -421,6 +437,7 @@ export async function updateBannerAd(formData: FormData) {
     placement,
     status,
     priority,
+    currentStatus,
     startsAt,
     expiresAt,
     notes: notes || null,
@@ -667,14 +684,6 @@ function assertUrl(value: string, key: string) {
   }
 }
 
-function readDateTime(formData: FormData, key: string) {
-  const value = readOptional(formData, key);
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) throw new Error(`${key} must be a valid date.`);
-  return date;
-}
-
 function revalidateBannerPaths() {
   revalidateTag('banner-ads', 'max');
   revalidatePath('/admin/dashboard');
@@ -684,4 +693,29 @@ function revalidateBannerPaths() {
 
 function addHours(date: Date, hours: number) {
   return new Date(date.getTime() + hours * 60 * 60 * 1000);
+}
+
+function readUtcStartDateOrNow(formData: FormData, key: string) {
+  const value = readOptional(formData, key);
+  if (!value) return new Date();
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) throw new Error('Start date must be a valid date.');
+
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0, 0));
+  if (Number.isNaN(date.getTime())) throw new Error('Start date must be a valid date.');
+
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+  if (date < todayUtc) throw new Error('Start date must be today or a future date.');
+
+  return date;
+}
+
+function getScheduleStatus(startsAt: Date, expiresAt: Date | null) {
+  const now = new Date();
+  if (expiresAt && expiresAt <= now) return 'inactive';
+  if (startsAt > now) return 'scheduled';
+  return 'active';
 }

@@ -119,8 +119,10 @@ export type AdminBannerRow = {
   targetUrl: string;
   status: string;
   priority: number;
+  startDate: string;
   startsAt: string;
-  expiresAt: string;
+  endsAt: string;
+  durationDays: number;
   schedule: string;
   notes: string;
 };
@@ -297,7 +299,7 @@ function AdminOverview({
   bannerAds: AdminBannerRow[];
   onSelectTab: (tab: AdminTab) => void;
 }) {
-  const pausedBanners = bannerAds.filter((banner) => banner.status !== 'active').length;
+  const scheduledBanners = bannerAds.filter((banner) => banner.status === 'scheduled').length;
 
   return (
     <section className="admin-overview">
@@ -335,8 +337,8 @@ function AdminOverview({
         />
         <OverviewQueueCard
           title="Banner ads"
-          value={pausedBanners}
-          label="paused banners"
+          value={scheduledBanners}
+          label="scheduled banners"
           action="Manage banners"
           onClick={() => onSelectTab('banners')}
         />
@@ -796,17 +798,10 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
       eyebrow="Banner inventory"
       title="Banner ads"
       count={`${rows.length} total`}
-      note="Manage image banners by placement. Use S3/public image URLs here; active banners rotate by priority when more than one is live."
+      note="Manage paid banner placements. Scheduled ads go live automatically, active ads can be extended, and expired ads become inactive."
       rows={rows}
-      searchPlaceholder="Search title, placement, or URL"
-      search={(row) => [
-        row.title,
-        row.subtitle,
-        row.placement,
-        row.placementLabel,
-        row.targetUrl,
-        row.status,
-      ]}
+      searchPlaceholder="Search type, URL, or status"
+      search={(row) => [row.placement, row.placementLabel, row.targetUrl, row.status]}
       empty="No banner ads created yet."
       action={<BannerEditAction popover={popover} />}
       renderTable={(visibleRows) => (
@@ -814,18 +809,17 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
           <thead>
             <tr>
               <th>Creative</th>
-              <th>Placement</th>
-              <th>Title</th>
+              <th>Type</th>
               <th>Target</th>
               <th>Status</th>
               <th>Priority</th>
-              <th>Schedule</th>
+              <th>Start Date</th>
+              <th>End Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {visibleRows.map((row) => {
-              const active = row.status === 'active';
               return (
                 <tr key={row.id}>
                   <td>
@@ -833,55 +827,37 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
                   </td>
                   <td>{row.placementLabel}</td>
                   <td>
-                    <strong>{row.title}</strong>
-                    {row.subtitle && <span className="admin-row-subtext">{row.subtitle}</span>}
-                  </td>
-                  <td>
                     <a href={row.targetUrl} target="_blank" rel="noreferrer">
                       Open target ↗
                     </a>
                   </td>
                   <td>
-                    <StatusPill tone={active ? 'lime' : 'neutral'}>
+                    <StatusPill
+                      tone={
+                        row.status === 'active'
+                          ? 'lime'
+                          : row.status === 'scheduled'
+                            ? 'amber'
+                            : 'neutral'
+                      }
+                    >
                       {labelize(row.status)}
                     </StatusPill>
+                    <span className="admin-row-subtext">{row.schedule}</span>
                   </td>
                   <td>{row.priority}</td>
-                  <td>{row.schedule}</td>
+                  <td>{row.startsAt}</td>
+                  <td>{row.endsAt}</td>
                   <td>
                     <ActionGroup>
                       <BannerEditAction row={row} popover={popover} />
-                      <ConfirmAction
-                        popover={popover}
-                        popoverId={`banner-status-${row.id}`}
-                        action={updateBannerAd}
-                        title={active ? 'Pause banner' : 'Activate banner'}
-                        tone={active ? 'danger' : 'success'}
-                        message={`${active ? 'Pause' : 'Activate'} ${row.title}?`}
-                        fields={{
-                          bannerId: row.id,
-                          placement: row.placement,
-                          title: row.title,
-                          subtitle: row.subtitle,
-                          desktopImageUrl: row.desktopImageUrl,
-                          mobileImageUrl: row.mobileImageUrl,
-                          targetUrl: row.targetUrl,
-                          status: active ? 'paused' : 'active',
-                          priority: row.priority,
-                          startsAt: row.startsAt,
-                          expiresAt: row.expiresAt,
-                          notes: row.notes,
-                        }}
-                      >
-                        {active ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-                      </ConfirmAction>
                       <ConfirmAction
                         popover={popover}
                         popoverId={`banner-delete-${row.id}`}
                         action={deleteBannerAd}
                         title="Delete banner"
                         tone="danger"
-                        message={`Delete ${row.title}? This removes the banner from admin inventory.`}
+                        message={`Delete this ${row.placementLabel.toLowerCase()}? This removes the banner from admin inventory.`}
                         fields={{ bannerId: row.id }}
                       >
                         <Trash2 aria-hidden="true" />
@@ -1172,37 +1148,42 @@ function PromoteAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCo
 
 function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: PopoverController }) {
   const [placement, setPlacement] = useState<BannerPlacement>(
-    isBannerPlacement(row?.placement) ? row.placement : 'homepage-top',
+    isBannerPlacement(row?.placement) ? row.placement : 'wide',
   );
-  const [title, setTitle] = useState(row?.title || '');
-  const [subtitle, setSubtitle] = useState(row?.subtitle || '');
   const [desktopImageUrl, setDesktopImageUrl] = useState(row?.desktopImageUrl || '');
   const [mobileImageUrl, setMobileImageUrl] = useState(row?.mobileImageUrl || '');
   const [targetUrl, setTargetUrl] = useState(row?.targetUrl || '');
-  const [status, setStatus] = useState(row?.status || 'active');
   const [priority, setPriority] = useState(row?.priority || 1);
-  const [startsAt, setStartsAt] = useState(row?.startsAt || defaultAdminDateTime());
-  const [expiresAt, setExpiresAt] = useState(row?.expiresAt || '');
+  const [startDate, setStartDate] = useState(row?.startDate || '');
+  const [durationDays, setDurationDays] = useState(row?.durationDays || 1);
+  const [extensionDays, setExtensionDays] = useState(1);
   const [notes, setNotes] = useState(row?.notes || '');
   const editing = Boolean(row);
+  const inactive = row?.status === 'inactive';
+  const active = row?.status === 'active';
 
   return (
     <ConfirmAction
       popover={popover}
       popoverId={editing ? `banner-edit-${row?.id}` : 'banner-create'}
       action={editing ? updateBannerAd : createBannerAd}
-      title={editing ? 'Edit banner' : 'New banner'}
+      title={active ? 'Extend banner' : editing ? 'Edit banner' : 'New banner'}
       tone={editing ? 'neutral' : 'boost'}
       message={
-        editing
-          ? `Update ${row?.title || 'this banner'} placement, creative, or schedule.`
-          : 'Create a banner ad using public image URLs from S3 or another approved static host.'
+        inactive
+          ? 'This ad has already ended. Create a new booking if the advertiser wants to run again.'
+          : active
+            ? `Add more days to this active ${row?.placementLabel || 'banner'} booking.`
+            : editing
+              ? `Update this scheduled ${row?.placementLabel || 'banner'} before it goes live.`
+              : 'Create a paid banner placement using the advertiser creative and destination link.'
       }
       fields={editing && row ? { bannerId: row.id } : {}}
+      disabled={inactive}
       extra={
         <div className="admin-banner-form">
           <label>
-            Placement
+            Banner type
             <select
               name="placement"
               value={placement}
@@ -1214,36 +1195,6 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
                 </option>
               ))}
             </select>
-          </label>
-          <label>
-            Status
-            <select
-              name="status"
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-            </select>
-          </label>
-          <label>
-            Title
-            <input
-              name="title"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Advertiser headline"
-              required
-            />
-          </label>
-          <label>
-            Subtitle
-            <input
-              name="subtitle"
-              value={subtitle}
-              onChange={(event) => setSubtitle(event.target.value)}
-              placeholder="Optional short supporting text"
-            />
           </label>
           <label className="admin-banner-form-wide">
             Desktop image URL
@@ -1286,26 +1237,48 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
               required
             />
           </label>
-          <label>
-            Starts
-            <input
-              name="startsAt"
-              type="datetime-local"
-              value={startsAt}
-              onChange={(event) => setStartsAt(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Ends
-            <input
-              name="expiresAt"
-              type="datetime-local"
-              value={expiresAt}
-              onChange={(event) => setExpiresAt(event.target.value)}
-              placeholder="Optional"
-            />
-          </label>
+          {active ? (
+            <label>
+              Add days
+              <input
+                name="extensionDays"
+                type="number"
+                min={0}
+                max={365}
+                value={extensionDays}
+                onChange={(event) =>
+                  setExtensionDays(Math.max(0, Number(event.target.value) || 0))
+                }
+                required
+              />
+            </label>
+          ) : (
+            <>
+              <label>
+                Start date
+                <input
+                  name="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </label>
+              <label>
+                Duration
+                <input
+                  name="durationDays"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={durationDays}
+                  onChange={(event) =>
+                    setDurationDays(Math.max(1, Number(event.target.value) || 1))
+                  }
+                  required
+                />
+              </label>
+            </>
+          )}
           <label className="admin-banner-form-wide">
             Notes
             <textarea
@@ -1315,6 +1288,9 @@ function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: Pop
               placeholder="Internal notes"
             />
           </label>
+          <small className="admin-banner-form-wide">
+            Pick a start date to begin at 12:00 AM UTC. Leave it blank to start immediately.
+          </small>
         </div>
       }
     >
@@ -1331,8 +1307,8 @@ function BannerPreviewAction({ row }: { row: AdminBannerRow }) {
         href={row.desktopImageUrl}
         target="_blank"
         rel="noreferrer"
-        title={`Open ${row.title} desktop image`}
-        aria-label={`Open ${row.title} desktop image`}
+        title={`Open ${row.placementLabel} desktop image`}
+        aria-label={`Open ${row.placementLabel} desktop image`}
       >
         <ImageIcon aria-hidden="true" />
       </a>
@@ -1342,8 +1318,8 @@ function BannerPreviewAction({ row }: { row: AdminBannerRow }) {
           href={row.mobileImageUrl}
           target="_blank"
           rel="noreferrer"
-          title={`Open ${row.title} mobile image`}
-          aria-label={`Open ${row.title} mobile image`}
+          title={`Open ${row.placementLabel} mobile image`}
+          aria-label={`Open ${row.placementLabel} mobile image`}
         >
           <ExternalLink aria-hidden="true" />
         </a>
@@ -1721,12 +1697,4 @@ function isBannerPlacement(value: string | undefined): value is BannerPlacement 
 
 function isAdminTab(value: string | null): value is AdminTab {
   return adminTabs.some((tab) => tab.id === value);
-}
-
-function defaultAdminDateTime() {
-  const date = new Date();
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
 }

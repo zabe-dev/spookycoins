@@ -9,7 +9,7 @@ import type {
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { NETWORKS } from '@/features/coins/networks';
-import { bannerPlacementLabels } from '@/features/ads/types';
+import { bannerPlacementLabels, normalizeBannerPlacement } from '@/features/ads/types';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import { hasAdminAccess } from '@/lib/auth/roles';
@@ -133,7 +133,7 @@ export default async function AdminDashboardPage({
       .from(bannerAds)
       .where(
         and(
-          eq(bannerAds.status, 'active'),
+          sql`${bannerAds.status} in ('active', 'scheduled')`,
           sql`${bannerAds.startsAt} <= ${nowIso}::timestamptz`,
           sql`(${bannerAds.expiresAt} is null or ${bannerAds.expiresAt} > ${nowIso}::timestamptz)`,
         ),
@@ -287,20 +287,26 @@ export default async function AdminDashboardPage({
   });
 
   const adminBannerAds: AdminBannerRow[] = bannerAdRows.map((banner) => ({
+    ...(() => {
+      const placement = normalizeBannerPlacement(banner.placement) || 'wide';
+      const status = getBannerStatus(banner.startsAt, banner.expiresAt, now);
+      return {
+        placement,
+        placementLabel: bannerPlacementLabels[placement],
+        status,
+      };
+    })(),
     id: banner.id,
-    placement: banner.placement,
-    placementLabel:
-      bannerPlacementLabels[banner.placement as keyof typeof bannerPlacementLabels] ||
-      banner.placement,
     title: banner.title,
     subtitle: banner.subtitle || '',
     desktopImageUrl: banner.desktopImageUrl,
     mobileImageUrl: banner.mobileImageUrl || '',
     targetUrl: banner.targetUrl,
-    status: banner.status,
     priority: banner.priority,
-    startsAt: formatInputDateTime(banner.startsAt),
-    expiresAt: banner.expiresAt ? formatInputDateTime(banner.expiresAt) : '',
+    startDate: formatInputDate(banner.startsAt),
+    startsAt: formatDateTime(banner.startsAt),
+    endsAt: banner.expiresAt ? formatDateTime(banner.expiresAt) : '—',
+    durationDays: banner.expiresAt ? getDurationDays(banner.startsAt, banner.expiresAt) : 1,
     schedule: formatBannerSchedule(banner.startsAt, banner.expiresAt, now),
     notes: banner.notes || '',
   }));
@@ -487,18 +493,26 @@ function formatDateTime(date: Date) {
   }).format(date);
 }
 
-function formatInputDateTime(date: Date) {
+function formatInputDate(date: Date) {
   const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
 
 function formatBannerSchedule(startsAt: Date, expiresAt: Date | null, now: Date) {
-  if (startsAt > now) return `Starts ${formatTimeRemaining(startsAt, now)} from now`;
-  if (!expiresAt) return 'Active, no end date';
-  if (expiresAt <= now) return 'Expired';
+  if (startsAt > now) return `Starts in ${formatTimeRemaining(startsAt, now)}`;
+  if (!expiresAt) return 'Active';
+  if (expiresAt <= now) return 'Inactive';
   return `${formatTimeRemaining(expiresAt, now)} left`;
+}
+
+function getBannerStatus(startsAt: Date, expiresAt: Date | null, now: Date) {
+  if (expiresAt && expiresAt <= now) return 'inactive';
+  if (startsAt > now) return 'scheduled';
+  return 'active';
+}
+
+function getDurationDays(startsAt: Date, expiresAt: Date) {
+  return Math.max(1, Math.ceil((expiresAt.getTime() - startsAt.getTime()) / 86_400_000));
 }
 
 function formatTimeRemaining(expiresAt: Date, now: Date) {
