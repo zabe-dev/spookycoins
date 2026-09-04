@@ -6,7 +6,7 @@ export type PublicBannerAd = {
   title: string;
   subtitle: string | null;
   desktopImageUrl: string;
-  mobileImageUrl: string | null;
+  mobileImageUrl: string;
   targetUrl: string;
 };
 

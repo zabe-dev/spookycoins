@@ -69,7 +69,7 @@ const bannerPlacements = [
   {
     placement: 'Fixed footer banner',
     size: 'Desktop: 1920×90 min · 2560×120 max',
-    price: '$75/day',
+    price: '$100/day',
     mobile: 'Mobile: 320×90 min · 620×120 max',
     note: 'Located at the bottom of page displayed across all site pages. Exclusive ad space, does not rotate.',
   },

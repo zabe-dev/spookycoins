@@ -31,22 +31,102 @@ function AdBadge() {
 function AdPicture({ ad }: { ad: PublicBannerAd }) {
   return (
     <span className="ad-banner-media" aria-label={ad.title || 'Advertisement'}>
-      <img
-        className="ad-banner-img ad-banner-img--desktop"
-        src={ad.desktopImageUrl}
-        alt={ad.title || 'Advertisement'}
+      <AdImageContent
+        key={`desktop-${ad.id}-${ad.desktopImageUrl}`}
+        frameClassName="ad-banner-img-frame--desktop"
+        ad={ad}
+        initialSrc={ad.desktopImageUrl}
+        fallbackSrc={ad.desktopImageUrl}
       />
-      <img
-        className="ad-banner-img ad-banner-img--mobile"
-        src={ad.mobileImageUrl || ad.desktopImageUrl}
-        alt=""
-        aria-hidden="true"
+      <AdImageContent
+        key={`mobile-${ad.id}-${ad.mobileImageUrl || ad.desktopImageUrl}`}
+        frameClassName="ad-banner-img-frame--mobile"
+        ad={ad}
+        initialSrc={ad.mobileImageUrl || ad.desktopImageUrl}
+        fallbackSrc={ad.desktopImageUrl}
+        decorative
       />
     </span>
   );
 }
 
-function BasicBannerSlot({ ad, slot = 'primary' }: { ad: PublicBannerAd | null; slot?: string }) {
+function BasicAdPicture({ ad, mode }: { ad: PublicBannerAd; mode: 'desktop' | 'mobile' }) {
+  const initialSrc =
+    mode === 'mobile' ? ad.mobileImageUrl || ad.desktopImageUrl : ad.desktopImageUrl;
+
+  return (
+    <span className="ad-banner-media" aria-label={ad.title || 'Advertisement'}>
+      <AdImageContent
+        key={`basic-${mode}-${ad.id}-${initialSrc}`}
+        ad={ad}
+        initialSrc={initialSrc}
+        fallbackSrc={ad.desktopImageUrl}
+      />
+    </span>
+  );
+}
+
+function AdImageContent({
+  ad,
+  frameClassName,
+  initialSrc,
+  fallbackSrc,
+  decorative = false,
+}: {
+  ad: PublicBannerAd;
+  frameClassName?: string;
+  initialSrc: string;
+  fallbackSrc: string;
+  decorative?: boolean;
+}) {
+  const [src, setSrc] = useState(initialSrc);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <span className={`ad-banner-img-frame ${frameClassName || ''} ad-banner-img-frame--pending`}>
+        <span className="ad-banner-loading-copy">Advertisement</span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`ad-banner-img-frame ${frameClassName || ''} ${
+        loaded ? '' : 'ad-banner-img-frame--pending'
+      }`}
+    >
+      <img
+        className="ad-banner-img"
+        src={src}
+        alt={decorative ? '' : ad.title || 'Advertisement'}
+        aria-hidden={decorative ? true : undefined}
+        style={{ opacity: loaded ? 1 : 0 }}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (src !== fallbackSrc) {
+            setSrc(fallbackSrc);
+            setLoaded(false);
+            return;
+          }
+          setFailed(true);
+        }}
+      />
+      {!loaded && <span className="ad-banner-loading-copy">Advertisement</span>}
+    </span>
+  );
+}
+
+function BasicBannerSlot({
+  ad,
+  imageMode,
+  slot = 'primary',
+}: {
+  ad: PublicBannerAd | null;
+  imageMode: 'desktop' | 'mobile';
+  slot?: string;
+}) {
   if (ad) {
     return (
       <Link
@@ -55,7 +135,7 @@ function BasicBannerSlot({ ad, slot = 'primary' }: { ad: PublicBannerAd | null; 
         target="_blank"
       >
         <AdBadge />
-        <AdPicture ad={ad} />
+        <BasicAdPicture ad={ad} mode={imageMode} />
       </Link>
     );
   }
@@ -78,8 +158,13 @@ export function BasicAdBannerPair({ ads = [], offset = 0 }: BannerProps) {
 
   return (
     <div className="container basic-ad-grid">
-      <BasicBannerSlot ad={firstAd} slot="primary" />
-      <BasicBannerSlot ad={secondAd} slot="secondary" />
+      <div className="basic-ad-row basic-ad-row--desktop">
+        <BasicBannerSlot ad={firstAd} imageMode="desktop" slot="primary" />
+        <BasicBannerSlot ad={secondAd} imageMode="desktop" slot="secondary" />
+      </div>
+      <div className="basic-ad-row basic-ad-row--mobile">
+        <BasicBannerSlot ad={firstAd} imageMode="mobile" slot="primary" />
+      </div>
     </div>
   );
 }

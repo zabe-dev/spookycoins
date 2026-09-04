@@ -57,6 +57,13 @@
       "when": 1788415638000,
       "tag": "0007_banner_ads",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788523402000,
+      "tag": "0008_clean_banner_placements",
+      "breakpoints": true
     }
   ]
 }

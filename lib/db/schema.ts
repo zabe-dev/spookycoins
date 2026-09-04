@@ -342,7 +342,7 @@ export const bannerAds = pgTable(
     title: text('title').notNull(),
     subtitle: text('subtitle'),
     desktopImageUrl: text('desktop_image_url').notNull(),
-    mobileImageUrl: text('mobile_image_url'),
+    mobileImageUrl: text('mobile_image_url').notNull(),
     targetUrl: text('target_url').notNull(),
     status: text('status').default('active').notNull(),
     priority: integer('priority').default(1).notNull(),
