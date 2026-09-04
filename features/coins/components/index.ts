@@ -1,4 +1,3 @@
-export { BannerAd } from './banner-ad';
 export { CoinCells, CoinTable, LineBurst, SortHeader, WatchButton } from './coin-table';
 export { DiscoveryCard } from './discovery-card';
 export { FormattedPrice } from './formatted-price';

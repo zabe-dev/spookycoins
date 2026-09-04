@@ -1,7 +1,7 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { WatchlistPanel } from '@/features/account/components/account-panel';
-import { WideAdBanner } from '@/features/ads/components/ad-banners';
+import { PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
@@ -36,7 +36,7 @@ export default async function WatchlistPage() {
         userId={session.user.id}
         coins={rows}
         isSignedIn={true}
-        afterTable={<WideAdBanner ads={bannerAds.wide} offset={3} />}
+        afterTable={<PremiumAdBanner ads={bannerAds.premium} offset={3} />}
       />
       <SiteFooter />
     </main>

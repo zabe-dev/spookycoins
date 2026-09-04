@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { FixedAdBanner } from '@/features/ads/components/ad-banners';
+import { FixedFooterBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { Fira_Mono, JetBrains_Mono, Poppins, Space_Grotesk } from 'next/font/google';
 import './globals.css';
@@ -84,7 +84,7 @@ export default async function RootLayout({
         className={`${poppins.variable} ${spaceGrotesk.variable} ${firaMono.variable} ${jetBrainsMono.variable} antialiased`}
       >
         {children}
-        <FixedAdBanner ads={bannerAds.fixed} />
+        <FixedFooterBanner ads={bannerAds.fixed} />
       </body>
     </html>
   );

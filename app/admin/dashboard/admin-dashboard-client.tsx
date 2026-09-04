@@ -1254,7 +1254,7 @@ function PromoteAction({ row, popover }: { row: AdminCoinRow; popover: PopoverCo
 
 function BannerEditAction({ row, popover }: { row?: AdminBannerRow; popover: PopoverController }) {
   const [placement, setPlacement] = useState<BannerPlacement>(
-    isBannerPlacement(row?.placement) ? row.placement : 'wide',
+    isBannerPlacement(row?.placement) ? row.placement : 'premium',
   );
   const [desktopImageUrl, setDesktopImageUrl] = useState(row?.desktopImageUrl || '');
   const [mobileImageUrl, setMobileImageUrl] = useState(row?.mobileImageUrl || '');

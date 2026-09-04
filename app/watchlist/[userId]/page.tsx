@@ -1,7 +1,7 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { PublicWatchlistTable } from '@/features/account/components/account-panel';
-import { WideAdBanner } from '@/features/ads/components/ad-banners';
+import { PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
@@ -61,7 +61,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
           )}
         </section>
         <div className="account-table-ad account-table-ad-inline">
-          <WideAdBanner ads={bannerAds.wide} offset={3} />
+          <PremiumAdBanner ads={bannerAds.premium} offset={3} />
         </div>
       </section>
       <SiteFooter />

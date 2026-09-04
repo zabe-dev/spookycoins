@@ -1,4 +1,4 @@
-export type BannerPlacement = 'premium' | 'wide' | 'coin-page' | 'fixed';
+export type BannerPlacement = 'basic' | 'premium' | 'fixed';
 
 export type PublicBannerAd = {
   id: string;
@@ -13,25 +13,24 @@ export type PublicBannerAd = {
 export type BannerAdMap = Record<BannerPlacement, PublicBannerAd[]>;
 
 export const bannerPlacements = [
+  'basic',
   'premium',
-  'wide',
-  'coin-page',
   'fixed',
 ] as const satisfies readonly BannerPlacement[];
 
 export const bannerPlacementLabels: Record<BannerPlacement, string> = {
-  premium: 'Premium top banner',
-  wide: 'Wide banner',
-  'coin-page': 'Coin page banner',
-  fixed: 'Fixed bottom banner',
+  basic: 'Basic banner',
+  premium: 'Premium banner',
+  fixed: 'Fixed footer banner',
 };
 
 export const legacyBannerPlacementMap: Record<string, BannerPlacement> = {
-  'homepage-top': 'premium',
-  'homepage-wide': 'wide',
-  'homepage-guide-wide': 'wide',
+  premium: 'basic',
+  wide: 'premium',
+  'homepage-top': 'basic',
+  'homepage-wide': 'premium',
+  'homepage-guide-wide': 'basic',
   'site-bottom': 'fixed',
-  'coin-page-wide': 'wide',
 };
 
 export function normalizeBannerPlacement(value: string): BannerPlacement | null {

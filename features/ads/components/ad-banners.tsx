@@ -1,23 +1,24 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- Ad creatives need plain desktop/mobile images that scale by container width without Next image sizing constraints. */
+import type { PublicBannerAd } from '@/features/ads/types';
 import Link from 'next/link';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import type { PublicBannerAd } from '@/features/ads/types';
 
 type BannerProps = {
   ads?: PublicBannerAd[];
   offset?: number;
 };
 
-function useRotatingAd(ads: PublicBannerAd[] = [], offset = 0) {
+function useSelectedAd(ads: PublicBannerAd[] = [], offset = 0, rotating = false) {
   const activeAds = useMemo(() => ads.filter((ad) => ad.desktopImageUrl), [ads]);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (activeAds.length < 2) return;
+    if (!rotating || activeAds.length < 2) return;
     const timer = window.setInterval(() => setIndex((current) => current + 1), 7000);
     return () => window.clearInterval(timer);
-  }, [activeAds.length]);
+  }, [activeAds.length, rotating]);
 
   if (activeAds.length === 0) return null;
   return activeAds[(index + offset) % activeAds.length] ?? activeAds[0];
@@ -27,23 +28,40 @@ function AdBadge() {
   return <span className="ad-creative-badge">Ad</span>;
 }
 
-export function PremiumAdBanner({ ads = [], offset = 0 }: BannerProps) {
-  const ad = useRotatingAd(ads, offset);
+function AdPicture({ ad }: { ad: PublicBannerAd }) {
+  return (
+    <span className="ad-banner-media" aria-label={ad.title || 'Advertisement'}>
+      <img
+        className="ad-banner-img ad-banner-img--desktop"
+        src={ad.desktopImageUrl}
+        alt={ad.title || 'Advertisement'}
+      />
+      <img
+        className="ad-banner-img ad-banner-img--mobile"
+        src={ad.mobileImageUrl || ad.desktopImageUrl}
+        alt=""
+        aria-hidden="true"
+      />
+    </span>
+  );
+}
 
+function BasicBannerSlot({ ad, slot = 'primary' }: { ad: PublicBannerAd | null; slot?: string }) {
   if (ad) {
     return (
-      <Link className="banner-ad banner-ad-image" href={ad.targetUrl} target="_blank">
+      <Link
+        className={`basic-ad-banner basic-ad-banner--${slot} ad-banner-image`}
+        href={ad.targetUrl}
+        target="_blank"
+      >
         <AdBadge />
-        <picture>
-          {ad.mobileImageUrl && <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />}
-          <img src={ad.desktopImageUrl} alt={ad.title || 'Advertisement'} />
-        </picture>
+        <AdPicture ad={ad} />
       </Link>
     );
   }
 
   return (
-    <div className="banner-ad">
+    <div className={`basic-ad-banner basic-ad-banner--${slot}`}>
       <small>AD SPACE</small>
       <div className="ad-placeholder-copy">
         <b>Reach crypto&apos;s earliest coin hunters.</b>
@@ -54,24 +72,37 @@ export function PremiumAdBanner({ ads = [], offset = 0 }: BannerProps) {
   );
 }
 
-export function WideAdBanner({ ads = [], offset = 0 }: BannerProps) {
-  const ad = useRotatingAd(ads, offset);
+export function BasicAdBannerPair({ ads = [], offset = 0 }: BannerProps) {
+  const firstAd = useSelectedAd(ads, offset, true);
+  const secondAd = useSelectedAd(ads, offset + 1, true);
+
+  return (
+    <div className="container basic-ad-grid">
+      <BasicBannerSlot ad={firstAd} slot="primary" />
+      <BasicBannerSlot ad={secondAd} slot="secondary" />
+    </div>
+  );
+}
+
+export function PremiumAdBanner({ ads = [], offset = 0 }: BannerProps) {
+  const ad = useSelectedAd(ads, offset, false);
 
   if (ad) {
     return (
-      <Link className="container wide-banner wide-banner-image" href={ad.targetUrl} target="_blank">
+      <Link
+        className="container premium-ad-banner ad-banner-image"
+        href={ad.targetUrl}
+        target="_blank"
+      >
         <AdBadge />
-        <picture>
-          {ad.mobileImageUrl && <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />}
-          <img src={ad.desktopImageUrl} alt={ad.title || 'Advertisement'} />
-        </picture>
+        <AdPicture ad={ad} />
       </Link>
     );
   }
 
   return (
-    <div className="container wide-banner">
-      <small>FULL-WIDTH ADVERTISEMENT</small>
+    <div className="container premium-ad-banner">
+      <small>PREMIUM ADVERTISEMENT</small>
       <div>
         <b>Reach crypto&apos;s earliest coin hunters.</b>
         <span>Premium inventory · Measured impressions and clicks</span>
@@ -81,32 +112,8 @@ export function WideAdBanner({ ads = [], offset = 0 }: BannerProps) {
   );
 }
 
-export function CoinPageAdBanner({ ads = [], offset = 0 }: BannerProps) {
-  const ad = useRotatingAd(ads, offset);
-
-  if (ad) {
-    return (
-      <Link className="coin-page-ad-banner ad-banner-image" href={ad.targetUrl} target="_blank">
-        <AdBadge />
-        <picture>
-          {ad.mobileImageUrl && <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />}
-          <img src={ad.desktopImageUrl} alt={ad.title || 'Advertisement'} />
-        </picture>
-      </Link>
-    );
-  }
-
-  return (
-    <div className="coin-page-ad-banner">
-      <small>COIN PAGE AD</small>
-      <b>Put your project beside active coin research.</b>
-      <Link href="/advertise">View ad packages ↗</Link>
-    </div>
-  );
-}
-
-export function FixedAdBanner({ ads = [], offset = 0 }: BannerProps) {
-  const ad = useRotatingAd(ads, offset);
+export function FixedFooterBanner({ ads = [], offset = 0 }: BannerProps) {
+  const ad = useSelectedAd(ads, offset, false);
   const visibleFromStorage = useSyncExternalStore(
     subscribeFixedAdStorage,
     getFixedAdSnapshot,
@@ -118,31 +125,28 @@ export function FixedAdBanner({ ads = [], offset = 0 }: BannerProps) {
   if (!visible) return null;
 
   return (
-    <aside className="fixed-ad-banner">
-      <div className="fixed-ad-banner-inner">
+    <aside className="fixed-footer-ad-banner">
+      <div className="fixed-footer-ad-banner-inner">
         {ad ? (
-          <Link className="fixed-ad-banner-creative" href={ad.targetUrl} target="_blank">
+          <Link className="fixed-footer-ad-banner-creative" href={ad.targetUrl} target="_blank">
             <AdBadge />
-            <picture>
-              {ad.mobileImageUrl && (
-                <source media="(max-width: 620px)" srcSet={ad.mobileImageUrl} />
-              )}
-              <img src={ad.desktopImageUrl} alt={ad.title || 'Advertisement'} />
-            </picture>
+            <AdPicture ad={ad} />
           </Link>
         ) : (
-          <div className="fixed-ad-banner-placeholder">
-            <small>AD SPACE</small>
-            <b>SPOOKY</b>
-            <span>Reach crypto&apos;s earliest coin hunters.</span>
-            <Link href="/advertise">View ad packages ↗</Link>
+          <div className="fixed-footer-ad-banner-placeholder">
+            <div className="fixed-footer-ad-banner-placeholder-inner">
+              <small>AD SPACE</small>
+              <b>SPOOKY</b>
+              <span>Reach crypto&apos;s earliest coin hunters.</span>
+              <Link href="/advertise">View ad packages ↗</Link>
+            </div>
           </div>
         )}
         <button
-          className="fixed-ad-banner-close"
+          className="fixed-footer-ad-banner-close"
           type="button"
           onClick={() => {
-            window.localStorage.setItem('spooky-fixed-ad-closed', '1');
+            window.localStorage.setItem('spooky-fixed-footer-ad-closed', '1');
             setDismissed(true);
           }}
           aria-label="Close ad"
@@ -162,5 +166,5 @@ function subscribeFixedAdStorage(callback: () => void) {
 
 function getFixedAdSnapshot() {
   if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem('spooky-fixed-ad-closed') !== '1';
+  return window.localStorage.getItem('spooky-fixed-footer-ad-closed') !== '1';
 }

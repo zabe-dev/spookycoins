@@ -1,42 +1,6 @@
 .coin-detail-page {
   padding-bottom: 0;
 }
-.coin-page-ad-banner {
-  position: relative;
-  display: flex;
-  width: 100%;
-  max-width: 300px;
-  height: 250px;
-  min-height: 250px;
-  overflow: hidden;
-  border: 1px solid #34311e;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #15140f, #1c1810 55%, #111519);
-  color: var(--copy);
-  text-decoration: none;
-}
-.coin-page-ad-banner:not(.ad-banner-image) {
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 18px;
-}
-.coin-page-ad-banner small {
-  color: var(--sub);
-  font-size: 8px;
-  letter-spacing: 0.15em;
-}
-.coin-page-ad-banner b {
-  max-width: 18ch;
-  color: var(--copy);
-  font-size: 15px;
-  line-height: 1.25;
-}
-.coin-page-ad-banner > a {
-  color: var(--lime);
-  font-size: 10px;
-  text-decoration: none;
-}
 .coin-breadcrumb {
   display: flex;
   gap: 8px;
@@ -790,43 +754,6 @@
 .detail-vote.just-voted,
 .sidebar-vote.just-voted {
   animation: vote-pop 0.32s cubic-bezier(0.2, 1.7, 0.4, 1);
-}
-.coin-ad {
-  margin-top: 18px;
-  height: 90px;
-  min-height: 90px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 12px 18px;
-  background: var(--surface);
-}
-.coin-ad > small {
-  font-size: 7px;
-  letter-spacing: 0.15em;
-  color: var(--sub);
-}
-.coin-ad > span {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  flex: 1;
-  color: var(--sub);
-  font-size: 9px;
-}
-.coin-ad b {
-  color: var(--copy);
-  font-size: 11px;
-}
-.coin-ad button,
-.coin-ad a {
-  border: 0;
-  background: transparent;
-  color: var(--lime);
-  font-size: 10px;
-  text-decoration: none;
 }
 .coin-layout {
   display: grid;
@@ -1588,19 +1515,6 @@
   .detail-logo {
     width: 56px;
     height: 56px;
-  }
-  .coin-ad {
-    align-items: flex-start;
-    gap: 7px;
-    flex-direction: column;
-  }
-  .coin-ad > span {
-    display: block;
-    line-height: 1.6;
-  }
-  .coin-ad button,
-  .coin-ad a {
-    padding: 0;
   }
   .chart-head {
     align-items: center;

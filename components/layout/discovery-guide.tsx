@@ -67,7 +67,7 @@ export function DiscoveryGuide() {
     <section className="container discovery-guide" aria-labelledby="discovery-guide-title">
       <div className="discovery-guide-head">
         <small>Good to know</small>
-        <h2 id="discovery-guide-title">How SpookyCoins works</h2>
+        <h2 id="discovery-guide-title">Frequently asked questions</h2>
         <p>A quick guide to rankings, boosts, submissions, and the data you see around the site.</p>
       </div>
 

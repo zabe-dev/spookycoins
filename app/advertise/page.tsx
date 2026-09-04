@@ -53,32 +53,25 @@ const boostRates = [
 
 const bannerPlacements = [
   {
-    placement: 'Top banner',
-    size: '728 × 90 desktop · 320 × 90 mobile',
-    price: '$45/day',
-    mobile: 'Shown in the premium top rotation.',
-    note: 'Best for quick visibility before hunters start scanning the page.',
+    placement: 'Basic banner',
+    size: 'Desktop: 652×90 min · 728×120 max',
+    price: '$25/day',
+    mobile: 'Mobile: 320×90 min · 620×120 max',
+    note: 'Located at the homepage top row and below the community leaderboard. Rotates through active ads.',
   },
   {
-    placement: 'Full-width banner',
-    size: '1320 × 90 desktop · 320 × 90 mobile',
-    price: '$60/day',
-    mobile: 'Runs across wide banner spots.',
-    note: 'A larger placement used across homepage, coin pages, dashboard, and watchlists.',
+    placement: 'Premium banner',
+    size: 'Desktop: 1320×90 min · 1400×120 max',
+    price: '$50/day',
+    mobile: 'Mobile: 320×90 min · 620×120 max',
+    note: 'Located below promoted coins, under coin page headers, and inside dashboard/watchlist pages. Exclusive ad space, does not rotate.',
   },
   {
-    placement: 'Fixed bottom banner',
-    size: '1920 × 90 desktop · 320 × 90 mobile',
+    placement: 'Fixed footer banner',
+    size: 'Desktop: 1920×90 min · 2560×120 max',
     price: '$75/day',
-    mobile: 'Stays visible until closed.',
-    note: 'An edge-to-edge sticky placement shown across the site for campaigns that need constant presence.',
-  },
-  {
-    placement: 'Coin page ad',
-    size: '300 × 250 desktop · 300 × 250 mobile',
-    price: '$35/day',
-    mobile: 'Same creative size on all screens.',
-    note: 'A compact coin-page placement beside deeper project research.',
+    mobile: 'Mobile: 320×90 min · 620×120 max',
+    note: 'Located at the bottom of page displayed across all site pages. Exclusive ad space, does not rotate.',
   },
 ];
 
@@ -126,7 +119,8 @@ export default function AdvertisePage() {
           </div>
           <p className="advertise-banner-intro">
             Banner ads are now available as managed placements. Send us your creative, target URL,
-            preferred dates, and we&apos;ll review everything before it goes live.
+            preferred start date, and campaign length. We&apos;ll review everything before it goes
+            live.
           </p>
           <div className="advertise-banner-grid">
             {bannerPlacements.map((banner) => (
@@ -138,27 +132,20 @@ export default function AdvertisePage() {
                 <small>{banner.note}</small>
               </div>
             ))}
-            <div className="advertise-creative-card">
-              <b>Test creative</b>
-              <strong>Preview</strong>
-              <span>Check desktop and mobile fit</span>
-              <span>Before sending files</span>
+            <div className="advertise-custom-request-card">
+              <b>Custom request</b>
+              <strong>TBD</strong>
+              <span>Custom placement or campaign idea</span>
+              <span>Reviewed manually before pricing</span>
               <small>
-                Open the tester to make sure your banner responds cleanly before booking.
+                Have something outside the standard packages? Send the idea and we&apos;ll price it
+                based on placement, duration, and availability.
               </small>
-              <a
-                className="advertise-creative-test"
-                href="https://test-ad-creative.zabe.dev"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Test creative ↗
-              </a>
             </div>
           </div>
           <p className="advertise-note">
-            *Banner ads follow the same multi-day discount model as promoted coins. Pricing is
-            non-refundable once the placement is approved and active.
+            *Banner ads follow the same multi-day discount model as promoted coins. Approved active
+            placements are non-refundable.
           </p>
         </section>
 

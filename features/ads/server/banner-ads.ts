@@ -12,9 +12,8 @@ import {
 } from '@/features/ads/types';
 
 const emptyBannerMap = (): BannerAdMap => ({
+  basic: [],
   premium: [],
-  wide: [],
-  'coin-page': [],
   fixed: [],
 });
 
@@ -57,7 +56,7 @@ export const getActiveBannerAds = unstable_cache(
 
     return map;
   },
-  ['active-banner-ads-v2'],
+  ['active-banner-ads-v3'],
   { revalidate: 60, tags: ['banner-ads'] },
 );
 

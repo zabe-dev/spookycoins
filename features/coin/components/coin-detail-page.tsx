@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/site-footer';
+import { PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import type { PublicBannerAd } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import { CoinTable } from '@/features/coins/components';
 import type { Coin } from '@/features/coins/types';
 import { getBoostVoteFactor, toCoinListItem, type CoinListItem } from '@/features/coins/view';
 import { ChangeRequestModal } from './change-request-modal';
-import { CoinAd } from './coin-ad';
 import { CoinChartCard } from './coin-chart-card';
 import { CoinHero } from './coin-hero';
 import { CoinInfoSections } from './coin-info-sections';
@@ -18,14 +18,12 @@ import { CoinSidebar } from './coin-sidebar';
 export function CoinDetailPage({
   coinRecord,
   promotedCoins,
-  wideBannerAds,
-  coinPageBannerAds,
+  premiumBannerAds,
   isSignedIn,
 }: {
   coinRecord: Coin;
   promotedCoins: CoinListItem[];
-  wideBannerAds: PublicBannerAd[];
-  coinPageBannerAds: PublicBannerAd[];
+  premiumBannerAds: PublicBannerAd[];
   isSignedIn: boolean;
 }) {
   const canonicalCoin = coinRecord;
@@ -400,7 +398,7 @@ export function CoinDetailPage({
         </div>
       )}
 
-      <CoinAd ads={wideBannerAds} />
+      <PremiumAdBanner ads={premiumBannerAds} />
 
       <div className="container coin-layout">
         <div className="coin-main-column">
@@ -418,7 +416,6 @@ export function CoinDetailPage({
           onVote={vote}
           onToggleWatch={toggleWatch}
           onOpenChangeRequest={() => openChangeRequest('change')}
-          bannerAds={coinPageBannerAds}
         />
       </div>
 

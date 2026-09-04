@@ -301,7 +301,7 @@ export default async function AdminDashboardPage({
 
   const adminBannerAds: AdminBannerRow[] = bannerAdRows.map((banner) => ({
     ...(() => {
-      const placement = normalizeBannerPlacement(banner.placement) || 'wide';
+      const placement = normalizeBannerPlacement(banner.placement) || 'premium';
       const status = getBannerStatus(banner.startsAt, banner.expiresAt, now);
       return {
         placement,

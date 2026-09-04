@@ -1,8 +1,6 @@
 'use client';
 
 import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
-import { CoinPageAdBanner } from '@/features/ads/components/ad-banners';
-import type { PublicBannerAd } from '@/features/ads/types';
 import { BoltIcon } from '@/features/coins/components';
 import { ExternalLink, Pencil } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +17,6 @@ export function CoinSidebar({
   onVote,
   onToggleWatch,
   onOpenChangeRequest,
-  bannerAds,
 }: {
   coin: CoinDetailView;
   voted: boolean;
@@ -30,7 +27,6 @@ export function CoinSidebar({
   onVote: () => void;
   onToggleWatch: () => void;
   onOpenChangeRequest: () => void;
-  bannerAds: PublicBannerAd[];
 }) {
   return (
     <aside className="coin-sidebar">
@@ -131,7 +127,6 @@ export function CoinSidebar({
         </div>
         <button onClick={onOpenChangeRequest}>Request a change</button>
       </section>
-      <CoinPageAdBanner ads={bannerAds} />
     </aside>
   );
 }

@@ -1,7 +1,7 @@
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { AccountPanel } from '@/features/account/components/account-panel';
-import { WideAdBanner } from '@/features/ads/components/ad-banners';
+import { PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getPublicCoinById } from '@/features/coins/server/coin-list';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
               ? pendingDeletionByCoinId.get(submission.coinId)
               : undefined),
         }))}
-        afterTable={<WideAdBanner ads={bannerAds.wide} offset={2} />}
+        afterTable={<PremiumAdBanner ads={bannerAds.premium} offset={2} />}
       />
       <SiteFooter />
     </main>

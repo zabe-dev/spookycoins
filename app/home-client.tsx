@@ -2,11 +2,10 @@
 /* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DiscoveryGuide } from '@/components/layout/discovery-guide';
-import { WideAdBanner } from '@/features/ads/components/ad-banners';
+import { BasicAdBannerPair, PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import type { BannerAdMap } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import {
-  BannerAd as Ad,
   CoinCells as Cells,
   DiscoveryCard as Discovery,
   LineBurst,
@@ -407,12 +406,7 @@ export function HomeClient({
   };
   return (
     <main className="market-page">
-      <div className="container ad-grid">
-        <Ad ads={bannerAds.premium} />
-        <div className="desktop-only">
-          <Ad ads={bannerAds.premium} offset={1} />
-        </div>
-      </div>
+      <BasicAdBannerPair ads={bannerAds.basic} />
       <section className="container hotspots-shell">
         <div className="hotspots-bar">
           <div>
@@ -516,7 +510,7 @@ export function HomeClient({
           coinLinks={false}
         />
       </section>
-      <WideAdBanner ads={bannerAds.wide} />
+      <PremiumAdBanner ads={bannerAds.premium} />
       <section className="container leaderboard" id="leaderboard">
         <div className="section-title">
           <div>
@@ -741,7 +735,7 @@ export function HomeClient({
           </div>
         </div>
       </section>
-      <WideAdBanner ads={bannerAds.wide} offset={1} />
+      <BasicAdBannerPair ads={bannerAds.basic} offset={2} />
       <DiscoveryGuide />
       <SiteFooter id="footer" variant="home" />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
