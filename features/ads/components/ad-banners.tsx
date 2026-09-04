@@ -80,7 +80,6 @@ function AdImageContent({
   decorative?: boolean;
 }) {
   const [src, setSrc] = useState(initialSrc);
-  const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -92,28 +91,20 @@ function AdImageContent({
   }
 
   return (
-    <span
-      className={`ad-banner-img-frame ${frameClassName || ''} ${
-        loaded ? '' : 'ad-banner-img-frame--pending'
-      }`}
-    >
+    <span className={`ad-banner-img-frame ${frameClassName || ''}`}>
       <img
         className="ad-banner-img"
         src={src}
         alt={decorative ? '' : ad.title || 'Advertisement'}
         aria-hidden={decorative ? true : undefined}
-        style={{ opacity: loaded ? 1 : 0 }}
-        onLoad={() => setLoaded(true)}
         onError={() => {
           if (src !== fallbackSrc) {
             setSrc(fallbackSrc);
-            setLoaded(false);
             return;
           }
           setFailed(true);
         }}
       />
-      {!loaded && <span className="ad-banner-loading-copy">Advertisement</span>}
     </span>
   );
 }
