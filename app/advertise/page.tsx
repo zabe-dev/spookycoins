@@ -54,23 +54,23 @@ const boostRates = [
 const bannerPlacements = [
   {
     placement: 'Basic banner',
-    size: 'Desktop: 652×90 min · 728×120 max',
+    size: 'Desktop: 652×90px - 728×120px',
     price: '$25/day',
-    mobile: 'Mobile: 320×90 min · 620×120 max',
+    mobile: 'Mobile: 320×90px - 620×120px',
     note: 'Located at the homepage top row and below the community leaderboard. Rotates through active ads.',
   },
   {
     placement: 'Premium banner',
-    size: 'Desktop: 1320×90 min · 1400×120 max',
+    size: 'Desktop: 1320×90px - 1400×120px',
     price: '$50/day',
-    mobile: 'Mobile: 320×90 min · 620×120 max',
+    mobile: 'Mobile: 320×90px - 620×120px',
     note: 'Located below promoted coins, under coin page headers, and inside dashboard/watchlist pages. Exclusive ad space, does not rotate.',
   },
   {
     placement: 'Fixed footer banner',
-    size: 'Desktop: 1920×90 min · 2560×120 max',
+    size: 'Desktop: 1920×90px - 2560×120px',
     price: '$100/day',
-    mobile: 'Mobile: 320×90 min · 620×120 max',
+    mobile: 'Mobile: 320×90px - 620×120px',
     note: 'Located at the bottom of page displayed across all site pages. Exclusive ad space, does not rotate.',
   },
 ];
@@ -93,11 +93,11 @@ export default function AdvertisePage() {
           <p className="eyebrow">
             <span>●</span> Advertise on SpookyCoins
           </p>
-          <h1>Reach crypto’s earliest project hunters.</h1>
+          <h1>Reach crypto’s earliest project investors.</h1>
           <p>
-            Put your project in front of hunters scanning for new launches, presales, and coins
-            gaining community attention. Choose banner placements, promoted coin visibility, or
-            boosts depending on how loud you want the campaign to be.
+            Put your project in front of crypto investors scanning for new launches, presales, and
+            coins gaining community attention. Choose banner placements, promoted coin visibility,
+            or boosts depending on how loud you want the campaign to be.
           </p>
           <div className="advertise-actions">
             <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
@@ -127,16 +127,20 @@ export default function AdvertisePage() {
               <div key={banner.placement}>
                 <b>{banner.placement}</b>
                 <strong>{banner.price}</strong>
-                <span>{banner.size}</span>
-                <span>{banner.mobile}</span>
+                <span className="advertise-banner-sizes">
+                  <span>{banner.size}</span>
+                  <span>{banner.mobile}</span>
+                </span>
                 <small>{banner.note}</small>
               </div>
             ))}
             <div className="advertise-custom-request-card">
               <b>Custom request</b>
               <strong>TBD</strong>
-              <span>Custom placement or campaign idea</span>
-              <span>Reviewed manually before pricing</span>
+              <span className="advertise-banner-sizes">
+                <span>Custom campaign idea.</span>
+                <span>Reviewed manually before pricing.</span>
+              </span>
               <small>
                 Have something outside the standard packages? Send the idea and we&apos;ll price it
                 based on placement, duration, and availability.

@@ -466,7 +466,7 @@ export function HomeClient({
               <Discovery
                 icon="watch"
                 title="Most watched"
-                sub="Most saved by hunters."
+                sub="Most saved by investors."
                 coins={hotspotCoins.watched}
                 viewMoreHref="/?coins=watched#leaderboard"
                 metric="watchlist"

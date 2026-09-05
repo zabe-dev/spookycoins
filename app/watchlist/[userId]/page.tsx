@@ -36,7 +36,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
     getWatchlistTableRows(userId, session?.user.id),
     getActiveBannerAds(),
   ]);
-  const ownerName = owner.name.trim() || 'Hunter';
+  const ownerName = owner.name.trim() || 'Investor';
 
   return (
     <main className="market-page">

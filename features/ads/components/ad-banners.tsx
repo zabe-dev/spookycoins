@@ -163,7 +163,7 @@ function BasicBannerSlot({
     <div className={`basic-ad-banner basic-ad-banner--${slot}`}>
       <small>AD SPACE</small>
       <div className="ad-placeholder-copy">
-        <b>Reach crypto&apos;s earliest coin hunters.</b>
+        <b>Reach crypto&apos;s earliest investors.</b>
         <span>Premium inventory · Measured impressions and clicks</span>
       </div>
       <Link href="/advertise">View ad packages ↗</Link>
@@ -207,7 +207,7 @@ export function PremiumAdBanner({ ads = [], offset = 0 }: BannerProps) {
     <div className="container premium-ad-banner">
       <small>PREMIUM ADVERTISEMENT</small>
       <div>
-        <b>Reach crypto&apos;s earliest coin hunters.</b>
+        <b>Reach crypto&apos;s earliest investors.</b>
         <span>Premium inventory · Measured impressions and clicks</span>
       </div>
       <Link href="/advertise">View ad packages ↗</Link>
@@ -240,7 +240,7 @@ export function FixedFooterBanner({ ads = [], offset = 0 }: BannerProps) {
             <div className="fixed-footer-ad-banner-placeholder-inner">
               <small>AD SPACE</small>
               <b>SPOOKY</b>
-              <span>Reach crypto&apos;s earliest coin hunters.</span>
+              <span>Reach crypto&apos;s earliest investors.</span>
               <Link href="/advertise">View ad packages ↗</Link>
             </div>
           </div>

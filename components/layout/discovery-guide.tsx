@@ -9,7 +9,7 @@ const guideItems = [
   },
   {
     title: 'How is trending determined?',
-    body: 'A coin can trend when hunters start paying attention to it quickly. Recent votes and watchlist activity help us spot projects getting fresh attention, without replacing the main vote-based leaderboard.',
+    body: 'A coin can trend when crypto investors start paying attention to it quickly. Recent votes and watchlist activity help us spot projects getting fresh attention, without replacing the main vote-based leaderboard.',
   },
   {
     title: 'What are boosted coins?',
@@ -17,7 +17,7 @@ const guideItems = [
   },
   {
     title: 'How do I submit a coin?',
-    body: 'Submit your project with the required details, links, logo, and market information. We review submissions first so the listings stay clean, useful, and easier for hunters to compare.',
+    body: 'Submit your project with the required details, links, logo, and market information. We review submissions first so the listings stay clean, useful, and easier for crypto investors to compare.',
   },
   {
     title: 'Why is market or chart data missing?',
@@ -25,15 +25,15 @@ const guideItems = [
   },
   {
     title: 'Do I need an account to vote or watch coins?',
-    body: 'Yes. Accounts help keep voting fair and let you build a watchlist you can come back to later. You can also share your watchlist with other hunters when you want.',
+    body: 'Yes. Accounts help keep voting fair and let you build a watchlist you can come back to later. You can also share your watchlist with other investors when you want.',
   },
 ];
 
 const summaryItems = [
   {
     kicker: 'What we do',
-    title: 'Find early crypto projects before the crowd does.',
-    body: 'SpookyCoins gives coin hunters a cleaner way to discover fresh launches, live presales, and promoted projects competing for attention each week.',
+    title: 'Find early crypto projects before most investors do.',
+    body: 'SpookyCoins gives crypto investors a cleaner way to discover fresh launches, live presales, and promoted projects competing for attention each week.',
     points: [
       'Browse new launches and presales',
       'Vote for projects you believe in',
@@ -52,8 +52,8 @@ const summaryItems = [
   },
   {
     kicker: 'Benefits',
-    title: 'More eyes for projects, faster scanning for hunters.',
-    body: 'Project teams can reach early crypto audiences, while hunters get the context they need to compare opportunities quickly.',
+    title: 'More eyes for projects, faster scanning for investors.',
+    body: 'Project teams can reach early crypto investors, while users get the context they need to compare opportunities quickly.',
     points: [
       'Fast scanning on desktop and mobile',
       'Clear chain, price, and vote context',

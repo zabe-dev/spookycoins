@@ -212,6 +212,12 @@
   color: #d8dde0;
   font-size: 10px;
   font-weight: 500;
+  line-height: 1.25;
+}
+
+.advertise-banner-grid .advertise-banner-sizes {
+  display: grid;
+  gap: 1px;
 }
 
 .advertise-banner-grid small {

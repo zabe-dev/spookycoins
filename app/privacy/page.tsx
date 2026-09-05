@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
           <h1>Privacy Policy</h1>
           <p>
             This page explains what SpookyCoins collects, why we collect it, and how we use it to
-            keep the site useful, fair, and safer for coin hunters and project owners.
+            keep the site useful, fair, and safer for crypto investors and project owners.
           </p>
           <span>Last updated: {lastUpdated}</span>
         </header>
