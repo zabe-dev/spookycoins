@@ -363,6 +363,23 @@ export const bannerAds = pgTable(
   ],
 );
 
+export const mailingListSubscribers = pgTable(
+  'mailing_list_subscribers',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    email: text('email').notNull(),
+    source: text('source').default('homepage').notNull(),
+    status: text('status').default('subscribed').notNull(),
+    subscribedAt: timestamp('subscribed_at', { withTimezone: true }).defaultNow().notNull(),
+    unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex('mailing_list_subscribers_email_unique').on(table.email),
+    index('mailing_list_subscribers_status_idx').on(table.status),
+  ],
+);
+
 export const coinVotes = pgTable(
   'coin_votes',
   {

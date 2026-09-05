@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Chain dropdown needs a remote Iconify SVG for Other alongside local icon files. */
 import { SiteFooter } from '@/components/layout/site-footer';
 import { DiscoveryGuide } from '@/components/layout/discovery-guide';
+import { MailingListSignup } from '@/components/layout/mailing-list-signup';
 import { BasicAdBannerPair, PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import type { BannerAdMap } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
@@ -737,6 +738,7 @@ export function HomeClient({
       </section>
       <BasicAdBannerPair ads={bannerAds.basic} offset={2} />
       <DiscoveryGuide />
+      <MailingListSignup />
       <SiteFooter id="footer" variant="home" />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </main>

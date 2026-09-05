@@ -31,6 +31,16 @@ const guideItems = [
 
 const summaryItems = [
   {
+    kicker: 'Who we are',
+    title: 'A community-powered crypto discovery platform.',
+    body: 'SpookyCoins spotlights early-stage tokens, presales, and airdrops in one place. We help crypto investors discover promising projects early, follow the ones they like, and influence visibility through real community votes.',
+    points: [
+      'Early-stage tokens, presales, and airdrops',
+      'Community-led voting visibility',
+      'Clear project and trust signals',
+    ],
+  },
+  {
     kicker: 'What we do',
     title: 'Find early crypto projects before most investors do.',
     body: 'SpookyCoins gives crypto investors a cleaner way to discover fresh launches, live presales, and promoted projects competing for attention each week.',
@@ -48,16 +58,6 @@ const summaryItems = [
       'Votes reset every week',
       'Boosts lift ranking visibility',
       'Promoted coins are labeled upfront',
-    ],
-  },
-  {
-    kicker: 'Benefits',
-    title: 'More eyes for projects, faster scanning for investors.',
-    body: 'Project teams can reach early crypto investors, while users get the context they need to compare opportunities quickly.',
-    points: [
-      'Fast scanning on desktop and mobile',
-      'Clear chain, price, and vote context',
-      'Simple promotion paths for listed coins',
     ],
   },
 ];

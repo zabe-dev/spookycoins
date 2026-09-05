@@ -1087,6 +1087,131 @@
   font-size: 11px;
   line-height: 1.75;
 }
+.mailing-list-signup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 38px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(203, 255, 74, 0.055), transparent 42%), rgba(255, 255, 255, 0.015);
+  padding: 22px;
+}
+.mailing-list-copy {
+  display: grid;
+  gap: 8px;
+}
+.mailing-list-copy > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--lime);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.mailing-list-copy > span svg {
+  width: 13px;
+  height: 13px;
+}
+.mailing-list-copy h2 {
+  max-width: 520px;
+  margin: 0;
+  color: var(--copy);
+  font:
+    800 27px/1 var(--font-space-grotesk),
+    sans-serif;
+  letter-spacing: -0.045em;
+}
+.mailing-list-copy p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--sub);
+  font-size: 11px;
+  line-height: 1.65;
+}
+.mailing-list-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: end;
+}
+.mailing-list-form label {
+  display: grid;
+  gap: 7px;
+}
+.mailing-list-form label span {
+  color: var(--sub);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mailing-list-form input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #2a3136;
+  border-radius: 12px;
+  background: rgba(5, 7, 8, 0.52);
+  padding: 0 13px;
+  color: var(--copy);
+  font-size: 12px;
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.mailing-list-form input:focus {
+  border-color: rgba(203, 255, 74, 0.5);
+  box-shadow: 0 0 0 3px rgba(203, 255, 74, 0.08);
+}
+.mailing-list-form button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--lime);
+  border-radius: 12px;
+  background: var(--lime);
+  padding: 0 17px;
+  color: #080b0b;
+  font-size: 10px;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    opacity 0.16s ease;
+}
+.mailing-list-form button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.mailing-list-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+.mailing-list-form button svg {
+  width: 14px;
+  height: 14px;
+}
+.mailing-list-form button svg[class*='lucide-loader'] {
+  animation: spin 0.9s linear infinite;
+}
+.mailing-list-feedback {
+  grid-column: 1 / -1;
+  min-height: 14px;
+  color: var(--sub);
+  font-size: 10px;
+}
+.mailing-list-feedback.success {
+  color: var(--lime);
+}
+.mailing-list-feedback.error {
+  color: #ff9999;
+}
 .legal-shell {
   width: min(100% - 36px, 980px);
   padding-block: 62px 86px;
@@ -1463,6 +1588,13 @@
   .discovery-guide-body {
     grid-template-columns: 1fr;
   }
+  .mailing-list-signup {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .mailing-list-copy h2 {
+    font-size: 24px;
+  }
   .premium-ad-banner,
   .section-title {
     align-items: flex-start;
@@ -1568,6 +1700,16 @@
   }
   .discovery-guide {
     padding-block: 36px 50px;
+  }
+  .mailing-list-signup {
+    margin-bottom: 28px;
+    padding: 17px;
+  }
+  .mailing-list-form {
+    grid-template-columns: 1fr;
+  }
+  .mailing-list-form button {
+    width: 100%;
   }
   .discovery-guide-row {
     grid-template-columns: 1fr;

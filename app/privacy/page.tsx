@@ -46,6 +46,9 @@ export default function PrivacyPolicyPage() {
             <ul>
               <li>Account details such as name, email address, and login information.</li>
               <li>Coin submissions, logos, links, descriptions, contract details, and contacts.</li>
+              <li>
+                Mailing list emails submitted for updates, announcements, and campaign targeting.
+              </li>
               <li>Votes, watchlists, reports, change requests, and other actions you take.</li>
               <li>Payment or order information for ads, boosts, and promoted placements.</li>
             </ul>
@@ -60,6 +63,7 @@ export default function PrivacyPolicyPage() {
             <ul>
               <li>Create accounts and keep voting/watchlists working.</li>
               <li>Review submissions, reports, advertisements, boosts, and promoted coins.</li>
+              <li>Send email updates, launch alerts, promotions, and SpookyCoins announcements.</li>
               <li>Display approved public project information on the site.</li>
               <li>Prevent spam, abuse, fake votes, fraud, and unsafe listings.</li>
               <li>Improve site performance, rankings, market data, and user experience.</li>
