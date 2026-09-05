@@ -87,11 +87,7 @@ function Metric({
       <strong className={`mini-coin-metric mini-coin-votes metric-${metric}`}>
         <b>
           {formatVotes(
-            metric === 'watchlist'
-              ? coin.watchCount
-              : metric === 'trend'
-                ? coin.totalVotes
-                : coin.votes,
+            metric === 'watchlist' ? coin.watchCount : metric === 'trend' ? coin.votes : coin.votes,
           )}
         </b>
         <span>{metric === 'watchlist' ? 'watchlists' : 'total votes'}</span>

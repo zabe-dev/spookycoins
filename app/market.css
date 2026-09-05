@@ -84,13 +84,13 @@
   color: var(--copy, var(--text));
 }
 .topbar-value {
-  color: var(--copy, var(--text)) !important;
+  color: var(--copy, var(--text, #eef1f2)) !important;
 }
 .topbar-label {
   color: var(--sub, var(--muted));
 }
 .topbar-coin-name {
-  color: var(--copy, var(--text));
+  color: var(--copy, var(--text, #eef1f2));
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 12px;
   font-weight: 700;
@@ -1289,9 +1289,21 @@
     background: transparent;
     color: var(--copy, var(--text));
     text-align: left;
-    font: inherit;
-    font-weight: 750;
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
     cursor: pointer;
+  }
+  .navbar nav.open > a,
+  .mobile-menu-account > a,
+  .mobile-menu-account > button,
+  .mobile-login-action {
+    font-family: var(--font-poppins), sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
   }
   .menu-item-icon,
   .mobile-login-action svg {
@@ -1414,7 +1426,7 @@
   .topbar-marquee-group a b,
   .topbar-marquee-group .topbar-value,
   .topbar-marquee-group .topbar-coin-name {
-    color: var(--copy) !important;
+    color: var(--copy, var(--text, #eef1f2)) !important;
   }
   .topbar-marquee-group .topbar-label,
   .topbar-marquee-group .topbar-coin-label {

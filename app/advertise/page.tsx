@@ -266,10 +266,8 @@ export default function AdvertisePage() {
         <section className="advertise-final-cta">
           <Sparkles aria-hidden="true" />
           <div>
-            <h2>Ready to book visibility?</h2>
-            <p>
-              Message us with your project link, campaign type, creative URL, and preferred dates.
-            </p>
+            <h2>Ready to increase your project’s reach?</h2>
+            <p>Message us to start your project campaign.</p>
           </div>
           <div className="advertise-actions advertise-final-actions">
             <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">

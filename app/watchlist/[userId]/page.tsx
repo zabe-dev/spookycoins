@@ -55,8 +55,7 @@ export default async function PublicWatchlistPage({ params }: WatchlistPageParam
             <PublicWatchlistTable coins={rows} isSignedIn={Boolean(session?.user)} />
           ) : (
             <div className="settings-empty">
-              <strong>No watched coins yet</strong>
-              <p>This public watchlist is empty.</p>
+              <strong>There is currently no projects available to display.</strong>
             </div>
           )}
         </section>

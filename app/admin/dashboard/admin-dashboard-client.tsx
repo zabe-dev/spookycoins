@@ -176,6 +176,7 @@ type PopoverController = {
 };
 
 const pageSize = 10;
+const emptyTableMessage = 'There is currently no projects available to display.';
 const boostPackages = [
   { value: 10, label: '10x', detail: 'votes ×2 · 24h' },
   { value: 30, label: '30x', detail: 'votes ×2 · 72h' },
@@ -402,7 +403,7 @@ function ChangeRequestsTable({
           row.requestedChanges,
           row.status,
         ]}
-        empty="No change requests yet."
+        empty={emptyTableMessage}
         renderTable={(visibleRows) => (
           <table className="admin-table admin-reports-table">
             <thead>
@@ -576,7 +577,7 @@ function PendingSubmissionsTable({
         rows={rows}
         searchPlaceholder="Search project, symbol, or chain"
         search={(row) => [row.name, row.symbol, row.chain, row.contactEmail, row.contactTelegram]}
-        empty="No pending submissions right now."
+        empty={emptyTableMessage}
         renderTable={(visibleRows) => (
           <table className="admin-table">
             <thead>
@@ -682,7 +683,7 @@ function ListedCoinsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Po
       rows={rows}
       searchPlaceholder="Search coin, symbol, or chain"
       search={(row) => [row.name, row.symbol, row.chain, row.contactEmail, row.contactTelegram]}
-      empty="No listed coins yet."
+      empty={emptyTableMessage}
       renderTable={(visibleRows) => (
         <table className="admin-table">
           <thead>
@@ -792,7 +793,7 @@ function PromotionsTable({ rows, popover }: { rows: AdminCoinRow[]; popover: Pop
       rows={rows}
       searchPlaceholder="Search coin, symbol, or chain"
       search={(row) => [row.name, row.symbol, row.chain, row.category]}
-      empty="No coins available for promotions yet."
+      empty={emptyTableMessage}
       renderTable={(visibleRows) => (
         <table className="admin-table admin-promotions-table">
           <thead>
@@ -888,7 +889,7 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
       rows={rows}
       searchPlaceholder="Search type, URL, or status"
       search={(row) => [row.placement, row.placementLabel, row.targetUrl, row.status]}
-      empty="No banner ads created yet."
+      empty={emptyTableMessage}
       action={<BannerEditAction popover={popover} />}
       renderTable={(visibleRows) => (
         <table className="admin-table banner-admin-table">
@@ -970,7 +971,7 @@ function UsersTable({ rows, popover }: { rows: AdminUserRow[]; popover: PopoverC
       rows={rows}
       searchPlaceholder="Search name or email"
       search={(row) => [row.name, row.email, row.role, row.status, row.lastIp]}
-      empty="No users found."
+      empty={emptyTableMessage}
       renderTable={(visibleRows) => (
         <table className="admin-table">
           <thead>

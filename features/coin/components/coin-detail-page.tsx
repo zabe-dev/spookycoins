@@ -447,7 +447,7 @@ export function CoinDetailPage({
           watch={togglePromotedWatch}
           vote={votePromoted}
           coinLinks={false}
-          emptyMessage="No promoted coins right now."
+          emptyMessage="There is currently no projects available to display."
         />
       </section>
 

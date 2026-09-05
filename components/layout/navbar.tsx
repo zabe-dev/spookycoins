@@ -5,13 +5,13 @@ import { AuthModal } from '@/features/auth/components/auth-modal';
 import { authClient } from '@/lib/auth/client';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import {
-  BadgeDollarSign,
   ChevronDown,
   CircleUserRound,
   Compass,
   Handshake,
   Heart,
   LogOut,
+  Megaphone,
   Plus,
   Settings,
   Shield,
@@ -245,8 +245,7 @@ function MenuIcon({
   if (type === 'discover') return <Compass className="menu-item-icon" aria-hidden="true" />;
   if (type === 'promoted') return <Zap className="menu-item-icon" aria-hidden="true" />;
   if (type === 'partners') return <Handshake className="menu-item-icon" aria-hidden="true" />;
-  if (type === 'advertise')
-    return <BadgeDollarSign className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'advertise') return <Megaphone className="menu-item-icon" aria-hidden="true" />;
   if (type === 'account') return <CircleUserRound className="menu-item-icon" aria-hidden="true" />;
   if (type === 'watchlist') return <Heart className="menu-item-icon" aria-hidden="true" />;
   if (type === 'settings') return <Settings className="menu-item-icon" aria-hidden="true" />;

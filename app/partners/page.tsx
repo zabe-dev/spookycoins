@@ -42,7 +42,7 @@ export default function PartnersPage() {
             </h1>
             <p>
               SpookyCoins partners with teams that help projects launch, prove trust, and reach
-              crypto investors who actually care about early discovery.
+              crypto investors looking for an edge in early discovery.
             </p>
             <div className="partners-actions">
               <a className="partners-primary" href="https://t.me/CoinSpookySupport">

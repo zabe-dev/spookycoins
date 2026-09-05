@@ -101,10 +101,14 @@ export function toCoinListItem(coin: Coin, index: number): CoinListItem {
   const boostPackage = coin.boost.active ? coin.boost.multiplier : null;
   const rawVotes = coin.community.weeklyVotes;
   const boostedVotes = rawVotes * getBoostVoteFactor(boostPackage);
+  const marketRank =
+    typeof coin.market.marketRank === 'number' && coin.market.marketRank > 0
+      ? coin.market.marketRank
+      : null;
   return {
     coinId: coin.id,
     externalId: coin.externalId,
-    rank: coin.market.marketRank ?? index + 1,
+    rank: marketRank ?? index + 1,
     name: coin.name,
     symbol: coin.symbol,
     lifecycle: coin.lifecycle,

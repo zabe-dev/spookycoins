@@ -342,8 +342,7 @@ nav a {
     opacity 0.18s ease,
     text-shadow 0.18s ease;
 }
-nav a:hover,
-nav a.active {
+nav a:hover {
   color: #f4f6f8;
   text-shadow: 0 0 16px rgba(203, 255, 74, 0.1);
 }
@@ -589,7 +588,7 @@ nav a.active {
   color: #d8dee1;
   text-align: left;
   font-size: 10px;
-  font-weight: 750;
+  font-weight: 650;
   cursor: pointer;
 }
 .user-dropdown .menu-item-icon {
@@ -1771,8 +1770,10 @@ tbody tr:hover td {
     background: transparent;
     padding: 0 11px;
     color: #d8dee1;
+    font-family: var(--font-poppins), sans-serif;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 700;
+    letter-spacing: 0;
     text-align: left;
   }
   .nav-shell nav.open > a.active,
@@ -1784,6 +1785,21 @@ tbody tr:hover td {
   .mobile-login-action:hover {
     background: rgba(255, 255, 255, 0.055);
     color: #fff;
+  }
+  .mobile-menu-account > a,
+  .mobile-menu-account > button {
+    font-weight: 700;
+  }
+  .nav-shell nav.open > a,
+  .nav-band .navbar nav.open > a,
+  .mobile-menu-account > a,
+  .mobile-menu-account > button,
+  .mobile-login-action {
+    font-family: var(--font-poppins), sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
   }
   .mobile-menu-account {
     display: grid;
@@ -2937,7 +2953,7 @@ img.admin-project-logo {
   display: inline-flex;
   padding: 0 12px;
   gap: 7px;
-  border-color: transparent;
+  border: 0;
   background: rgba(203, 255, 74, 0.08);
   color: var(--lime);
   font-size: 10px;

@@ -206,7 +206,7 @@ export function CoinTable({
           ) : (
             <tr>
               <td className="coins-table-empty" colSpan={11}>
-                {emptyMessage || 'There are currently no coins to display.'}
+                {emptyMessage || 'There is currently no projects available to display.'}
               </td>
             </tr>
           )}

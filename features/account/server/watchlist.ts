@@ -30,11 +30,17 @@ export async function getWatchlistTableRows(
   );
   const watchedOrder = new Map(watchedCoins.map((coin, index) => [coin.coinId, index]));
   const fullCoins = await getPublicCoinListItems(viewerId);
+  const topCoinRankById = new Map(
+    [...fullCoins]
+      .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name))
+      .map((coin, index) => [coin.coinId, index + 1]),
+  );
 
   return fullCoins
     .filter((coin) => savedAtByCoinId.has(coin.coinId))
     .map((coin) => ({
       ...coin,
+      rank: topCoinRankById.get(coin.coinId) ?? coin.rank,
       savedAt: savedAtByCoinId.get(coin.coinId) || coin.submittedTimestamp,
     }))
     .sort(

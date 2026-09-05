@@ -6,6 +6,7 @@ import { CoinCells } from '@/features/coins/components/coin-table';
 import { getBoostVoteFactor, type CoinListItem } from '@/features/coins/view';
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
   Clock3,
   Copy,
@@ -49,16 +50,22 @@ export function WatchlistPanel({
   isSignedIn: boolean;
   afterTable?: ReactNode;
 }) {
-  const [watchlistNotice, setWatchlistNotice] = useState<InlineNotice | null>(null);
+  const [copiedWatchlistUrl, setCopiedWatchlistUrl] = useState(false);
   const watchlistPath = `/watchlist/${userId}`;
+
+  useEffect(() => {
+    if (!copiedWatchlistUrl) return;
+    const timeout = window.setTimeout(() => setCopiedWatchlistUrl(false), 1400);
+    return () => window.clearTimeout(timeout);
+  }, [copiedWatchlistUrl]);
 
   async function copyWatchlistUrl() {
     try {
       const watchlistUrl = `${window.location.origin}${watchlistPath}`;
       await navigator.clipboard.writeText(watchlistUrl);
-      setWatchlistNotice({ tone: 'success', message: 'Public watchlist link copied.' });
+      setCopiedWatchlistUrl(true);
     } catch {
-      setWatchlistNotice({ tone: 'error', message: 'Could not copy the link. Please try again.' });
+      setCopiedWatchlistUrl(false);
     }
   }
 
@@ -75,18 +82,16 @@ export function WatchlistPanel({
       <section className="settings-card submissions-card watchlist-page-card">
         <div className="watchlist-page-toolbar">
           <button type="button" onClick={() => void copyWatchlistUrl()}>
-            <Copy aria-hidden="true" />
+            {copiedWatchlistUrl ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
             COPY PUBLIC LINK
           </button>
           <span>{coins.length}</span>
         </div>
-        <InlineFeedback notice={watchlistNotice} />
         {coins.length ? (
           <PublicWatchlistTable coins={coins} isSignedIn={isSignedIn} />
         ) : (
           <div className="settings-empty">
-            <strong>No watched coins yet</strong>
-            <p>Coins you add to your watchlist will appear here.</p>
+            <strong>There is currently no projects available to display.</strong>
           </div>
         )}
       </section>
@@ -136,8 +141,7 @@ export function AccountPanel({
           <SubmissionTable submissions={listingRows} onRequestDelete={setDeleteModal} />
         ) : (
           <div className="settings-empty">
-            <strong>No coin submissions yet</strong>
-            <p>Your submitted coins will appear here.</p>
+            <strong>There is currently no projects available to display.</strong>
           </div>
         )}
       </section>
