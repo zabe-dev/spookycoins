@@ -107,7 +107,7 @@ async function getDiscoveryHotspots(userId?: string | null): Promise<DiscoveryHo
   };
 }
 
-async function getPromotedCoinItems(userId?: string | null) {
+export async function getPromotedCoinItems(userId?: string | null) {
   const ids = await getCachedActivePromotedCoinIds().catch((error) => {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(

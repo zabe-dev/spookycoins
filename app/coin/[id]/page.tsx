@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { SiteHeader } from '@/components/layout/site-header';
 import { CoinDetailPage } from '@/features/coin/components/coin-detail-page';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
-import { getPublicCoinById, getPublicCoinListItems } from '@/features/coins/server/coin-list';
+import { getPublicCoinById } from '@/features/coins/server/coin-list';
+import { getPromotedCoinItems } from '@/features/coins/server/discovery';
 import { NETWORKS } from '@/features/coins/networks';
 import { getCurrentSession } from '@/lib/auth/session';
 import '../../market.css';
@@ -51,14 +52,10 @@ export default async function CoinPage({ params }: CoinPageParams) {
   const session = await getCurrentSession();
   const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
-  const [allCoins, bannerAds] = await Promise.all([
-    getPublicCoinListItems(session?.user.id),
+  const [promotedCoins, bannerAds] = await Promise.all([
+    getPromotedCoinItems(session?.user.id),
     getActiveBannerAds(),
   ]);
-  const promotedCoins = allCoins
-    .filter((item) => item.promoted)
-    .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name))
-    .map((item, index) => ({ ...item, rank: index + 1 }));
 
   return (
     <>
