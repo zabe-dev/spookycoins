@@ -20,7 +20,7 @@ import { z } from 'zod';
 import { AuthProviderButtons } from './auth-provider-buttons';
 
 const emailPasswordSchema = z.object({
-  email: z.string().trim().email('Use a real email address, like you@example.com.'),
+  email: z.string().trim().email('Use a real email address, like someone@example.com.'),
   password: z.string().min(8, 'Password needs at least 8 characters.'),
 });
 
@@ -487,7 +487,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 New password
                 <PasswordField
                   name="password"
-                  placeholder="At least 8 characters"
+                  placeholder="Must have atleast 8 characters"
                   autoComplete="new-password"
                   minLength={8}
                   required
@@ -510,7 +510,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               <input
                 type="email"
                 name="email"
-                placeholder="you@example.com"
+                placeholder="someone@example.com"
                 autoComplete="email"
                 required
               />
@@ -523,7 +523,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                   <input
                     type="text"
                     name="name"
-                    placeholder="Your name"
+                    placeholder="Enter your name"
                     autoComplete="name"
                     minLength={2}
                     maxLength={60}
@@ -536,7 +536,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 <input
                   type="email"
                   name="email"
-                  placeholder="you@example.com"
+                  placeholder="someone@example.com"
                   autoComplete="email"
                   required
                 />
@@ -545,7 +545,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                 Password
                 <PasswordField
                   name="password"
-                  placeholder="At least 8 characters"
+                  placeholder="Must have atleast 8 characters"
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   minLength={8}
                   required

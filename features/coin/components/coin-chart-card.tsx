@@ -16,7 +16,7 @@ export function CoinChartCard({
       <div className="chart-head">
         <div>
           <strong>
-            {coin.symbol} / {coin.chain}
+            {coin.symbol} / {coin.chain} / {coin.category.toUpperCase()}
           </strong>
         </div>
         {canonicalCoin.dex.available ? (

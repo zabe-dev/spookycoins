@@ -51,6 +51,21 @@ const mobulaChainIds: Partial<Record<NetworkId, string>> = {
   sui: 'sui:sui',
 };
 
+const evmNetworks = new Set<NetworkId>([
+  'ethereum',
+  'bsc',
+  'polygon',
+  'avalanche',
+  'arbitrum',
+  'base',
+  'optimism',
+  'fantom',
+  'kcc',
+  'hood',
+]);
+
+const base58AddressPattern = /^[1-9A-HJ-NP-Za-km-z]+$/;
+
 const syncState = globalThis as typeof globalThis & {
   spookycoinsMobulaInFlight?: Promise<Map<number, MarketSnapshotRow>>;
   spookycoinsMobulaNextAllowedAt?: number;
@@ -191,6 +206,18 @@ async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
       );
       continue;
     }
+    if (!isValidAddressForChain(coin.chain, address)) {
+      await recordMarketSourceError(
+        coin.id,
+        externalId,
+        invalidAddressErrorCode,
+        `Invalid address format for ${coin.chain || 'unknown'} chain.`,
+      );
+      console.warn(
+        `${LOG_TAG} coin ${coin.id}: skipped locally invalid address ${chainId}/${address}`,
+      );
+      continue;
+    }
 
     const result = await fetchMobulaTokenDetails(chainId, address);
     if (!result.ok) {
@@ -310,6 +337,7 @@ function shouldRefreshCoin(coin: MarketSyncCoin, snapshot: MarketSnapshotRow | u
   if (!coin.contractAddress?.trim()) return false;
   const chainId = getMobulaChainId(coin.chain);
   if (!chainId) return false;
+  if (!isValidAddressForChain(coin.chain, coin.contractAddress.trim())) return false;
   if (
     hasKnownInvalidAddressError(coin, marketSourceExternalId(chainId, coin.contractAddress.trim()))
   ) {
@@ -383,6 +411,21 @@ async function selectStaleSyncCoins(limit: number): Promise<MarketSyncCoin[]> {
     order by latest_snapshot.recorded_at asc nulls first, c.id asc
     limit ${limit}
   `);
+}
+
+function isValidAddressForChain(chain: string | null, address: string) {
+  const normalizedChain = chain as NetworkId | null;
+  const trimmed = address.trim();
+
+  if (!normalizedChain || !trimmed) return false;
+  if (evmNetworks.has(normalizedChain)) return /^0x[\da-f]{40}$/i.test(trimmed);
+  if (normalizedChain === 'solana') {
+    return trimmed.length >= 32 && trimmed.length <= 44 && base58AddressPattern.test(trimmed);
+  }
+  if (normalizedChain === 'tron') return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(trimmed);
+  if (normalizedChain === 'sui') return /^0x[\da-f]{64}$/i.test(trimmed);
+
+  return true;
 }
 
 function hasKnownInvalidAddressError(coin: MarketSyncCoin, externalId: string) {

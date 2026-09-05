@@ -136,7 +136,7 @@ export function ChangeRequestModal({
               </label>
               <label>
                 <span>Contact email</span>
-                <input name="email" type="email" required placeholder="you@example.com" />
+                <input name="email" type="email" required placeholder="someone@example.com" />
               </label>
               <p className="change-form-note">
                 Submitting a request does not guarantee that the listing will be changed.

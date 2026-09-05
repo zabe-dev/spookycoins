@@ -1,12 +1,12 @@
 import { Icon as IconifyIcon } from '@iconify/react';
-import { Compass, Flag, Share2 } from 'lucide-react';
+import { ExternalLink, Flag, Share2 } from 'lucide-react';
 import type { CoinProjectLink } from '@/features/coins/types';
 
 type SocialKind = 'explorer' | 'share' | 'report';
 type ProjectLinkKind = CoinProjectLink['type'];
 
 const icons = {
-  explorer: Compass,
+  explorer: ExternalLink,
   share: Share2,
   report: Flag,
 };

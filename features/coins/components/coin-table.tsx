@@ -1,15 +1,15 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Project logos can come from submitted URLs later. */
 
-import type { MouseEvent, ReactNode } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import {
   formatVotes,
   type CoinListItem as Coin,
   type CoinSortKey as SortKey,
 } from '@/features/coins/view';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import type { MouseEvent, ReactNode } from 'react';
 import { FormattedPrice } from './formatted-price';
 import { BoltIcon } from './icons';
 import { TableScroller } from './table-scroller';
@@ -206,7 +206,7 @@ export function CoinTable({
           ) : (
             <tr>
               <td className="coins-table-empty" colSpan={11}>
-                {emptyMessage || 'No coins to display.'}
+                {emptyMessage || 'There are currently no coins to display.'}
               </td>
             </tr>
           )}

@@ -75,7 +75,7 @@ export function CoinHero({
               )}
             </div>
             <div className="coin-meta-row">
-              <span className="coin-symbol">${coin.symbol}</span>
+              <span className="coin-symbol">{coin.symbol}</span>
               <span className="coin-meta-chain">
                 <ChainIcon coin={coin} />
                 {coin.networkName}
