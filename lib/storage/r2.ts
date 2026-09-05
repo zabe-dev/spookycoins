@@ -20,11 +20,13 @@ export async function uploadSubmissionLogo(logo: {
   name: string;
   mimeType: 'image/png' | 'image/jpeg' | 'image/webp';
   dataUrl: string;
+  chain: string;
 }): Promise<StoredObject> {
   const storage = getR2Config();
   const body = dataUrlToBuffer(logo.dataUrl, logo.mimeType);
   const extension = extensionForMime(logo.mimeType);
-  const key = `submissions/logos/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.${extension}`;
+  const chain = cleanPathSegment(logo.chain || 'unknown');
+  const key = `assets/${chain}/logos/${randomUUID()}.${extension}`;
   const url = objectRequestUrl(storage.endpoint, storage.bucket, key);
 
   const response = await fetch(url, {
@@ -48,6 +50,15 @@ export async function uploadSubmissionLogo(logo: {
       ? publicObjectUrl(storage.publicBaseUrl, key)
       : objectRequestUrl(storage.endpoint, storage.bucket, key),
   };
+}
+
+function cleanPathSegment(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 function getR2Config(): R2Config {

@@ -76,7 +76,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const uploadedLogo = await uploadSubmissionLogo(payload.logo).catch(() => null);
+  const uploadedLogo = await uploadSubmissionLogo({
+    ...payload.logo,
+    chain: payload.contracts[0]?.chain || 'unknown',
+  }).catch(() => null);
   if (!uploadedLogo) {
     return apiError('LOGO_UPLOAD_FAILED', 'Could not upload the logo. Please try again.', 502);
   }
