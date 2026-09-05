@@ -38,6 +38,7 @@ type DbCoinBoost = typeof coinBoosts.$inferSelect;
 type DbCoinPromotion = typeof coinPromotions.$inferSelect;
 type DbCoinLink = typeof coinLinks.$inferSelect;
 type DbCoinSubmission = typeof coinSubmissions.$inferSelect;
+type DbCoinSubmissionPayload = Pick<DbCoinSubmission, 'coinId' | 'coinData'>;
 type DexProvider = Extract<DexConfig, { available: true }>['provider'];
 type InteractionSummary = NonNullable<
   Awaited<ReturnType<typeof getCoinInteractionSummaries>> extends Map<number, infer Summary>
@@ -161,16 +162,7 @@ async function readPublicCoinRecords(
       )
       .orderBy(desc(coinPromotions.expiresAt)),
     db.select().from(coinLinks).where(inArray(coinLinks.coinId, hydratedCoinIds)),
-    db
-      .select()
-      .from(coinSubmissions)
-      .where(
-        and(
-          inArray(coinSubmissions.coinId, hydratedCoinIds),
-          eq(coinSubmissions.submissionType, 'new-coin'),
-        ),
-      )
-      .orderBy(desc(coinSubmissions.createdAt)),
+    selectLatestSubmissionPayloads(hydratedCoinIds),
   ]);
 
   const snapshotByCoin = firstByCoinId(snapshotRows);
@@ -249,7 +241,7 @@ function mapDbCoinToCoin({
   boost: DbCoinBoost | null;
   promotion: DbCoinPromotion | null;
   links: Map<string, DbCoinLink>;
-  submission: DbCoinSubmission | null;
+  submission: DbCoinSubmissionPayload | null;
   interactions: InteractionSummary | null;
 }): Coin {
   const network = toNetworkId(coin.chain);
@@ -338,7 +330,9 @@ function firstByCoinId<T extends { coinId: number }>(rows: T[]) {
   return map;
 }
 
-function hasLinkedCoinId(row: DbCoinSubmission): row is DbCoinSubmission & { coinId: number } {
+function hasLinkedCoinId(
+  row: DbCoinSubmissionPayload,
+): row is DbCoinSubmissionPayload & { coinId: number } {
   return typeof row.coinId === 'number';
 }
 
@@ -404,14 +398,14 @@ function groupLinksByCoinId(rows: DbCoinLink[]) {
 
 async function selectLatestMarketSnapshots(coinIds: number[]): Promise<DbMarketSnapshot[]> {
   return db
-    .select()
+    .selectDistinctOn([marketSnapshots.coinId])
     .from(marketSnapshots)
     .where(inArray(marketSnapshots.coinId, coinIds))
-    .orderBy(desc(marketSnapshots.recordedAt))
+    .orderBy(marketSnapshots.coinId, desc(marketSnapshots.recordedAt))
     .catch((error) => {
       if (!isMissingMarketSnapshotColumnError(error)) throw error;
       return db
-        .select({
+        .selectDistinctOn([marketSnapshots.coinId], {
           id: marketSnapshots.id,
           coinId: marketSnapshots.coinId,
           priceUsd: marketSnapshots.priceUsd,
@@ -427,8 +421,26 @@ async function selectLatestMarketSnapshots(coinIds: number[]): Promise<DbMarketS
         })
         .from(marketSnapshots)
         .where(inArray(marketSnapshots.coinId, coinIds))
-        .orderBy(desc(marketSnapshots.recordedAt));
+        .orderBy(marketSnapshots.coinId, desc(marketSnapshots.recordedAt));
     });
+}
+
+async function selectLatestSubmissionPayloads(
+  coinIds: number[],
+): Promise<DbCoinSubmissionPayload[]> {
+  return db
+    .selectDistinctOn([coinSubmissions.coinId], {
+      coinId: coinSubmissions.coinId,
+      coinData: coinSubmissions.coinData,
+    })
+    .from(coinSubmissions)
+    .where(
+      and(
+        inArray(coinSubmissions.coinId, coinIds),
+        eq(coinSubmissions.submissionType, 'new-coin'),
+      ),
+    )
+    .orderBy(coinSubmissions.coinId, desc(coinSubmissions.createdAt));
 }
 
 function isMissingMarketSnapshotColumnError(error: unknown): boolean {
@@ -439,7 +451,7 @@ function isMissingMarketSnapshotColumnError(error: unknown): boolean {
 
 function buildChartConfig(
   links: Map<string, DbCoinLink>,
-  submission: DbCoinSubmission | null,
+  submission: DbCoinSubmissionPayload | null,
   network: NetworkId,
   contractAddress: string,
 ): Coin['chart'] {
@@ -590,7 +602,7 @@ const coinbrainChainIds: Partial<Record<NetworkId, string>> = {
 
 function buildDexConfig(
   dexLink: DbCoinLink | undefined,
-  submission: DbCoinSubmission | null,
+  submission: DbCoinSubmissionPayload | null,
   network: NetworkId,
   contractAddress: string,
 ): DexConfig {
