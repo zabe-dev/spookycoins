@@ -82,5 +82,18 @@ async function writeJson(key: string, value: unknown, ttlSeconds: number) {
 
 function logCache(event: 'HIT' | 'MISS' | 'SKIP' | 'WRITE', message: string) {
   if (process.env.NODE_ENV === 'production') return;
-  console.info(`[redis-cache] ${event} ${message}`);
+  console.info(`[redis-cache] ${event} ${readableCacheLog(message)}`);
+}
+
+function readableCacheLog(message: string) {
+  return message
+    .split(':')
+    .map((part) => {
+      try {
+        return decodeURIComponent(part);
+      } catch {
+        return part;
+      }
+    })
+    .join(':');
 }
