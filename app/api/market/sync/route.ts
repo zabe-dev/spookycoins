@@ -1,3 +1,4 @@
+import { invalidateCoinDiscoveryCache } from '@/features/coins/server/cache-invalidation';
 import { syncMobulaMarketData } from '@/features/coins/server/market-sync';
 import { NextResponse } from 'next/server';
 
@@ -25,6 +26,9 @@ export async function GET(request: Request) {
   );
   const limit = Number.isFinite(requestedLimit) ? requestedLimit : 7;
   const result = await syncMobulaMarketData(limit);
+  if (result.updated > 0) {
+    await invalidateCoinDiscoveryCache();
+  }
 
   return NextResponse.json({
     status: 'success',

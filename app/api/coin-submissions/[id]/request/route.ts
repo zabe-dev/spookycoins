@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth/server';
 import { apiError, apiSuccess } from '@/lib/api/responses';
 import { rateLimitError } from '@/lib/api/rate-limit-response';
+import { invalidateCoinDiscoveryCache } from '@/features/coins/server/cache-invalidation';
 import { db } from '@/lib/db/client';
 import { coins, coinSubmissions } from '@/lib/db/schema';
 import { buildRequestSubject, consumeRateLimit, oneHourMs } from '@/lib/security/rate-limit';
@@ -69,6 +70,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       }
     });
 
+    await invalidateCoinDiscoveryCache(owned.coinId);
+
     return apiSuccess({ id: owned.id, scheduledDeleteAt: null }, 'Deletion request cancelled.');
   }
 
@@ -114,6 +117,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       },
     });
   });
+  await invalidateCoinDiscoveryCache(owned.coinId);
+
   return apiSuccess(
     { id: owned.id, scheduledDeleteAt: scheduledDeleteAt.toISOString() },
     'Deletion request sent.',

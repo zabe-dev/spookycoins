@@ -1,3 +1,4 @@
+import { invalidateCoinInteractionCache } from '@/features/coins/server/cache-invalidation';
 import { toggleCoinWatchlist } from '@/features/coins/server/interactions';
 import { apiError, apiSuccess } from '@/lib/api/responses';
 import { rateLimitError } from '@/lib/api/rate-limit-response';
@@ -31,6 +32,8 @@ export async function POST(_request: Request, { params }: RouteContext) {
 
   try {
     const result = await toggleCoinWatchlist(coinId, session.user.id);
+    await invalidateCoinInteractionCache(coinId);
+
     return apiSuccess(
       {
         coinId,

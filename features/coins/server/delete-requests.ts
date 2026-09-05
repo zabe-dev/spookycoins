@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db/client';
 import { coinSubmissions, coins } from '@/lib/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
+import { invalidateCoinDiscoveryCache } from './cache-invalidation';
 
 export async function processExpiredCoinDeletionRequests() {
   try {
@@ -52,6 +53,8 @@ export async function processExpiredCoinDeletionRequests() {
         await tx.delete(coins).where(inArray(coins.id, coinIds));
       }
     });
+
+    await invalidateCoinDiscoveryCache();
 
     return { completedRequests: requestIds.length, deletedCoins: coinIds.length };
   } catch (error) {

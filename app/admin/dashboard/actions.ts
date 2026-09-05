@@ -1,5 +1,8 @@
 'use server';
 
+import { invalidateBannerAdCache } from '@/features/ads/server/cache-invalidation';
+import { bannerPlacementLabels, bannerPlacements } from '@/features/ads/types';
+import { invalidateCoinDiscoveryCache } from '@/features/coins/server/cache-invalidation';
 import { getCurrentSession } from '@/lib/auth/session';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { db } from '@/lib/db/client';
@@ -14,7 +17,6 @@ import {
   coinSubmissions,
   users,
 } from '@/lib/db/schema';
-import { bannerPlacementLabels, bannerPlacements } from '@/features/ads/types';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { notFound, redirect } from 'next/navigation';
@@ -92,6 +94,7 @@ export async function deleteAdminUser(formData: FormData) {
     role: user?.role || null,
     banned: user?.banned || false,
   });
+  await invalidateCoinDiscoveryCache();
   revalidatePath('/admin/dashboard');
 }
 
@@ -111,6 +114,7 @@ export async function updateAdminCoin(formData: FormData) {
     .where(eq(coins.id, coinId));
 
   await audit(adminUser.id, 'coin.updated', 'coin', String(coinId), { listingStatus, category });
+  await invalidateCoinDiscoveryCache(coinId);
   revalidatePath('/admin/dashboard');
 }
 
@@ -126,6 +130,7 @@ export async function deleteAdminCoin(formData: FormData) {
     chain: coin?.chain || null,
     listingStatus: coin?.listingStatus || null,
   });
+  await invalidateCoinDiscoveryCache(coinId);
   revalidatePath('/admin/dashboard');
   revalidatePath('/');
 }
@@ -177,6 +182,7 @@ export async function updateAdminSubmission(formData: FormData) {
     requesterEmail,
     coinId: approvedCoinId,
   });
+  await invalidateCoinDiscoveryCache(approvedCoinId);
   revalidatePath('/admin/dashboard');
   revalidatePath('/');
   if (approvedCoinId) revalidatePath(`/coin/${approvedCoinId}`);
@@ -226,6 +232,7 @@ export async function grantCoinBoost(formData: FormData) {
         extensionDays,
         notes: notes || null,
       });
+      await invalidateCoinDiscoveryCache(coinId);
       revalidatePath('/admin/dashboard');
       return;
     }
@@ -255,6 +262,7 @@ export async function grantCoinBoost(formData: FormData) {
     expiresAt,
     notes: notes || null,
   });
+  await invalidateCoinDiscoveryCache(coinId);
   revalidatePath('/admin/dashboard');
 }
 
@@ -275,6 +283,7 @@ export async function removeCoinBoost(formData: FormData) {
       notes: boost.notes,
     })),
   });
+  await invalidateCoinDiscoveryCache(coinId);
   revalidatePath('/admin/dashboard');
 }
 
@@ -320,6 +329,7 @@ export async function addPromotedCoin(formData: FormData) {
         priority,
         notes: notes || null,
       });
+      await invalidateCoinDiscoveryCache(coinId);
       revalidatePath('/admin/dashboard');
       return;
     }
@@ -358,6 +368,7 @@ export async function addPromotedCoin(formData: FormData) {
     priority,
     notes: notes || null,
   });
+  await invalidateCoinDiscoveryCache(coinId);
   revalidatePath('/admin/dashboard');
 }
 
@@ -381,6 +392,7 @@ export async function removePromotedCoin(formData: FormData) {
       notes: promotion.notes,
     })),
   });
+  await invalidateCoinDiscoveryCache(coinId);
   revalidatePath('/admin/dashboard');
 }
 
@@ -440,7 +452,7 @@ export async function createBannerAd(formData: FormData) {
     expiresAt,
     notes: notes || null,
   });
-  revalidateBannerPaths();
+  await revalidateBannerPaths();
 }
 
 export async function updateBannerAd(formData: FormData) {
@@ -509,7 +521,7 @@ export async function updateBannerAd(formData: FormData) {
     expiresAt,
     notes: notes || null,
   });
-  revalidateBannerPaths();
+  await revalidateBannerPaths();
 }
 
 export async function deleteBannerAd(formData: FormData) {
@@ -525,7 +537,7 @@ export async function deleteBannerAd(formData: FormData) {
     targetUrl: banner?.targetUrl || null,
     notes: banner?.notes || null,
   });
-  revalidateBannerPaths();
+  await revalidateBannerPaths();
 }
 
 async function requireAdmin() {
@@ -770,7 +782,8 @@ function assertUrl(value: string, key: string) {
   }
 }
 
-function revalidateBannerPaths() {
+async function revalidateBannerPaths() {
+  await invalidateBannerAdCache();
   revalidateTag('banner-ads', 'max');
   revalidatePath('/admin/dashboard');
   revalidatePath('/');

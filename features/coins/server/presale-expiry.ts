@@ -3,6 +3,7 @@ import 'server-only';
 import { db } from '@/lib/db/client';
 import { coins, coinSubmissions } from '@/lib/db/schema';
 import { and, desc, eq, inArray } from 'drizzle-orm';
+import { invalidateCoinDiscoveryCache } from './cache-invalidation';
 
 type PresaleCoin = Pick<typeof coins.$inferSelect, 'id'>;
 type SubmissionRow = Pick<typeof coinSubmissions.$inferSelect, 'coinId' | 'coinData'>;
@@ -63,6 +64,8 @@ export async function processExpiredPresales() {
         }
       }
     });
+
+    await invalidateCoinDiscoveryCache();
 
     return { converted: expiredCoins.length };
   } catch (error) {
