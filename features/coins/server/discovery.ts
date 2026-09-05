@@ -1,23 +1,107 @@
 import 'server-only';
 
-import type { LeaderboardPage, LeaderboardQuery } from '@/features/coins/leaderboard-types';
-import type { CoinListItem } from '@/features/coins/view';
-import { getPublicCoinListItems } from './coin-list';
+import type { DiscoveryData, DiscoveryHotspots } from '@/features/coins/discovery-types';
+import type { LeaderboardQuery } from '@/features/coins/leaderboard-types';
+import { db } from '@/lib/db/client';
+import { coinBoosts, coinPromotions, coinVotes, coins } from '@/lib/db/schema';
+import { sql } from 'drizzle-orm';
+import { getPublicCoinListItemsByIds } from './coin-list';
 import { getLeaderboardPage } from './leaderboard';
+import { getCurrentVoteWeekStart } from './interactions';
 
-export type DiscoveryData = {
-  coins: CoinListItem[];
-  leaderboard: LeaderboardPage;
-};
+const promotedCoinsLimit = 25;
 
 export async function getDiscoveryData(query: LeaderboardQuery = {}): Promise<DiscoveryData> {
-  const [coins, leaderboard] = await Promise.all([
-    getPublicCoinListItems(query.userId),
+  const [hotspots, promotedCoins, leaderboard] = await Promise.all([
+    getDiscoveryHotspots(query.userId),
+    getPromotedCoinItems(query.userId),
     getLeaderboardPage(query),
   ]);
 
   return {
-    coins,
+    hotspots,
+    promotedCoins,
     leaderboard,
   };
+}
+
+async function getDiscoveryHotspots(userId?: string | null): Promise<DiscoveryHotspots> {
+  const [recent, trending, presales, watched] = await Promise.all([
+    getLeaderboardPage({ view: 'recent', pageSize: 4, userId }),
+    getLeaderboardPage({ view: 'trending', pageSize: 4, userId }),
+    getLeaderboardPage({ view: 'presales', pageSize: 4, userId }),
+    getLeaderboardPage({ view: 'watched', pageSize: 4, userId }),
+  ]);
+
+  return {
+    recent: recent.rows,
+    trending: trending.rows,
+    presales: presales.rows,
+    watched: watched.rows,
+  };
+}
+
+async function getPromotedCoinItems(userId?: string | null) {
+  const ids = await selectActivePromotedCoinIds().catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        '[discovery] promoted coin query unavailable:',
+        error instanceof Error ? error.message : error,
+      );
+    }
+    return [];
+  });
+
+  if (!ids.length) return [];
+  const items = await getPublicCoinListItemsByIds(ids, userId);
+  const itemById = new Map(items.map((item) => [item.coinId, item]));
+  return ids.flatMap((id, index) => {
+    const item = itemById.get(id);
+    return item ? [{ ...item, rank: index + 1 }] : [];
+  });
+}
+
+async function selectActivePromotedCoinIds() {
+  const nowIso = new Date().toISOString();
+  const weekStartIso = getCurrentVoteWeekStart().toISOString();
+  const rows = await db.execute<{ id: number }>(sql`
+    with weekly_votes as (
+      select ${coinVotes.coinId} as coin_id, count(*)::int as count
+      from ${coinVotes}
+      where ${coinVotes.weekStartsAt} = ${weekStartIso}::timestamptz
+      group by ${coinVotes.coinId}
+    ),
+    active_boosts as (
+      select distinct on (${coinBoosts.coinId})
+        ${coinBoosts.coinId} as coin_id,
+        ${coinBoosts.multiplier} as multiplier
+      from ${coinBoosts}
+      where ${coinBoosts.status} in ('active', 'scheduled')
+        and ${coinBoosts.startsAt} <= ${nowIso}::timestamptz
+        and ${coinBoosts.expiresAt} > ${nowIso}::timestamptz
+      order by ${coinBoosts.coinId}, ${coinBoosts.expiresAt} desc
+    )
+    select ${coins.id} as id
+    from ${coinPromotions}
+    inner join ${coins} on ${coins.id} = ${coinPromotions.coinId}
+    left join weekly_votes on weekly_votes.coin_id = ${coins.id}
+    left join active_boosts on active_boosts.coin_id = ${coins.id}
+    where ${coins.listingStatus} = 'active'
+      and ${coinPromotions.status} in ('active', 'scheduled')
+      and ${coinPromotions.startsAt} <= ${nowIso}::timestamptz
+      and ${coinPromotions.expiresAt} > ${nowIso}::timestamptz
+    order by
+      (coalesce(weekly_votes.count, 0) * case
+        when active_boosts.multiplier in (10, 30) then 2
+        when active_boosts.multiplier in (50, 100) then 3
+        when active_boosts.multiplier = 500 then 5
+        else 1
+      end) desc,
+      ${coinPromotions.priority} desc,
+      ${coinPromotions.expiresAt} desc,
+      ${coins.name} asc
+    limit ${promotedCoinsLimit}
+  `);
+
+  return Array.from(rows, (row) => Number(row.id));
 }

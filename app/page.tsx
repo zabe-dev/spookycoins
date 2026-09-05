@@ -40,7 +40,8 @@ export default async function Home({ searchParams }: HomeParams) {
           leaderboardPage.sort.direction,
           leaderboardPage.page,
         ].join(':')}
-        initialCoins={discovery.coins}
+        initialHotspots={discovery.hotspots}
+        initialPromotedCoins={discovery.promotedCoins}
         initialLeaderboard={leaderboardPage}
         isSignedIn={Boolean(session?.user)}
         bannerAds={bannerAds}
