@@ -2,6 +2,7 @@ import type { PublicWatchedCoin } from '@/features/account/components/account-pa
 import type { AccountTablePage } from '@/features/account/types';
 import { getPublicCoinListItemsByIds } from '@/features/coins/server/coin-list';
 import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
 import { coinWatchlists, coins } from '@/lib/db/schema';
@@ -37,11 +38,7 @@ export async function getWatchlistTablePage(
   const watchedCoins =
     viewerId === userId
       ? await readWatchedCoinRecords(userId, requestedPage, pageSize)
-      : await rememberJson(
-          `watchlist:public:${userId}:${requestedPage}:${pageSize}:v2`,
-          { ttlSeconds: watchlistCacheSeconds },
-          () => readWatchedCoinRecords(userId, requestedPage, pageSize),
-        );
+      : await getCachedPublicWatchedCoinRecords(userId, requestedPage, pageSize);
 
   const total = watchedCoins.total;
   const pages = Math.max(1, Math.ceil(total / pageSize));
@@ -75,6 +72,15 @@ export async function getWatchlistTablePage(
     );
 
   return { rows, total, page, pageSize, pages };
+}
+
+async function getCachedPublicWatchedCoinRecords(userId: string, page: number, pageSize: number) {
+  const version = await getCacheVersion('public-watchlists');
+  return rememberJson(
+    `watchlist:public:${version}:${userId}:${page}:${pageSize}:v2`,
+    { ttlSeconds: watchlistCacheSeconds },
+    () => readWatchedCoinRecords(userId, page, pageSize),
+  );
 }
 
 async function readWatchedCoinRecords(

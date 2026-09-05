@@ -3,6 +3,7 @@ import 'server-only';
 import { asc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { bannerAds } from '@/lib/db/schema';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import {
   bannerPlacements,
@@ -19,9 +20,10 @@ const emptyBannerMap = (): BannerAdMap => ({
 
 const activeBannerCacheSeconds = Number(process.env.BANNER_AD_CACHE_SECONDS || 60);
 
-export function getActiveBannerAds(): Promise<BannerAdMap> {
+export async function getActiveBannerAds(): Promise<BannerAdMap> {
+  const version = await getCacheVersion('banner-ads');
   return rememberJson(
-    'banner-ads:active:v1',
+    `banner-ads:active:${version}:v1`,
     { ttlSeconds: activeBannerCacheSeconds },
     readActiveBannerAds,
   );

@@ -5,12 +5,18 @@ import { coinBoosts, coinVotes, coinWatchlists, coins, users } from '@/lib/db/sc
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { getCachedTopbarPrices } from './market-prices';
 import type { TopbarCoinLink, TopbarSummary } from '@/features/topbar/types';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 
 const summaryCacheSeconds = Number(process.env.TOPBAR_SUMMARY_CACHE_SECONDS || 60);
 
-export function getTopbarSummary() {
-  return rememberJson('topbar:summary:v1', { ttlSeconds: summaryCacheSeconds }, readTopbarSummary);
+export async function getTopbarSummary() {
+  const version = await getCacheVersion('topbar-summary');
+  return rememberJson(
+    `topbar:summary:${version}:v1`,
+    { ttlSeconds: summaryCacheSeconds },
+    readTopbarSummary,
+  );
 }
 
 async function readTopbarSummary(): Promise<TopbarSummary> {

@@ -2,6 +2,7 @@ import 'server-only';
 
 import type { DiscoveryData, DiscoveryHotspots } from '@/features/coins/discovery-types';
 import type { LeaderboardQuery } from '@/features/coins/leaderboard-types';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
 import { coinBoosts, coinPromotions, coinVotes, coins } from '@/lib/db/schema';
@@ -126,8 +127,9 @@ async function getPromotedCoinItems(userId?: string | null) {
 }
 
 async function getCachedActivePromotedCoinIds() {
+  const version = await getCacheVersion('promoted-coins');
   return rememberJson(
-    `promoted-coins:active:${getCurrentVoteWeekStart().toISOString()}:v1`,
+    `promoted-coins:active:${version}:${getCurrentVoteWeekStart().toISOString()}:v1`,
     { ttlSeconds: promotedCoinsCacheSeconds },
     selectActivePromotedCoinIds,
   );

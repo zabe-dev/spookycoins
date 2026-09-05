@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createHash } from 'crypto';
 import { db } from '@/lib/db/client';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import { coinVotes, coinWatchlists, coins, users } from '@/lib/db/schema';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -51,8 +52,9 @@ export async function getCoinInteractionSummaries(
 async function getCachedPublicInteractionSummaries(coinIds: number[]) {
   const sortedIds = [...coinIds].sort((a, b) => a - b);
   const idHash = createHash('sha256').update(sortedIds.join(',')).digest('hex').slice(0, 16);
+  const version = await getCacheVersion('coin-interactions');
   return rememberJson(
-    `coins:interactions:${getCurrentVoteWeekStart().toISOString()}:${idHash}:v2`,
+    `coins:interactions:${version}:${getCurrentVoteWeekStart().toISOString()}:${idHash}:v2`,
     { ttlSeconds: interactionCacheSeconds },
     () => readPublicInteractionSummaries(sortedIds),
   );

@@ -13,6 +13,7 @@ import {
   type CoinListItem,
   type CoinSortKey,
 } from '@/features/coins/view';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
 import {
@@ -161,8 +162,9 @@ type LeaderboardIdRow = {
 };
 
 async function getCachedLeaderboardCoinIds(query: NormalizedLeaderboardQuery) {
+  const version = await getCacheVersion('leaderboard');
   return rememberJson(
-    buildLeaderboardCacheKey(query),
+    buildLeaderboardCacheKey(query, version),
     { ttlSeconds: leaderboardCacheSeconds },
     () => selectLeaderboardCoinIds(query),
   );
@@ -280,9 +282,10 @@ async function selectLeaderboardCoinIds(
   return Array.from(result);
 }
 
-function buildLeaderboardCacheKey(query: NormalizedLeaderboardQuery) {
+function buildLeaderboardCacheKey(query: NormalizedLeaderboardQuery, version: number) {
   return [
     'leaderboard',
+    version,
     getCurrentVoteWeekStart().toISOString(),
     query.view,
     query.category,

@@ -13,8 +13,9 @@ import type {
   NetworkId,
 } from '@/features/coins/types';
 import { toCoinListItem, type CoinListItem } from '@/features/coins/view';
-import { db } from '@/lib/db/client';
+import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
+import { db } from '@/lib/db/client';
 import {
   coinBoosts,
   coinLinks,
@@ -88,16 +89,18 @@ async function getPublicCoinRecords(
   await processExpiredCoinDeletionRequests();
 
   if (!coinId && !userId) {
+    const version = await getCacheVersion('public-coins');
     return rememberJson(
-      'coins:public:list:v1',
+      `coins:public:list:${version}:v1`,
       { ttlSeconds: publicCoinListCacheSeconds },
       () => readPublicCoinRecords(undefined, undefined, priorityCoinId),
     );
   }
 
   if (coinId && !userId) {
+    const version = await getCacheVersion('public-coins');
     return rememberJson(
-      `coins:public:detail:${coinId}:v1`,
+      `coins:public:detail:${version}:${coinId}:v1`,
       { ttlSeconds: publicCoinDetailCacheSeconds },
       () => readPublicCoinRecords(coinId, undefined, priorityCoinId),
     );

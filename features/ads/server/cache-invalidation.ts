@@ -1,7 +1,7 @@
 import 'server-only';
 
-import { forgetJson } from '@/lib/cache/json-cache';
+import { bumpCacheVersion } from '@/lib/cache/cache-version';
 
 export async function invalidateBannerAdCache() {
-  await forgetJson('banner-ads:active:v1');
+  await bumpCacheVersion('banner-ads');
 }
