@@ -265,6 +265,10 @@ export function PublicWatchlistTable({
             : coin,
         ),
       );
+      if (body.code === 'VOTE_COOLDOWN') {
+        updateCoinInteractionSummary(coinId, body.data?.summary);
+        return;
+      }
       if (!showRateLimitToast(body, 'vote')) {
         setInteractionNotice({
           tone: 'error',

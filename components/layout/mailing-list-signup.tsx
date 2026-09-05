@@ -75,7 +75,12 @@ export function MailingListSignup() {
             required
           />
         </label>
-        <button type="submit" disabled={status === 'loading'}>
+        <button
+          type="submit"
+          className={status === 'loading' ? 'is-loading' : undefined}
+          disabled={status === 'loading'}
+          aria-busy={status === 'loading'}
+        >
           {status === 'loading' ? (
             <Loader2 aria-hidden="true" />
           ) : status === 'success' ? (

@@ -180,7 +180,7 @@ export async function recordCoinVote({
     return {
       ok: false as const,
       code: 'VOTE_COOLDOWN',
-      message: `You can vote for this coin again ${formatRelativeTime(nextVoteAt)}.`,
+      message: '',
       nextVoteAt: nextVoteAt.toISOString(),
       summary: await getSingleCoinSummary(coinId, userId),
     };
@@ -284,15 +284,6 @@ export function getCurrentVoteWeekStart(date = new Date()) {
 
 function addHours(date: Date, hours: number) {
   return new Date(date.getTime() + hours * 60 * 60 * 1000);
-}
-
-function formatRelativeTime(date: Date) {
-  const remainingMs = Math.max(0, date.getTime() - Date.now());
-  const remainingMinutes = Math.ceil(remainingMs / 60_000);
-  if (remainingMinutes < 60) return `in ${remainingMinutes}m`;
-  const hours = Math.floor(remainingMinutes / 60);
-  const minutes = remainingMinutes % 60;
-  return minutes ? `in ${hours}h ${minutes}m` : `in ${hours}h`;
 }
 
 export function isMissingInteractionTableError(error: unknown) {

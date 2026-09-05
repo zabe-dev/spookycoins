@@ -285,6 +285,11 @@ export function HomeClient({
             : coin,
         ),
       );
+      if (body.code === 'VOTE_COOLDOWN') {
+        const summary = body.data?.summary;
+        if (summary) updateCoinInteractionSummary(coinId, summary);
+        return;
+      }
       if (!showRateLimitToast(body, 'vote')) {
         setInteractionNotice(body.message || 'Could not record your vote.');
       }

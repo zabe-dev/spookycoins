@@ -1171,6 +1171,8 @@
 }
 .mailing-list-form button {
   display: inline-flex;
+  width: 132px;
+  flex: 0 0 132px;
   min-height: 44px;
   align-items: center;
   justify-content: center;
@@ -1198,7 +1200,7 @@
   width: 14px;
   height: 14px;
 }
-.mailing-list-form button svg[class*='lucide-loader'] {
+.mailing-list-form button.is-loading svg {
   animation: spin 0.9s linear infinite;
 }
 .mailing-list-feedback {

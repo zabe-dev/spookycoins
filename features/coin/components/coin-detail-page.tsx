@@ -202,6 +202,10 @@ export function CoinDetailPage({
             : row,
         ),
       );
+      if (body.code === 'VOTE_COOLDOWN') {
+        updatePromotedInteractionSummary(coinId, body.data?.summary);
+        return;
+      }
       if (!showRateLimitToast(body, 'vote')) {
         setNotice(body.message || body.errorMessage || 'Could not record your vote.');
       }
