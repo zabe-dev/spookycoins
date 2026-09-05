@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { RateLimitToaster } from '@/components/ui/rate-limit-toaster';
-import { FixedFooterBanner } from '@/features/ads/components/ad-banners';
-import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
+import { FixedFooterBannerLoader } from '@/features/ads/components/fixed-footer-banner-loader';
 import { Fira_Mono, JetBrains_Mono, Poppins, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
@@ -72,20 +72,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const bannerAds = await getActiveBannerAds();
-
   return (
     <html lang="en">
       <body
         className={`${poppins.variable} ${spaceGrotesk.variable} ${firaMono.variable} ${jetBrainsMono.variable} antialiased`}
       >
         {children}
-        <FixedFooterBanner ads={bannerAds.fixed} />
+        <Suspense fallback={null}>
+          <FixedFooterBannerLoader />
+        </Suspense>
         <RateLimitToaster />
       </body>
     </html>
