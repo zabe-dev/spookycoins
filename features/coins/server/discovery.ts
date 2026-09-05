@@ -17,9 +17,30 @@ import {
 import { getCurrentVoteWeekStart } from './interactions';
 
 const promotedCoinsLimit = 25;
+const discoveryCacheSeconds = Number(process.env.DISCOVERY_CACHE_SECONDS || 30);
 const promotedCoinsCacheSeconds = Number(process.env.PROMOTED_COINS_CACHE_SECONDS || 60);
 
 export async function getDiscoveryData(query: LeaderboardQuery = {}): Promise<DiscoveryData> {
+  if (!query.userId) return getCachedDiscoveryData(query);
+
+  return readDiscoveryData(query);
+}
+
+async function getCachedDiscoveryData(query: LeaderboardQuery): Promise<DiscoveryData> {
+  const [publicCoinsVersion, leaderboardVersion, promotedCoinsVersion] = await Promise.all([
+    getCacheVersion('public-coins'),
+    getCacheVersion('leaderboard'),
+    getCacheVersion('promoted-coins'),
+  ]);
+
+  return rememberJson(
+    buildDiscoveryCacheKey(query, publicCoinsVersion, leaderboardVersion, promotedCoinsVersion),
+    { ttlSeconds: discoveryCacheSeconds },
+    () => readDiscoveryData(query),
+  );
+}
+
+async function readDiscoveryData(query: LeaderboardQuery = {}): Promise<DiscoveryData> {
   const selectionData = await getDiscoverySelections(query).catch((error) => {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
@@ -69,6 +90,31 @@ export async function getDiscoveryData(query: LeaderboardQuery = {}): Promise<Di
     promotedCoins,
     leaderboard: hydrateLeaderboardSelectionFromItems(selectionData.leaderboard, itemsById),
   };
+}
+
+function buildDiscoveryCacheKey(
+  query: LeaderboardQuery,
+  publicCoinsVersion: number,
+  leaderboardVersion: number,
+  promotedCoinsVersion: number,
+) {
+  return [
+    'discovery',
+    publicCoinsVersion,
+    leaderboardVersion,
+    promotedCoinsVersion,
+    query.view || '',
+    query.category || '',
+    query.chain || '',
+    query.search || '',
+    query.sort || '',
+    query.direction || '',
+    query.page || '',
+    query.pageSize || '',
+    'v1',
+  ]
+    .map(cacheKeyPart)
+    .join(':');
 }
 
 async function getDiscoverySelections(query: LeaderboardQuery = {}) {
