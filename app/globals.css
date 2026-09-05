@@ -4039,7 +4039,7 @@ img.admin-project-logo {
   font-weight: 500;
   letter-spacing: 0.12em;
 }
-.account-pagination {
+.table-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4049,14 +4049,14 @@ img.admin-project-logo {
   font-size: 10px;
   overflow: hidden;
 }
-.account-pagination > span {
+.table-pagination > span {
   flex: 0 0 auto;
   max-width: 42%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.account-pagination > div {
+.table-pagination > div {
   display: flex;
   flex: 1;
   flex-wrap: nowrap;
@@ -4065,7 +4065,7 @@ img.admin-project-logo {
   min-width: 0;
   overflow: hidden;
 }
-.account-pagination button {
+.table-pagination button {
   min-height: 30px;
   min-width: 30px;
   border: 1px solid rgba(148, 163, 184, 0.2);
@@ -4081,20 +4081,20 @@ img.admin-project-logo {
     color 0.18s ease,
     background 0.18s ease;
 }
-.account-pagination button:hover:not(:disabled):not(.active) {
+.table-pagination button:hover:not(:disabled):not(.active) {
   border-color: rgba(203, 255, 74, 0.34);
   color: var(--lime);
 }
-.account-pagination button.active {
+.table-pagination button.active {
   border-color: rgba(203, 255, 74, 0.72);
   background: var(--lime);
   color: #0b0d0e;
 }
-.account-pagination button:disabled {
+.table-pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.35;
 }
-.account-pagination-ellipsis {
+.table-pagination-ellipsis {
   display: inline-grid;
   min-width: 22px;
   min-height: 30px;
