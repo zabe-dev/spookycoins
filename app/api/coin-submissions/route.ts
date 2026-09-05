@@ -3,6 +3,7 @@ import {
   type CoinSubmissionPayload,
 } from '@/features/submissions/schemas/coin-submission';
 import { apiError, apiSuccess } from '@/lib/api/responses';
+import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/lib/db/client';
 import {
@@ -12,13 +13,11 @@ import {
   coinSubmissions,
 } from '@/lib/db/schema';
 import { getClientIp } from '@/lib/http/client-ip';
+import { buildRequestSubject, consumeRateLimit, oneHourMs } from '@/lib/security/rate-limit';
 import { uploadSubmissionLogo } from '@/lib/storage/r2';
 import { headers } from 'next/headers';
 
 const maxSubmissionBodyBytes = 3_200_000;
-const rateLimitWindowMs = 60_000;
-const maxSubmissionsPerWindow = 5;
-const submissionAttempts = new Map<string, number[]>();
 
 export async function POST(request: Request) {
   const requestHeaders = await headers();
@@ -30,13 +29,15 @@ export async function POST(request: Request) {
     return apiError('SUBMISSION_TOO_LARGE', 'Submission is too large.', 413);
   }
 
-  const requesterKey = buildRequesterKey(session.user.id, requestHeaders);
-  if (isRateLimited(requesterKey)) {
-    return apiError(
-      'RATE_LIMITED',
-      'Too many submission attempts. Please try again in a minute.',
-      429,
-    );
+  const limiter = await consumeRateLimit({
+    action: 'coin-submission.create',
+    subject: buildRequestSubject({ requestHeaders, userId: session.user.id }),
+    limit: 5,
+    windowMs: oneHourMs,
+  });
+
+  if (!limiter.allowed) {
+    return rateLimitError('', limiter);
   }
 
   const rawBody = await request.text().catch(() => '');
@@ -254,24 +255,6 @@ function parseJson(value: string) {
 
 function byteLength(value: string) {
   return new TextEncoder().encode(value).length;
-}
-
-function buildRequesterKey(userId: string, requestHeaders: Headers) {
-  const ip = getClientIp(requestHeaders) || 'unknown-ip';
-  return `${userId}:${ip}`;
-}
-
-function isRateLimited(key: string) {
-  const now = Date.now();
-  const activeAttempts = (submissionAttempts.get(key) || []).filter(
-    (timestamp) => now - timestamp < rateLimitWindowMs,
-  );
-  if (activeAttempts.length >= maxSubmissionsPerWindow) {
-    submissionAttempts.set(key, activeAttempts);
-    return true;
-  }
-  submissionAttempts.set(key, [...activeAttempts, now]);
-  return false;
 }
 
 async function verifyTurnstile(token: string, requestHeaders: Headers) {

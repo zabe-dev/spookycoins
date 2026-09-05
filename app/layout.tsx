@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { RateLimitToaster } from '@/components/ui/rate-limit-toaster';
 import { FixedFooterBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { Fira_Mono, JetBrains_Mono, Poppins, Space_Grotesk } from 'next/font/google';
@@ -85,6 +86,7 @@ export default async function RootLayout({
       >
         {children}
         <FixedFooterBanner ads={bannerAds.fixed} />
+        <RateLimitToaster />
       </body>
     </html>
   );

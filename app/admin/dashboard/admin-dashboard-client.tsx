@@ -43,6 +43,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -1831,11 +1832,15 @@ function CoinPageLinkAction({ coinId, name }: { coinId: number; name: string }) 
 function usePopoverPosition(open: boolean, buttonRef: RefObject<HTMLButtonElement | null>) {
   const [position, setPosition] = useState<CSSProperties>({
     position: 'fixed',
-    top: 16,
-    left: 16,
+    top: '50%',
+    left: '50%',
+    width: 'min(420px, calc(100vw - 32px))',
+    opacity: 0,
+    pointerEvents: 'none',
+    transform: 'translate(-50%, -50%)',
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
 
     function updatePosition() {
@@ -1858,6 +1863,8 @@ function usePopoverPosition(open: boolean, buttonRef: RefObject<HTMLButtonElemen
         width,
         left,
         maxHeight: viewportMaxHeight,
+        opacity: 1,
+        pointerEvents: 'auto',
       };
 
       if (availableBelow >= minUsefulHeight || availableBelow >= availableAbove) {

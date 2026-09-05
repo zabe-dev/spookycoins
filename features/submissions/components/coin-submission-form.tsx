@@ -39,6 +39,7 @@ import {
 } from '@/features/submissions/schemas/coin-submission';
 import confetti from 'canvas-confetti';
 import { Check, ChevronLeft, ChevronRight, Home, Loader2, PartyPopper, Plus } from 'lucide-react';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
@@ -314,7 +315,9 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
     setSubmitting(false);
 
     if (!response.ok) {
-      setErrors({ form: body.message || 'Could not submit your project right now.' });
+      if (!showRateLimitToast(body, 'submit')) {
+        setErrors({ form: body.message || 'Could not submit your project right now.' });
+      }
       return;
     }
 
@@ -694,7 +697,7 @@ export function CoinSubmissionForm({ userEmail }: { userEmail: string }) {
                     label="Contact Telegram"
                     value={values.telegramContact}
                     error={errors.telegramContact}
-                    placeholder="username"
+                    placeholder="Telegram username"
                     onChange={(value) => update('telegramContact', value)}
                   />
                 </div>

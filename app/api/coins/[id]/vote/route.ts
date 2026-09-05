@@ -1,14 +1,12 @@
 import { recordCoinVote } from '@/features/coins/server/interactions';
 import { apiError, apiSuccess } from '@/lib/api/responses';
+import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { auth } from '@/lib/auth/server';
 import { getClientIp } from '@/lib/http/client-ip';
+import { buildRequestSubject, consumeRateLimit, twoSecondsMs } from '@/lib/security/rate-limit';
 import { headers } from 'next/headers';
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-const voteAttempts = new Map<string, number[]>();
-const rateLimitWindowMs = 60_000;
-const maxVotesPerWindow = 20;
 
 export async function POST(_request: Request, { params }: RouteContext) {
   const requestHeaders = await headers();
@@ -16,8 +14,15 @@ export async function POST(_request: Request, { params }: RouteContext) {
   if (!session) return apiError('AUTH_REQUIRED', 'Sign in required.', 401);
 
   const ipAddress = getClientIp(requestHeaders);
-  if (isRateLimited(`${session.user.id}:${ipAddress || 'unknown'}`)) {
-    return apiError('RATE_LIMITED', 'Too many vote attempts. Please slow down.', 429);
+  const limiter = await consumeRateLimit({
+    action: 'coin.vote.throttle',
+    subject: buildRequestSubject({ requestHeaders, userId: session.user.id }),
+    limit: 1,
+    windowMs: twoSecondsMs,
+  });
+
+  if (!limiter.allowed) {
+    return rateLimitError('', limiter);
   }
 
   const { id } = await params;
@@ -57,13 +62,4 @@ export async function POST(_request: Request, { params }: RouteContext) {
       400,
     );
   }
-}
-
-function isRateLimited(key: string) {
-  const now = Date.now();
-  const activeAttempts = (voteAttempts.get(key) || []).filter(
-    (timestamp) => now - timestamp < rateLimitWindowMs,
-  );
-  voteAttempts.set(key, [...activeAttempts, now]);
-  return activeAttempts.length >= maxVotesPerWindow;
 }

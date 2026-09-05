@@ -5,8 +5,7 @@ import { CoinDetailPage } from '@/features/coin/components/coin-detail-page';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getPublicCoinById, getPublicCoinListItems } from '@/features/coins/server/coin-list';
 import { NETWORKS } from '@/features/coins/networks';
-import { auth } from '@/lib/auth/server';
-import { headers } from 'next/headers';
+import { getCurrentSession } from '@/lib/auth/session';
 import '../../market.css';
 import '../../../features/coin/styles/coin-page.css';
 
@@ -49,7 +48,7 @@ export async function generateMetadata({ params }: CoinPageParams): Promise<Meta
 export default async function CoinPage({ params }: CoinPageParams) {
   const { id } = await params;
   if (!/^\d+$/.test(id)) notFound();
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCurrentSession();
   const coin = await getPublicCoinById(Number(id), session?.user.id);
   if (!coin) notFound();
   const [allCoins, bannerAds] = await Promise.all([

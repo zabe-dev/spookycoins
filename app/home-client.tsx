@@ -25,6 +25,7 @@ import {
   type CoinSortKey,
 } from '@/features/coins/view';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
@@ -284,7 +285,9 @@ export function HomeClient({
             : coin,
         ),
       );
-      setInteractionNotice(body.message || 'Could not record your vote.');
+      if (!showRateLimitToast(body, 'vote')) {
+        setInteractionNotice(body.message || 'Could not record your vote.');
+      }
       return;
     }
 
@@ -341,7 +344,9 @@ export function HomeClient({
             : coin,
         ),
       );
-      setInteractionNotice(body.message || 'Could not update your watchlist.');
+      if (!showRateLimitToast(body, 'watchlist')) {
+        setInteractionNotice(body.message || 'Could not update your watchlist.');
+      }
       return;
     }
 

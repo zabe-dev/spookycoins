@@ -4,6 +4,7 @@ import { VoteButton, WatchlistButton } from '@/components/ui/action-buttons';
 import { AuthModal } from '@/features/auth/components/auth-modal';
 import { CoinCells } from '@/features/coins/components/coin-table';
 import { getBoostVoteFactor, type CoinListItem } from '@/features/coins/view';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import {
   AlertCircle,
   Check,
@@ -264,10 +265,12 @@ export function PublicWatchlistTable({
             : coin,
         ),
       );
-      setInteractionNotice({
-        tone: 'error',
-        message: body.message || body.errorMessage || 'Could not record your vote.',
-      });
+      if (!showRateLimitToast(body, 'vote')) {
+        setInteractionNotice({
+          tone: 'error',
+          message: body.message || body.errorMessage || 'Could not record your vote.',
+        });
+      }
       return;
     }
 
@@ -324,10 +327,12 @@ export function PublicWatchlistTable({
             : coin,
         ),
       );
-      setInteractionNotice({
-        tone: 'error',
-        message: body.message || body.errorMessage || 'Could not update your watchlist.',
-      });
+      if (!showRateLimitToast(body, 'watchlist')) {
+        setInteractionNotice({
+          tone: 'error',
+          message: body.message || body.errorMessage || 'Could not update your watchlist.',
+        });
+      }
       return;
     }
 

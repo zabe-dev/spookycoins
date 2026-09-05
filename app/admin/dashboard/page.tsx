@@ -13,7 +13,7 @@ import { bannerPlacementLabels, normalizeBannerPlacement } from '@/features/ads/
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import { hasAdminAccess } from '@/lib/auth/roles';
-import { auth } from '@/lib/auth/server';
+import { getCurrentSession } from '@/lib/auth/session';
 import { db } from '@/lib/db/client';
 import {
   coinBoosts,
@@ -27,7 +27,6 @@ import {
 } from '@/lib/db/schema';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
@@ -41,7 +40,7 @@ export default async function AdminDashboardPage({
   searchParams?: Promise<{ tab?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCurrentSession();
   if (!session) redirect('/');
   if (!hasAdminAccess(session.user.role)) notFound();
 

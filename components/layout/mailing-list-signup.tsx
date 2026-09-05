@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Loader2, Mail } from 'lucide-react';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import { useState, type FormEvent } from 'react';
 
 type SubscribeState = 'idle' | 'loading' | 'success' | 'error';
@@ -29,6 +30,10 @@ export function MailingListSignup() {
     } | null;
 
     if (!response?.ok || !body?.success) {
+      if (showRateLimitToast(body, 'subscribe')) {
+        setStatus('idle');
+        return;
+      }
       setStatus('error');
       setMessage(body?.message || 'Use a valid email address.');
       return;
@@ -65,7 +70,7 @@ export function MailingListSignup() {
                 setMessage('');
               }
             }}
-            placeholder="you@example.com"
+            placeholder="someone@example.com"
             autoComplete="email"
             required
           />

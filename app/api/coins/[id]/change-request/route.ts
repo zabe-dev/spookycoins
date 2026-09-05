@@ -1,6 +1,8 @@
 import { apiError, apiSuccess } from '@/lib/api/responses';
+import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { db } from '@/lib/db/client';
 import { changeRequests, coins } from '@/lib/db/schema';
+import { buildIpSubject, consumeRateLimit, oneHourMs } from '@/lib/security/rate-limit';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -19,10 +21,6 @@ const requestSchema = z.object({
   email: z.string().trim().email('Use a valid contact email.').max(254),
 });
 
-const requestAttempts = new Map<string, number[]>();
-const rateLimitWindowMs = 60_000;
-const maxRequestsPerWindow = 8;
-
 export async function POST(request: Request, { params }: RouteContext) {
   const { id } = await params;
   const coinId = Number(id);
@@ -30,9 +28,16 @@ export async function POST(request: Request, { params }: RouteContext) {
     return apiError('INVALID_COIN_ID', 'Coin not found.', 404);
   }
 
-  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (isRateLimited(`${coinId}:${ipAddress}`)) {
-    return apiError('RATE_LIMITED', 'Too many requests. Please slow down.', 429);
+  const requestHeaders = request.headers;
+  const limiter = await consumeRateLimit({
+    action: 'coin.change-request',
+    subject: `${coinId}:${buildIpSubject(requestHeaders)}`,
+    limit: 5,
+    windowMs: oneHourMs,
+  });
+
+  if (!limiter.allowed) {
+    return rateLimitError('', limiter);
   }
 
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
@@ -56,13 +61,4 @@ export async function POST(request: Request, { params }: RouteContext) {
   });
 
   return apiSuccess({ coinId }, 'Request sent for admin review.');
-}
-
-function isRateLimited(key: string) {
-  const now = Date.now();
-  const activeAttempts = (requestAttempts.get(key) || []).filter(
-    (timestamp) => now - timestamp < rateLimitWindowMs,
-  );
-  requestAttempts.set(key, [...activeAttempts, now]);
-  return activeAttempts.length >= maxRequestsPerWindow;
 }

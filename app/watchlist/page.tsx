@@ -6,9 +6,8 @@ import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
 import { getWatchlistTableRows } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
-import { auth } from '@/lib/auth/server';
+import { getCurrentSession } from '@/lib/auth/session';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import '../market.css';
 import '../scroll-fix.css';
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function WatchlistPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCurrentSession();
   if (!session) redirect('/');
 
   await processExpiredPresales();

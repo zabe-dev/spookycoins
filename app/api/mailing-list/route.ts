@@ -1,7 +1,8 @@
 import { apiError, apiSuccess } from '@/lib/api/responses';
+import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { db } from '@/lib/db/client';
 import { mailingListSubscribers } from '@/lib/db/schema';
-import { getClientIp } from '@/lib/http/client-ip';
+import { buildIpSubject, consumeRateLimit, oneHourMs } from '@/lib/security/rate-limit';
 import { sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { z } from 'zod';
@@ -11,16 +12,18 @@ const subscribeSchema = z.object({
   source: z.string().trim().max(80).optional(),
 });
 
-const rateLimitWindowMs = 60_000;
-const maxRequestsPerWindow = 6;
-const subscribeAttempts = new Map<string, number[]>();
-
 export async function POST(request: Request) {
   const requestHeaders = await headers();
-  const ipAddress = getClientIp(requestHeaders) || 'unknown';
 
-  if (isRateLimited(ipAddress)) {
-    return apiError('RATE_LIMITED', 'Too many attempts. Please try again in a minute.', 429);
+  const limiter = await consumeRateLimit({
+    action: 'mailing-list.subscribe',
+    subject: buildIpSubject(requestHeaders),
+    limit: 5,
+    windowMs: oneHourMs,
+  });
+
+  if (!limiter.allowed) {
+    return rateLimitError('', limiter);
   }
 
   const parsed = subscribeSchema.safeParse(await request.json().catch(() => null));
@@ -57,13 +60,4 @@ export async function POST(request: Request) {
     });
 
   return apiSuccess({ email }, 'You are on the list.');
-}
-
-function isRateLimited(key: string) {
-  const now = Date.now();
-  const activeAttempts = (subscribeAttempts.get(key) || []).filter(
-    (timestamp) => now - timestamp < rateLimitWindowMs,
-  );
-  subscribeAttempts.set(key, [...activeAttempts, now]);
-  return activeAttempts.length >= maxRequestsPerWindow;
 }

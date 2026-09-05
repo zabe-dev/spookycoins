@@ -2,6 +2,7 @@
 
 import { Brand } from '@/components/ui/brand';
 import { PasswordField } from '@/components/ui/password-field';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import { authClient } from '@/lib/auth/client';
 import { Check, Info, TriangleAlert, X } from 'lucide-react';
 import Link from 'next/link';
@@ -73,7 +74,7 @@ const authFeedbackCopy = {
   emailDelivery: 'We could not send the email code right now. Wait a moment, then try again.',
   weakPassword: 'Use a stronger password with at least 8 characters.',
   leakedPassword: 'Use a different password that has not appeared in a known data leak.',
-  rateLimited: 'Too many attempts. Wait a bit before trying again.',
+  rateLimited: 'Slow down, you are moving too fast.',
   network: 'We could not reach the auth service. Check your connection and try again.',
 } satisfies Record<string, string>;
 
@@ -211,7 +212,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
           router.push('/dashboard');
           return; // don't closeModal(), don't reset loading — let dots stay up until nav takes over
         }
-        throw new Error(error.message || 'Login failed.');
+        throw error;
       }
 
       const name =
@@ -235,9 +236,10 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         setLoading(false);
         return;
       }
-      throw new Error(error.message || 'Signup failed.');
+      throw error;
     } catch (caught) {
       setLoading(false);
+      if (showRateLimitToast(caught, 'auth')) return;
       setFeedback({
         tone: 'error',
         title: mode === 'login' ? 'Could not log in' : 'Could not create account',
@@ -258,7 +260,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       const { error } = await authClient.emailOtp.requestPasswordReset({
         email: parsedEmail.data.email,
       });
-      if (error) throw new Error(error.message || 'Could not send reset code.');
+      if (error) throw error;
       setVerificationEmail(parsedEmail.data.email);
       setStep('reset-code');
       setCodeDigits(emptyCode);
@@ -268,6 +270,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         message: authFeedbackCopy.resetCodeSent,
       });
     } catch (caught) {
+      if (showRateLimitToast(caught, 'auth')) return;
       setFeedback({
         tone: 'error',
         title: 'Could not send reset code',
@@ -306,7 +309,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         otp: resetCode,
         password: parsedPassword.data.password,
       });
-      if (error) throw new Error(error.message || 'Could not update password.');
+      if (error) throw error;
 
       setFeedback({
         tone: 'success',
@@ -315,6 +318,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
       });
       resetFlow('login');
     } catch (caught) {
+      if (showRateLimitToast(caught, 'auth')) return;
       setFeedback({
         tone: 'error',
         title: 'Could not update password',

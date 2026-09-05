@@ -996,14 +996,7 @@
 }
 
 .turnstile-shell {
-  display: flex;
-  min-height: 0;
-  align-items: center;
   margin: 16px 0 0;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 13px;
-  background: rgba(5, 7, 8, 0.35);
-  padding: 10px 12px;
 }
 
 .turnstile-shell > div {

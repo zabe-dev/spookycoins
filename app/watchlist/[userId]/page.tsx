@@ -8,10 +8,9 @@ import { processExpiredCoinDeletionRequests } from '@/features/coins/server/dele
 import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import { db } from '@/lib/db/client';
 import { users } from '@/lib/db/schema';
-import { auth } from '@/lib/auth/server';
+import { getCurrentSession } from '@/lib/auth/session';
 import { eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import '../../market.css';
 import '../../scroll-fix.css';
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
 
 export default async function PublicWatchlistPage({ params }: WatchlistPageParams) {
   const { userId } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCurrentSession();
   await processExpiredPresales();
   await processExpiredCoinDeletionRequests();
 

@@ -1,9 +1,8 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { CoinSubmissionForm } from '@/features/submissions/components/coin-submission-form';
-import { auth } from '@/lib/auth/server';
+import { getCurrentSession } from '@/lib/auth/session';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import '../market.css';
 import './submit.css';
@@ -22,9 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SubmitCoinPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await getCurrentSession();
 
   if (!session) redirect('/');
 

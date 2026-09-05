@@ -9,6 +9,7 @@ import { AuthModal } from '@/features/auth/components/auth-modal';
 import { CoinTable } from '@/features/coins/components';
 import type { Coin } from '@/features/coins/types';
 import { getBoostVoteFactor, toCoinListItem, type CoinListItem } from '@/features/coins/view';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import { ChangeRequestModal } from './change-request-modal';
 import { CoinChartCard } from './coin-chart-card';
 import { CoinHero } from './coin-hero';
@@ -103,7 +104,9 @@ export function CoinDetailPage({
         trendingScore: Math.max(0, current.trendingScore - 3),
         trend: Math.max(0, current.trend - 3),
       }));
-      setNotice(body.message || 'Could not record your vote.');
+      if (!showRateLimitToast(body, 'vote')) {
+        setNotice(body.message || 'Could not record your vote.');
+      }
       return;
     }
 
@@ -143,7 +146,9 @@ export function CoinDetailPage({
         trendingScore: Math.max(0, current.trendingScore + (adding ? -2 : 2)),
         trend: Math.max(0, current.trend + (adding ? -2 : 2)),
       }));
-      setNotice(body.message || 'Could not update your watchlist.');
+      if (!showRateLimitToast(body, 'watchlist')) {
+        setNotice(body.message || 'Could not update your watchlist.');
+      }
       return;
     }
 
@@ -197,7 +202,9 @@ export function CoinDetailPage({
             : row,
         ),
       );
-      setNotice(body.message || body.errorMessage || 'Could not record your vote.');
+      if (!showRateLimitToast(body, 'vote')) {
+        setNotice(body.message || body.errorMessage || 'Could not record your vote.');
+      }
       return;
     }
 
@@ -254,7 +261,9 @@ export function CoinDetailPage({
             : row,
         ),
       );
-      setNotice(body.message || body.errorMessage || 'Could not update your watchlist.');
+      if (!showRateLimitToast(body, 'watchlist')) {
+        setNotice(body.message || body.errorMessage || 'Could not update your watchlist.');
+      }
       return;
     }
 

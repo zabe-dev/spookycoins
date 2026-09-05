@@ -1,13 +1,12 @@
 import { SiteHeader } from '@/components/layout/site-header';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SettingsPanel } from '@/features/settings/components/settings-panel';
-import { auth } from '@/lib/auth/server';
-import { headers } from 'next/headers';
+import { getCurrentSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import '../market.css';
 
 export default async function SettingsPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCurrentSession();
   if (!session) redirect('/');
 
   return (

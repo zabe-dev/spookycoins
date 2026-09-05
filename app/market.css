@@ -1059,6 +1059,7 @@
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.018), transparent 42%), var(--surface);
   overflow: hidden;
+  height: 100%;
 }
 .discovery-guide-row {
   display: grid;

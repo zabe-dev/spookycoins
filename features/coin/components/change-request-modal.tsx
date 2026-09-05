@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, X } from 'lucide-react';
+import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 
 export function ChangeRequestModal({
@@ -62,7 +63,9 @@ export function ChangeRequestModal({
     setSaving(false);
 
     if (!response.ok) {
-      setFeedback(body.message || 'Could not submit the request. Please try again.');
+      if (!showRateLimitToast(body, 'request')) {
+        setFeedback(body.message || 'Could not submit the request. Please try again.');
+      }
       return;
     }
 

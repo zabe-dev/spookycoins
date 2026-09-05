@@ -1,6 +1,16 @@
+import { RATE_LIMIT_MESSAGE } from '@/lib/api/rate-limit-message';
 import { db } from '@/lib/db/client';
 import * as schema from '@/lib/db/schema';
 import { getClientIp } from '@/lib/http/client-ip';
+import {
+  buildIpSubject,
+  consumeRateLimit,
+  fifteenMinutesMs,
+  normalizeEmail,
+  oneHourMs,
+  peekRateLimit,
+  resetRateLimit,
+} from '@/lib/security/rate-limit';
 import { APIError, betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
@@ -95,7 +105,14 @@ export const auth = betterAuth({
     deleteUser: { enabled: true },
   },
   hooks: {
-    before: validateSettingsUpdates,
+    before: async (ctx) => {
+      await validateAuthRateLimits(ctx);
+      await validateSettingsUpdates(ctx);
+    },
+    after: async (ctx) => {
+      await recordAuthFailures(ctx);
+      return {};
+    },
   },
   socialProviders:
     googleClientId && googleClientSecret
@@ -114,6 +131,7 @@ export const auth = betterAuth({
     emailOTP({
       otpLength: 6,
       expiresIn: 10 * 60,
+      allowedAttempts: 5,
       async sendVerificationOTP({ email, otp, type }, ctx) {
         await sendAuthCodeEmail({ email, otp, type, request: ctx?.request });
       },
@@ -168,6 +186,207 @@ async function validateSettingsUpdates(ctx: unknown): Promise<void> {
       });
     }
   }
+}
+
+async function validateAuthRateLimits(ctx: unknown): Promise<void> {
+  const request = readAuthContext(ctx);
+  const path = request.path;
+  if (!isRateLimitedAuthPath(path)) return;
+
+  const email = normalizeEmail(readBodyString(request.body.email));
+
+  if (path === '/sign-in/email') {
+    const emailIpLimit = email
+      ? await peekRateLimit({
+          action: 'auth.login.failed.email-ip',
+          subject: buildAuthEmailIpSubject(email, request.headers),
+          limit: 5,
+        })
+      : null;
+    const ipLimit = await peekRateLimit({
+      action: 'auth.login.failed.ip',
+      subject: buildIpSubject(request.headers),
+      limit: 20,
+    });
+
+    if (emailIpLimit || ipLimit) {
+      throwAuthRateLimit();
+    }
+  }
+
+  if (path === '/sign-up/email') {
+    const limit = await consumeRateLimit({
+      action: 'auth.signup',
+      subject: buildIpSubject(request.headers),
+      limit: 5,
+      windowMs: oneHourMs,
+    });
+
+    if (!limit.allowed) {
+      throwAuthRateLimit();
+    }
+  }
+
+  if (path === '/email-otp/request-password-reset') {
+    const limit = await consumeRateLimit({
+      action: 'auth.password-reset.request',
+      subject: buildAuthEmailIpSubject(email, request.headers),
+      limit: 5,
+      windowMs: oneHourMs,
+    });
+
+    if (!limit.allowed) {
+      throwAuthRateLimit();
+    }
+  }
+
+  if (path === '/email-otp/reset-password') {
+    const limit = await peekRateLimit({
+      action: 'auth.password-reset.failed',
+      subject: buildAuthEmailIpSubject(email, request.headers),
+      limit: 5,
+    });
+
+    if (limit) {
+      throwAuthRateLimit();
+    }
+  }
+}
+
+async function recordAuthFailures(ctx: unknown): Promise<void> {
+  const request = readAuthContext(ctx);
+  const path = request.path;
+  if (path !== '/sign-in/email' && path !== '/email-otp/reset-password') return;
+
+  const response = request.response;
+  const failed = isAuthFailureResponse(response);
+  const email = normalizeEmail(readBodyString(request.body.email));
+
+  if (path === '/sign-in/email') {
+    if (!failed) {
+      if (email) {
+        await resetRateLimit(
+          'auth.login.failed.email-ip',
+          buildAuthEmailIpSubject(email, request.headers),
+        );
+      }
+      return;
+    }
+
+    if (!isRateLimitResponse(response)) {
+      if (email) {
+        await consumeRateLimit({
+          action: 'auth.login.failed.email-ip',
+          subject: buildAuthEmailIpSubject(email, request.headers),
+          limit: 5,
+          windowMs: fifteenMinutesMs,
+        });
+      }
+
+      await consumeRateLimit({
+        action: 'auth.login.failed.ip',
+        subject: buildIpSubject(request.headers),
+        limit: 20,
+        windowMs: fifteenMinutesMs,
+      });
+    }
+  }
+
+  if (path === '/email-otp/reset-password') {
+    if (!failed) {
+      if (email) {
+        await resetRateLimit(
+          'auth.password-reset.failed',
+          buildAuthEmailIpSubject(email, request.headers),
+        );
+      }
+      return;
+    }
+
+    if (!isRateLimitResponse(response) && isOtpFailureResponse(response)) {
+      await consumeRateLimit({
+        action: 'auth.password-reset.failed',
+        subject: buildAuthEmailIpSubject(email, request.headers),
+        limit: 5,
+        windowMs: fifteenMinutesMs,
+      });
+    }
+  }
+}
+
+function readAuthContext(ctx: unknown) {
+  if (!ctx || typeof ctx !== 'object') {
+    return {
+      path: '',
+      body: {},
+      headers: new Headers(),
+      response: undefined,
+    };
+  }
+
+  const value = ctx as {
+    path?: string;
+    body?: Record<string, unknown>;
+    headers?: Headers;
+    request?: Request;
+    context?: {
+      returned?: unknown;
+    };
+  };
+
+  return {
+    path: value.path || '',
+    body: value.body || {},
+    headers: value.headers || value.request?.headers || new Headers(),
+    response: value.context?.returned,
+  };
+}
+
+function isRateLimitedAuthPath(path: string) {
+  return (
+    path === '/sign-in/email' ||
+    path === '/sign-up/email' ||
+    path === '/email-otp/request-password-reset' ||
+    path === '/email-otp/reset-password'
+  );
+}
+
+function readBodyString(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function buildAuthEmailIpSubject(email: string, requestHeaders: Headers) {
+  return `email:${email || 'unknown'}:${buildIpSubject(requestHeaders)}`;
+}
+
+function isAuthFailureResponse(response: unknown) {
+  if (!response || typeof response !== 'object') return false;
+  const statusCode = (response as { statusCode?: number; status?: number | string }).statusCode;
+  const status = (response as { statusCode?: number; status?: number | string }).status;
+  if (typeof statusCode === 'number') return statusCode >= 400;
+  if (typeof status === 'number') return status >= 400;
+  return false;
+}
+
+function isRateLimitResponse(response: unknown) {
+  if (!response || typeof response !== 'object') return false;
+  const body = (response as { body?: { code?: string } }).body;
+  return body?.code === 'RATE_LIMITED';
+}
+
+function isOtpFailureResponse(response: unknown) {
+  if (!response || typeof response !== 'object') return false;
+  const body = (response as { body?: { code?: string; message?: string } }).body;
+  const code = body?.code?.toLowerCase() || '';
+  const message = body?.message?.toLowerCase() || '';
+  return code.includes('otp') || message.includes('otp') || message.includes('code');
+}
+
+function throwAuthRateLimit(): never {
+  throw APIError.from('TOO_MANY_REQUESTS', {
+    code: 'RATE_LIMITED',
+    message: RATE_LIMIT_MESSAGE,
+  });
 }
 
 function getAuthRequestDetails(request?: Request) {

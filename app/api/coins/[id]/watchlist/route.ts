@@ -1,21 +1,26 @@
 import { toggleCoinWatchlist } from '@/features/coins/server/interactions';
 import { apiError, apiSuccess } from '@/lib/api/responses';
+import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { auth } from '@/lib/auth/server';
+import { buildRequestSubject, consumeRateLimit, twoSecondsMs } from '@/lib/security/rate-limit';
 import { headers } from 'next/headers';
 
 type RouteContext = { params: Promise<{ id: string }> };
-
-const watchlistAttempts = new Map<string, number[]>();
-const rateLimitWindowMs = 60_000;
-const maxWatchlistAttemptsPerWindow = 40;
 
 export async function POST(_request: Request, { params }: RouteContext) {
   const requestHeaders = await headers();
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) return apiError('AUTH_REQUIRED', 'Sign in required.', 401);
 
-  if (isRateLimited(session.user.id)) {
-    return apiError('RATE_LIMITED', 'Too many watchlist updates. Please slow down.', 429);
+  const limiter = await consumeRateLimit({
+    action: 'coin.watchlist.throttle',
+    subject: buildRequestSubject({ requestHeaders, userId: session.user.id }),
+    limit: 1,
+    windowMs: twoSecondsMs,
+  });
+
+  if (!limiter.allowed) {
+    return rateLimitError('', limiter);
   }
 
   const { id } = await params;
@@ -41,13 +46,4 @@ export async function POST(_request: Request, { params }: RouteContext) {
       400,
     );
   }
-}
-
-function isRateLimited(key: string) {
-  const now = Date.now();
-  const activeAttempts = (watchlistAttempts.get(key) || []).filter(
-    (timestamp) => now - timestamp < rateLimitWindowMs,
-  );
-  watchlistAttempts.set(key, [...activeAttempts, now]);
-  return activeAttempts.length >= maxWatchlistAttemptsPerWindow;
 }

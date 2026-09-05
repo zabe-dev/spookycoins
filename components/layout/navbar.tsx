@@ -78,16 +78,16 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
               href="/#leaderboard"
               onClick={closeMenu}
             >
-              <MenuIcon type="discover" /> Discover
+              <MenuIcon type="discover" /> <span className="menu-item-label">Discover</span>
             </Link>
             <Link href="/#promoted" onClick={closeMenu}>
-              <MenuIcon type="promoted" /> Promoted
+              <MenuIcon type="promoted" /> <span className="menu-item-label">Promoted</span>
             </Link>
             <Link href="/partners" onClick={closeMenu}>
-              <MenuIcon type="partners" /> Partners
+              <MenuIcon type="partners" /> <span className="menu-item-label">Partners</span>
             </Link>
             <Link href="/advertise" onClick={closeMenu}>
-              <MenuIcon type="advertise" /> Advertise
+              <MenuIcon type="advertise" /> <span className="menu-item-label">Advertise</span>
             </Link>
             <div className="mobile-menu-account">
               {isSignedIn ? (
@@ -100,26 +100,26 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                     </span>
                   </div>
                   <Link href="/dashboard" onClick={closeMenu}>
-                    <MenuIcon type="account" /> Dashboard
+                    <MenuIcon type="account" /> <span className="menu-item-label">Dashboard</span>
                   </Link>
                   <Link href="/watchlist" onClick={closeMenu}>
-                    <MenuIcon type="watchlist" /> Watchlist
+                    <MenuIcon type="watchlist" /> <span className="menu-item-label">Watchlist</span>
                   </Link>
                   {canOpenAdmin && (
                     <Link href="/admin/dashboard" onClick={closeMenu}>
-                      <MenuIcon type="admin" /> Admin Panel
+                      <MenuIcon type="admin" /> <span className="menu-item-label">Admin Panel</span>
                     </Link>
                   )}
                   <Link href="/settings" onClick={closeMenu}>
-                    <MenuIcon type="settings" /> Settings
+                    <MenuIcon type="settings" /> <span className="menu-item-label">Settings</span>
                   </Link>
                   <button className="logout-action" onClick={() => void logout()}>
-                    <MenuIcon type="logout" /> Logout
+                    <MenuIcon type="logout" /> <span className="menu-item-label">Logout</span>
                   </button>
                 </>
               ) : (
                 <button className="mobile-login-action" onClick={openAuth}>
-                  <UserIcon /> Login or signup
+                  <UserIcon /> <span className="menu-item-label">Login or signup</span>
                 </button>
               )}
             </div>
@@ -160,21 +160,21 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
                         </span>
                       </div>
                       <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="account" /> Dashboard
+                        <MenuIcon type="account" /> <span className="menu-item-label">Dashboard</span>
                       </Link>
                       <Link href="/watchlist" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="watchlist" /> Watchlist
+                        <MenuIcon type="watchlist" /> <span className="menu-item-label">Watchlist</span>
                       </Link>
                       {canOpenAdmin && (
                         <Link href="/admin/dashboard" onClick={() => setUserMenuOpen(false)}>
-                          <MenuIcon type="admin" /> Admin Panel
+                          <MenuIcon type="admin" /> <span className="menu-item-label">Admin Panel</span>
                         </Link>
                       )}
                       <Link href="/settings" onClick={() => setUserMenuOpen(false)}>
-                        <MenuIcon type="settings" /> Settings
+                        <MenuIcon type="settings" /> <span className="menu-item-label">Settings</span>
                       </Link>
                       <button className="logout-action" onClick={() => void logout()}>
-                        <MenuIcon type="logout" /> Logout
+                        <MenuIcon type="logout" /> <span className="menu-item-label">Logout</span>
                       </button>
                     </div>
                   )}

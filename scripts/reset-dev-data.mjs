@@ -76,6 +76,7 @@ async function main() {
     }
 
     await tx`delete from admin_audit_logs`;
+    await tx`delete from rate_limits`;
     await tx`
       delete from coin_watchlists
       where not (coin_id = any(${preservedCoinIds}::int[]) and user_id = ${preservedUser.id})

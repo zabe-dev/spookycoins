@@ -1,7 +1,9 @@
 import { auth } from '@/lib/auth/server';
 import { apiError, apiSuccess } from '@/lib/api/responses';
+import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { db } from '@/lib/db/client';
 import { coins, coinSubmissions } from '@/lib/db/schema';
+import { buildRequestSubject, consumeRateLimit, oneHourMs } from '@/lib/security/rate-limit';
 import { and, eq, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { z } from 'zod';
@@ -11,7 +13,8 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session) return apiError('AUTH_REQUIRED', 'Sign in required.', 401);
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success)
@@ -67,6 +70,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     });
 
     return apiSuccess({ id: owned.id, scheduledDeleteAt: null }, 'Deletion request cancelled.');
+  }
+
+  const limiter = await consumeRateLimit({
+    action: 'coin.delete-request',
+    subject: buildRequestSubject({ requestHeaders, userId: session.user.id }),
+    limit: 5,
+    windowMs: oneHourMs,
+  });
+
+  if (!limiter.allowed) {
+    return rateLimitError('', limiter);
   }
 
   if (existingDeleteRequest) {

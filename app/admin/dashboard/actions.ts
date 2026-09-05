@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from '@/lib/auth/server';
+import { getCurrentSession } from '@/lib/auth/session';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { db } from '@/lib/db/client';
 import {
@@ -17,7 +17,6 @@ import {
 import { bannerPlacementLabels, bannerPlacements } from '@/features/ads/types';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 
 const userRoles = ['user', 'admin'] as const;
@@ -530,7 +529,7 @@ export async function deleteBannerAd(formData: FormData) {
 }
 
 async function requireAdmin() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getCurrentSession();
   if (!session) redirect('/');
   if (!hasAdminAccess(session.user.role)) notFound();
   return session.user;

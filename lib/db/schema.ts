@@ -380,6 +380,23 @@ export const mailingListSubscribers = pgTable(
   ],
 );
 
+export const rateLimits = pgTable(
+  'rate_limits',
+  {
+    key: text('key').primaryKey(),
+    action: text('action').notNull(),
+    subject: text('subject').notNull(),
+    count: integer('count').default(0).notNull(),
+    windowStart: timestamp('window_start', { withTimezone: true }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('rate_limits_action_subject_idx').on(table.action, table.subject),
+    index('rate_limits_expires_idx').on(table.expiresAt),
+  ],
+);
+
 export const coinVotes = pgTable(
   'coin_votes',
   {
