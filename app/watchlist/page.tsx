@@ -3,7 +3,7 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { WatchlistPanel } from '@/features/account/components/account-panel';
 import { PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import { getActiveBannerAds } from '@/features/ads/server/banner-ads';
-import { getWatchlistTableRows } from '@/features/account/server/watchlist';
+import { getWatchlistTablePage } from '@/features/account/server/watchlist';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import { getCurrentSession } from '@/lib/auth/session';
@@ -17,14 +17,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function WatchlistPage() {
+type WatchlistPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function WatchlistPage({ searchParams }: WatchlistPageProps) {
+  const params = await searchParams;
   const session = await getCurrentSession();
   if (!session) redirect('/');
 
   await processExpiredPresales();
   await processExpiredCoinDeletionRequests();
-  const [rows, bannerAds] = await Promise.all([
-    getWatchlistTableRows(session.user.id, session.user.id),
+  const [watchlistPage, bannerAds] = await Promise.all([
+    getWatchlistTablePage(session.user.id, session.user.id, { page: readParam(params?.page) }),
     getActiveBannerAds(),
   ]);
 
@@ -33,11 +38,16 @@ export default async function WatchlistPage() {
       <SiteHeader active="none" />
       <WatchlistPanel
         userId={session.user.id}
-        coins={rows}
+        coins={watchlistPage.rows}
         isSignedIn={true}
+        pagination={watchlistPage}
         afterTable={<PremiumAdBanner ads={bannerAds.premium} offset={3} />}
       />
       <SiteFooter />
     </main>
   );
+}
+
+function readParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
