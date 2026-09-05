@@ -886,7 +886,7 @@ function BannerAdsTable({ rows, popover }: { rows: AdminBannerRow[]; popover: Po
       eyebrow="Banner inventory"
       title="Banner ads"
       count={`${rows.length} total`}
-      note="Manage paid banner placements. Scheduled ads go live automatically, active ads can be extended, and finished ads show as expired."
+      note="Create, schedule, extend, or expire banner placements."
       rows={rows}
       searchPlaceholder="Search type, URL, or status"
       search={(row) => [row.placement, row.placementLabel, row.targetUrl, row.status]}
@@ -1105,8 +1105,8 @@ function AdminPanel<T>({
           <h2>{title}</h2>
         </div>
         <div className="admin-panel-title-actions">
-          <span>{count}</span>
           {action}
+          <span>{count}</span>
         </div>
       </div>
       <p className="admin-panel-note">{note}</p>
@@ -1691,7 +1691,7 @@ function ConfirmAction({
       <button
         ref={buttonRef}
         type="button"
-        className={`admin-icon-button ${tone} ${triggerClassName || ''}`}
+        className={triggerClassName || `admin-icon-button ${tone}`}
         title={title}
         aria-label={title}
         disabled={disabled || isPending}
