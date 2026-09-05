@@ -126,6 +126,7 @@ h3,
   padding: 0 0 env(safe-area-inset-bottom);
   pointer-events: none;
   backdrop-filter: blur(14px);
+  animation: fixed-footer-ad-slide-up 280ms ease-out both;
 }
 .fixed-footer-ad-banner-inner {
   position: relative;
@@ -298,6 +299,21 @@ h3,
   .fixed-footer-ad-banner-placeholder-inner span,
   .fixed-footer-ad-banner-placeholder-inner a {
     font-size: 9px;
+  }
+}
+@keyframes fixed-footer-ad-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fixed-footer-ad-banner {
+    animation: none;
   }
 }
 .ambient {
