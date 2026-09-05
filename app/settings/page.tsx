@@ -11,7 +11,7 @@ export default async function SettingsPage() {
 
   return (
     <main className="market-page">
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <SettingsPanel user={{ name: session.user.name, email: session.user.email }} />
       <SiteFooter />
     </main>

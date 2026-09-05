@@ -29,7 +29,7 @@ export default async function Home({ searchParams }: HomeParams) {
   const leaderboardPage = discovery.leaderboard;
   return (
     <>
-      <SiteHeader />
+      <SiteHeader initialSession={session} />
       <HomeClient
         key={[
           leaderboardPage.view,

@@ -27,7 +27,7 @@ export default async function SubmitCoinPage() {
 
   return (
     <main className="market-page submit-page">
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <div className="container submission-shell">
         <CoinSubmissionForm userEmail={session.user.email || ''} />
       </div>

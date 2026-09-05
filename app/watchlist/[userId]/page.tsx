@@ -43,7 +43,7 @@ export default async function PublicWatchlistPage({ params, searchParams }: Watc
 
   return (
     <main className="market-page">
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <section className="container settings-shell account-shell public-watchlist-shell">
         <header className="account-heading">
           <h1>{ownerName}&apos;s Watchlist</h1>

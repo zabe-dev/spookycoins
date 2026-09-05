@@ -59,7 +59,7 @@ export default async function CoinPage({ params }: CoinPageParams) {
 
   return (
     <>
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <CoinDetailPage
         coinRecord={coin}
         promotedCoins={promotedCoins}

@@ -21,12 +21,25 @@ import {
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
+type InitialSession = Parameters<typeof authClient.hydrateSession>[0];
+
+export function Navbar({
+  active = 'discover',
+  initialSession = null,
+}: {
+  active?: 'discover' | 'none';
+  initialSession?: InitialSession;
+}) {
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const { data: session } = authClient.useSession();
+  const [seededSession] = useState(() => {
+    authClient.hydrateSession(initialSession);
+    return initialSession;
+  });
+  const { data: clientSession } = authClient.useSession();
+  const session = clientSession ?? seededSession;
   const closeMenu = () => setMenuOpen(false);
   const isSignedIn = Boolean(session?.user);
   const email = session?.user.email || '';

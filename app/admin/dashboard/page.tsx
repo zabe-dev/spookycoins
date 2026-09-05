@@ -325,7 +325,7 @@ export default async function AdminDashboardPage({
 
   return (
     <main className="market-page">
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <section className="container admin-dashboard" aria-label="Admin dashboard">
         <header className="admin-dashboard-head">
           <h1>Admin dashboard</h1>

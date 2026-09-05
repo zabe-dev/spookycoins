@@ -111,7 +111,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <main className="market-page">
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <AccountPanel
         submissions={submissions.map((submission) => ({
           ...submission,

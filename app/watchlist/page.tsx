@@ -35,7 +35,7 @@ export default async function WatchlistPage({ searchParams }: WatchlistPageProps
 
   return (
     <main className="market-page">
-      <SiteHeader active="none" />
+      <SiteHeader active="none" initialSession={session} />
       <WatchlistPanel
         userId={session.user.id}
         coins={watchlistPage.rows}
