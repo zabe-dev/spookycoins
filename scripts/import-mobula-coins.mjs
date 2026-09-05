@@ -28,8 +28,8 @@ const MOBULA_BASE_URL = 'https://api.mobula.io/api/1/all';
 const MOBULA_DETAILS_URL = 'https://api.mobula.io/api/2/asset/details';
 const MOBULA_METADATA_URL = 'https://api.mobula.io/api/1/multi-metadata';
 const MOBULA_MARKET_DETAILS_URL = 'https://api.mobula.io/api/2/market/details';
-const MOBULA_API_KEY = process.env.MOBULA_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;
+let mobulaApiKeyIndex = 0;
 
 // Used by log()/formatDuration() below so every log line shows elapsed time
 // since the script started, making it obvious whether things are progressing
@@ -297,7 +297,7 @@ async function fetchMobulaAssets() {
   );
 
   const response = await fetch(url, {
-    headers: MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {},
+    headers: mobulaAuthHeaders(),
   });
 
   if (!response.ok) {
@@ -489,7 +489,7 @@ async function fetchMobulaMetadataBatch(tokens) {
 
   try {
     const response = await fetch(url, {
-      headers: MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {},
+      headers: mobulaAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -530,7 +530,7 @@ async function fetchMobulaMarketDetails(token) {
 
   try {
     const response = await fetch(url, {
-      headers: MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {},
+      headers: mobulaAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -569,7 +569,7 @@ async function fetchMobulaMarketDetailsBatch(tokens) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {}),
+        ...mobulaAuthHeaders(),
       },
       body: JSON.stringify(body),
     });
@@ -729,7 +729,7 @@ async function fetchMobulaAssetDetailsBatch(tokens) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {}),
+        ...mobulaAuthHeaders(),
       },
       body: JSON.stringify(body),
     });
@@ -779,7 +779,7 @@ async function fetchMobulaAssetDetailsIndividually(tokens) {
 
     try {
       const response = await fetch(url, {
-        headers: MOBULA_API_KEY ? { Authorization: MOBULA_API_KEY } : {},
+        headers: mobulaAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -1023,7 +1023,6 @@ async function resolveLogoUrl(token) {
   try {
     const uploaded = await mirrorRemoteImageToR2(token.logo, {
       chain: token.contract.chain,
-      symbol: token.symbol,
     });
     return uploaded.url;
   } catch (error) {
@@ -1377,6 +1376,39 @@ function compactObject(value) {
   );
 }
 
+function mobulaAuthHeaders() {
+  const apiKey = getNextMobulaApiKey();
+  return apiKey ? { Authorization: apiKey } : {};
+}
+
+function getNextMobulaApiKey() {
+  const keys = getMobulaApiKeys();
+  if (!keys.length) return '';
+
+  const index = mobulaApiKeyIndex;
+  mobulaApiKeyIndex = (index + 1) % keys.length;
+
+  return keys[index % keys.length];
+}
+
+function getMobulaApiKeys() {
+  return uniqueStrings([
+    ...splitEnvList(process.env.MOBULA_API_KEYS),
+    ...splitEnvList(process.env.MOBULA_API_KEY),
+  ]);
+}
+
+function splitEnvList(value) {
+  return (value || '')
+    .split(/[\n,]/)
+    .map((key) => key.trim())
+    .filter(Boolean);
+}
+
+function uniqueStrings(values) {
+  return Array.from(new Set(values));
+}
+
 function sanitizePlainText(value) {
   if (typeof value !== 'string') return '';
 
@@ -1410,11 +1442,10 @@ function codePointToString(number) {
   return String.fromCodePoint(number);
 }
 
-async function mirrorRemoteImageToR2(sourceUrl, { chain, symbol }) {
+async function mirrorRemoteImageToR2(sourceUrl, { chain }) {
   const storage = getR2Config();
   const image = await fetchRemoteImage(sourceUrl);
   const extension = extensionForMime(image.mimeType);
-  const safeSymbol = slugify(symbol) || 'token';
   const key = `assets/${chain}/logos/${randomUUID()}.${extension}`;
   const requestUrl = objectRequestUrl(storage.endpoint, storage.bucket, key);
 

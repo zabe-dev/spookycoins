@@ -69,6 +69,7 @@ const base58AddressPattern = /^[1-9A-HJ-NP-Za-km-z]+$/;
 const syncState = globalThis as typeof globalThis & {
   spookycoinsMobulaInFlight?: Promise<Map<number, MarketSnapshotRow>>;
   spookycoinsMobulaNextAllowedAt?: number;
+  spookycoinsMobulaKeyIndex?: number;
 };
 
 const apiBaseUrl = process.env.MOBULA_API_BASE_URL || 'https://api.mobula.io';
@@ -179,8 +180,10 @@ async function withAdvisoryLock(fetcher: () => Promise<Map<number, MarketSnapsho
 async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
   const refreshed = new Map<number, MarketSnapshotRow>();
 
-  if (!process.env.MOBULA_API_KEY) {
-    console.warn(`${LOG_TAG} MOBULA_API_KEY is not set, skipping all ${coinRows.length} coin(s)`);
+  if (!getMobulaApiKeys().length) {
+    console.warn(
+      `${LOG_TAG} MOBULA_API_KEY or MOBULA_API_KEYS is not set, skipping all ${coinRows.length} coin(s)`,
+    );
     return refreshed;
   }
 
@@ -265,9 +268,13 @@ async function fetchMobulaTokenDetails(
   chainId: string,
   address: string,
 ): Promise<MobulaFetchResult> {
-  const apiKey = process.env.MOBULA_API_KEY;
+  const apiKey = getNextMobulaApiKey();
   if (!apiKey) {
-    return { ok: false, code: 'request-failed', message: 'MOBULA_API_KEY is not set.' };
+    return {
+      ok: false,
+      code: 'request-failed',
+      message: 'MOBULA_API_KEY or MOBULA_API_KEYS is not set.',
+    };
   }
 
   await waitForMobulaSlot();
@@ -437,6 +444,34 @@ function hasKnownInvalidAddressError(coin: MarketSyncCoin, externalId: string) {
 
 function marketSourceExternalId(chainId: string, address: string) {
   return `${chainId}:${address.trim()}`;
+}
+
+function getNextMobulaApiKey() {
+  const keys = getMobulaApiKeys();
+  if (!keys.length) return '';
+
+  const index = syncState.spookycoinsMobulaKeyIndex || 0;
+  syncState.spookycoinsMobulaKeyIndex = (index + 1) % keys.length;
+
+  return keys[index % keys.length];
+}
+
+function getMobulaApiKeys() {
+  return uniqueStrings([
+    ...splitEnvList(process.env.MOBULA_API_KEYS),
+    ...splitEnvList(process.env.MOBULA_API_KEY),
+  ]);
+}
+
+function splitEnvList(value: string | undefined) {
+  return (value || '')
+    .split(/[\n,]/)
+    .map((key) => key.trim())
+    .filter(Boolean);
+}
+
+function uniqueStrings(values: string[]) {
+  return Array.from(new Set(values));
 }
 
 async function recordMarketSourceError(

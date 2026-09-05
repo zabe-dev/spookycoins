@@ -19,7 +19,7 @@ import {
   Zap,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }) {
   const [authOpen, setAuthOpen] = useState(false);
@@ -34,8 +34,19 @@ export function Navbar({ active = 'discover' }: { active?: 'discover' | 'none' }
   const accountLabel = getAccountLabel(session?.user.name, email);
   const canOpenAdmin = hasAdminAccess(session?.user.role);
 
+  useEffect(() => {
+    const closeForAuthModal = () => {
+      setMenuOpen(false);
+      setUserMenuOpen(false);
+    };
+
+    window.addEventListener('spooky-auth-modal-open', closeForAuthModal);
+    return () => window.removeEventListener('spooky-auth-modal-open', closeForAuthModal);
+  }, []);
+
   function openAuth() {
     closeMenu();
+    setUserMenuOpen(false);
     setAuthOpen(true);
   }
 
