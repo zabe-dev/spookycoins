@@ -1,7 +1,7 @@
 'use client';
 
-import { Check, Loader2, Mail } from 'lucide-react';
 import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
+import { Check, Loader2, Mail } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
 type SubscribeState = 'idle' | 'loading' | 'success' | 'error';
@@ -83,7 +83,7 @@ export function MailingListSignup() {
           ) : (
             <Mail aria-hidden="true" />
           )}
-          <span>{status === 'loading' ? 'Joining...' : 'Subscribe'}</span>
+          <span>{status === 'loading' ? 'Subscribing...' : 'Subscribe'}</span>
         </button>
         {message && (
           <small className={`mailing-list-feedback ${status}`} role="status">

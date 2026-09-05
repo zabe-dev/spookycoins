@@ -3,7 +3,7 @@ import { rateLimitError } from '@/lib/api/rate-limit-response';
 import { db } from '@/lib/db/client';
 import { mailingListSubscribers } from '@/lib/db/schema';
 import { buildIpSubject, consumeRateLimit, oneHourMs } from '@/lib/security/rate-limit';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 
@@ -37,6 +37,15 @@ export async function POST(request: Request) {
 
   const email = parsed.data.email.toLowerCase();
   const source = parsed.data.source || 'homepage';
+  const [existingSubscriber] = await db
+    .select({ status: mailingListSubscribers.status })
+    .from(mailingListSubscribers)
+    .where(eq(mailingListSubscribers.email, email))
+    .limit(1);
+
+  if (existingSubscriber?.status === 'subscribed') {
+    return apiError('EMAIL_ALREADY_SUBSCRIBED', 'This email is already subscribed.', 409);
+  }
 
   await db
     .insert(mailingListSubscribers)
