@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { TopbarPriceTicker } from '@/features/topbar/types';
-import { unstable_cache } from 'next/cache';
+import { incrementCacheCounter, rememberJson } from '@/lib/cache/json-cache';
 
 const symbols = ['BTC', 'ETH', 'SOL', 'BNB'] as const;
 const binanceSymbols = symbols.map((symbol) => `${symbol}USDT`);
@@ -32,11 +32,9 @@ const binanceFallbackBaseUrls = [
     .filter(Boolean),
 ].filter((url, index, list) => list.indexOf(url) === index);
 
-export const getCachedTopbarPrices = unstable_cache(
-  () => getSafeTopbarPrices(),
-  ['topbar-market-prices-v1'],
-  { revalidate: cacheSeconds },
-);
+export function getCachedTopbarPrices() {
+  return rememberJson('topbar:prices:v1', { ttlSeconds: cacheSeconds }, getSafeTopbarPrices);
+}
 
 async function getSafeTopbarPrices(): Promise<TopbarPriceTicker[]> {
   try {
@@ -57,7 +55,7 @@ async function fetchMarketPrices(): Promise<TopbarPriceTicker[]> {
 }
 
 async function fetchBinancePrices(): Promise<TopbarPriceTicker[]> {
-  if (!canUsePriceProvider()) return fallbackPrices;
+  if (!(await canUsePriceProvider())) return fallbackPrices;
 
   for (const baseUrl of binanceFallbackBaseUrls) {
     const prices = await fetchBinancePricesFromBaseUrl(baseUrl);
@@ -114,7 +112,7 @@ async function fetchBinancePricesFromBaseUrl(baseUrl: string): Promise<TopbarPri
 }
 
 async function fetchCoinGeckoPrices(): Promise<TopbarPriceTicker[]> {
-  if (!canUsePriceProvider()) return fallbackPrices;
+  if (!(await canUsePriceProvider())) return fallbackPrices;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
@@ -157,7 +155,10 @@ async function dedupeFetch(_key: string, fetcher: () => Promise<TopbarPriceTicke
   return providerState.spookycoinsTopbarPriceInFlight;
 }
 
-function canUsePriceProvider() {
+async function canUsePriceProvider() {
+  const redisCount = await incrementCacheCounter('topbar:prices:provider-requests', 86_400);
+  if (redisCount !== null) return redisCount <= maxRequestsPerDay;
+
   const dayAgo = Date.now() - 86_400_000;
   const attempts = (providerState.spookycoinsTopbarPriceFetches || []).filter(
     (timestamp) => timestamp > dayAgo,

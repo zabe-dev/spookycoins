@@ -1,33 +1,34 @@
 import type { PublicWatchedCoin } from '@/features/account/components/account-panel';
 import { getPublicCoinListItems } from '@/features/coins/server/coin-list';
 import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
+import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
 import { coinWatchlists, coins } from '@/lib/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
+
+const watchlistCacheSeconds = Number(process.env.PUBLIC_WATCHLIST_CACHE_SECONDS || 60);
+
+type WatchedCoinRecord = {
+  coinId: number;
+  savedAt: string;
+};
 
 export async function getWatchlistTableRows(
   userId: string,
   viewerId?: string | null,
 ): Promise<PublicWatchedCoin[]> {
-  const watchedCoins = await db
-    .select({
-      coinId: coins.id,
-      createdAt: coinWatchlists.createdAt,
-    })
-    .from(coinWatchlists)
-    .innerJoin(coins, eq(coins.id, coinWatchlists.coinId))
-    .where(and(eq(coinWatchlists.userId, userId), eq(coins.listingStatus, 'active')))
-    .orderBy(desc(coinWatchlists.createdAt))
-    .catch((error) => {
-      if (isMissingInteractionTableError(error)) return [];
-      throw error;
-    });
+  const watchedCoins =
+    viewerId === userId
+      ? await readWatchedCoinRecords(userId)
+      : await rememberJson(
+          `watchlist:public:${userId}:v1`,
+          { ttlSeconds: watchlistCacheSeconds },
+          () => readWatchedCoinRecords(userId),
+        );
 
   if (!watchedCoins.length) return [];
 
-  const savedAtByCoinId = new Map(
-    watchedCoins.map((coin) => [coin.coinId, coin.createdAt.toISOString()]),
-  );
+  const savedAtByCoinId = new Map(watchedCoins.map((coin) => [coin.coinId, coin.savedAt]));
   const watchedOrder = new Map(watchedCoins.map((coin, index) => [coin.coinId, index]));
   const fullCoins = await getPublicCoinListItems(viewerId);
   const topCoinRankById = new Map(
@@ -48,4 +49,25 @@ export async function getWatchlistTableRows(
         (watchedOrder.get(a.coinId) ?? Number.MAX_SAFE_INTEGER) -
         (watchedOrder.get(b.coinId) ?? Number.MAX_SAFE_INTEGER),
     );
+}
+
+async function readWatchedCoinRecords(userId: string): Promise<WatchedCoinRecord[]> {
+  const watchedCoins = await db
+    .select({
+      coinId: coins.id,
+      createdAt: coinWatchlists.createdAt,
+    })
+    .from(coinWatchlists)
+    .innerJoin(coins, eq(coins.id, coinWatchlists.coinId))
+    .where(and(eq(coinWatchlists.userId, userId), eq(coins.listingStatus, 'active')))
+    .orderBy(desc(coinWatchlists.createdAt))
+    .catch((error) => {
+      if (isMissingInteractionTableError(error)) return [];
+      throw error;
+    });
+
+  return watchedCoins.map((coin) => ({
+    coinId: coin.coinId,
+    savedAt: coin.createdAt.toISOString(),
+  }));
 }

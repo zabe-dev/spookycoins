@@ -3,7 +3,6 @@ import 'server-only';
 import { NETWORKS } from '@/features/coins/networks';
 import { processExpiredCoinDeletionRequests } from '@/features/coins/server/delete-requests';
 import { getCoinInteractionSummaries } from '@/features/coins/server/interactions';
-import { refreshStaleMarketSnapshots } from '@/features/coins/server/market-sync';
 import { processExpiredPresales } from '@/features/coins/server/presale-expiry';
 import type {
   BoostMultiplier,
@@ -15,6 +14,7 @@ import type {
 } from '@/features/coins/types';
 import { toCoinListItem, type CoinListItem } from '@/features/coins/view';
 import { db } from '@/lib/db/client';
+import { rememberJson } from '@/lib/cache/json-cache';
 import {
   coinBoosts,
   coinLinks,
@@ -26,6 +26,10 @@ import {
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 const boostMultipliers = [10, 30, 50, 100, 500] as const;
+const syncMarketDataOnPageRead =
+  process.env.MARKET_SYNC_ON_PAGE === 'true' || process.env.MARKET_DATA_SYNC_ON_PAGE === 'true';
+const publicCoinListCacheSeconds = Number(process.env.PUBLIC_COIN_LIST_CACHE_SECONDS || 60);
+const publicCoinDetailCacheSeconds = Number(process.env.PUBLIC_COIN_DETAIL_CACHE_SECONDS || 60);
 
 type DbCoin = typeof coins.$inferSelect;
 type DbMarketSnapshot = typeof marketSnapshots.$inferSelect;
@@ -41,17 +45,18 @@ type InteractionSummary = NonNullable<
 >;
 
 export async function getPublicCoinListItems(userId?: string | null): Promise<CoinListItem[]> {
-  const coinRecords = await getPublicCoinRecords(undefined, userId);
-  return coinRecords.map((coin, index) => toCoinListItem(coin, index));
+  const coinRecords = await getPublicCoinRecords();
+  const personalizedRecords = userId ? await attachUserInteractionState(coinRecords, userId) : coinRecords;
+  return personalizedRecords.map((coin, index) => toCoinListItem(coin, index));
 }
 
 export async function getPublicCoinById(id: number, userId?: string | null): Promise<Coin | null> {
-  const coinRecords = await getPublicCoinRecords(undefined, userId, id);
+  const coinRecords = await getPublicCoinRecords(undefined, undefined, id);
   const rankedRecords = rankCoinsByBoostedVotes(coinRecords);
   const activeCoin = rankedRecords.find((coin) => coin.id === id);
-  if (activeCoin) return activeCoin;
+  if (activeCoin) return userId ? attachSingleUserInteractionState(activeCoin, userId) : activeCoin;
 
-  const suspendedRecords = await getPublicCoinRecords(id, userId, id);
+  const suspendedRecords = await getPublicCoinRecords(id, undefined, id);
   return suspendedRecords.find((coin) => coin.id === id) || null;
 }
 
@@ -63,6 +68,30 @@ async function getPublicCoinRecords(
   await processExpiredPresales();
   await processExpiredCoinDeletionRequests();
 
+  if (!coinId && !userId) {
+    return rememberJson(
+      'coins:public:list:v1',
+      { ttlSeconds: publicCoinListCacheSeconds },
+      () => readPublicCoinRecords(undefined, undefined, priorityCoinId),
+    );
+  }
+
+  if (coinId && !userId) {
+    return rememberJson(
+      `coins:public:detail:${coinId}:v1`,
+      { ttlSeconds: publicCoinDetailCacheSeconds },
+      () => readPublicCoinRecords(coinId, undefined, priorityCoinId),
+    );
+  }
+
+  return readPublicCoinRecords(coinId, userId, priorityCoinId);
+}
+
+async function readPublicCoinRecords(
+  coinId?: number,
+  userId?: string | null,
+  priorityCoinId?: number,
+): Promise<Coin[]> {
   const now = new Date();
   const nowIso = now.toISOString();
   const coinRows = await db
@@ -115,12 +144,15 @@ async function getPublicCoinRecords(
   ]);
 
   const snapshotByCoin = firstByCoinId(snapshotRows);
-  const refreshedSnapshots = await refreshStaleMarketSnapshots(
-    coinRows,
-    snapshotByCoin,
-    priorityCoinId,
-  );
-  refreshedSnapshots.forEach((snapshot, coinId) => snapshotByCoin.set(coinId, snapshot));
+  if (syncMarketDataOnPageRead) {
+    const { refreshStaleMarketSnapshots } = await import('@/features/coins/server/market-sync');
+    const refreshedSnapshots = await refreshStaleMarketSnapshots(
+      coinRows,
+      snapshotByCoin,
+      priorityCoinId,
+    );
+    refreshedSnapshots.forEach((snapshot, coinId) => snapshotByCoin.set(coinId, snapshot));
+  }
   const boostByCoin = firstByCoinId(boostRows);
   const promotionByCoin = firstByCoinId(promotionRows);
   const linksByCoin = groupLinksByCoinId(linkRows);
@@ -139,6 +171,36 @@ async function getPublicCoinRecords(
       interactions: interactionsByCoin.get(coin.id) || null,
     }),
   );
+}
+
+async function attachUserInteractionState(coinRecords: Coin[], userId: string) {
+  if (!coinRecords.length) return coinRecords;
+
+  const interactionsByCoin = await getCoinInteractionSummaries(
+    coinRecords.map((coin) => coin.id),
+    userId,
+  );
+
+  return coinRecords.map((coin) => withInteractionState(coin, interactionsByCoin.get(coin.id)));
+}
+
+async function attachSingleUserInteractionState(coin: Coin, userId: string) {
+  const [personalizedCoin] = await attachUserInteractionState([coin], userId);
+  return personalizedCoin || coin;
+}
+
+function withInteractionState(coin: Coin, interactions: InteractionSummary | null | undefined) {
+  if (!interactions) return coin;
+
+  return {
+    ...coin,
+    community: {
+      ...coin.community,
+      userHasVoted: interactions.userHasVoted,
+      nextVoteAt: interactions.nextVoteAt,
+      userWatching: interactions.userWatching,
+    },
+  };
 }
 
 function mapDbCoinToCoin({

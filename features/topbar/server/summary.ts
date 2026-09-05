@@ -1,17 +1,17 @@
 import 'server-only';
 
-import { unstable_cache } from 'next/cache';
 import { db } from '@/lib/db/client';
 import { coinBoosts, coinVotes, coinWatchlists, coins, users } from '@/lib/db/schema';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { getCachedTopbarPrices } from './market-prices';
 import type { TopbarCoinLink, TopbarSummary } from '@/features/topbar/types';
+import { rememberJson } from '@/lib/cache/json-cache';
 
 const summaryCacheSeconds = Number(process.env.TOPBAR_SUMMARY_CACHE_SECONDS || 60);
 
-export const getTopbarSummary = unstable_cache(() => readTopbarSummary(), ['topbar-summary-v2'], {
-  revalidate: summaryCacheSeconds,
-});
+export function getTopbarSummary() {
+  return rememberJson('topbar:summary:v1', { ttlSeconds: summaryCacheSeconds }, readTopbarSummary);
+}
 
 async function readTopbarSummary(): Promise<TopbarSummary> {
   const [prices, dbSummary] = await Promise.all([getCachedTopbarPrices(), readDatabaseSummary()]);

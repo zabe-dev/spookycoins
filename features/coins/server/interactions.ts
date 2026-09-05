@@ -1,10 +1,12 @@
 import 'server-only';
 
 import { db } from '@/lib/db/client';
+import { rememberJson } from '@/lib/cache/json-cache';
 import { coinVotes, coinWatchlists, coins, users } from '@/lib/db/schema';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 export const voteCooldownHours = 12;
+const interactionCacheSeconds = Number(process.env.COIN_INTERACTION_CACHE_SECONDS || 30);
 
 type InteractionSummary = {
   weeklyVotes: number;
@@ -18,27 +20,44 @@ type InteractionSummary = {
   userWatching: boolean;
 };
 
-export async function getCoinInteractionSummaries(coinIds: number[], userId?: string | null) {
-  const summaries = new Map<number, InteractionSummary>();
+type PublicInteractionSummary = Omit<
+  InteractionSummary,
+  'userHasVoted' | 'nextVoteAt' | 'userWatching'
+>;
+
+type InteractionOptions = {
+  freshPublic?: boolean;
+};
+
+export async function getCoinInteractionSummaries(
+  coinIds: number[],
+  userId?: string | null,
+  options: InteractionOptions = {},
+) {
   const uniqueIds = Array.from(new Set(coinIds));
-  if (!uniqueIds.length) return summaries;
+  if (!uniqueIds.length) return new Map<number, InteractionSummary>();
 
-  uniqueIds.forEach((coinId) => {
-    summaries.set(coinId, {
-      weeklyVotes: 0,
-      totalVotes: 0,
-      recentVotes: 0,
-      recentWatchlistAdds: 0,
-      trendingScore: 0,
-      watchlistCount: 0,
-      userHasVoted: false,
-      nextVoteAt: null,
-      userWatching: false,
-    });
-  });
+  const publicSummaries = options.freshPublic
+    ? await readPublicInteractionSummaries(uniqueIds)
+    : await getCachedPublicInteractionSummaries(uniqueIds);
+  const summaries = toFullInteractionSummaries(publicSummaries);
 
-  const cooldownStart = addHours(new Date(), -voteCooldownHours);
-  const cooldownStartIso = cooldownStart.toISOString();
+  if (userId) await attachUserInteractionSummaries(summaries, uniqueIds, userId);
+
+  return summaries;
+}
+
+async function getCachedPublicInteractionSummaries(coinIds: number[]) {
+  const sortedIds = [...coinIds].sort((a, b) => a - b);
+  return rememberJson(
+    `coins:interactions:${getCurrentVoteWeekStart().toISOString()}:${sortedIds.join(',')}:v1`,
+    { ttlSeconds: interactionCacheSeconds },
+    () => readPublicInteractionSummaries(sortedIds),
+  );
+}
+
+async function readPublicInteractionSummaries(coinIds: number[]) {
+  const summaries = createPublicInteractionSummaries(coinIds);
   const weekStartIso = getCurrentVoteWeekStart().toISOString();
   const dayAgoIso = addHours(new Date(), -24).toISOString();
   const interactionRows = await Promise.all([
@@ -47,7 +66,7 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
       .from(coinVotes)
       .where(
         and(
-          inArray(coinVotes.coinId, uniqueIds),
+          inArray(coinVotes.coinId, coinIds),
           sql`${coinVotes.createdAt} >= ${weekStartIso}::timestamptz`,
         ),
       )
@@ -55,14 +74,14 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
     db
       .select({ coinId: coinVotes.coinId, count: sql<number>`count(*)::int` })
       .from(coinVotes)
-      .where(inArray(coinVotes.coinId, uniqueIds))
+      .where(inArray(coinVotes.coinId, coinIds))
       .groupBy(coinVotes.coinId),
     db
       .select({ coinId: coinVotes.coinId, count: sql<number>`count(*)::int` })
       .from(coinVotes)
       .where(
         and(
-          inArray(coinVotes.coinId, uniqueIds),
+          inArray(coinVotes.coinId, coinIds),
           sql`${coinVotes.createdAt} >= ${dayAgoIso}::timestamptz`,
         ),
       )
@@ -70,53 +89,26 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
     db
       .select({ coinId: coinWatchlists.coinId, count: sql<number>`count(*)::int` })
       .from(coinWatchlists)
-      .where(inArray(coinWatchlists.coinId, uniqueIds))
+      .where(inArray(coinWatchlists.coinId, coinIds))
       .groupBy(coinWatchlists.coinId),
     db
       .select({ coinId: coinWatchlists.coinId, count: sql<number>`count(*)::int` })
       .from(coinWatchlists)
       .where(
         and(
-          inArray(coinWatchlists.coinId, uniqueIds),
+          inArray(coinWatchlists.coinId, coinIds),
           sql`${coinWatchlists.createdAt} >= ${dayAgoIso}::timestamptz`,
         ),
       )
       .groupBy(coinWatchlists.coinId),
-    userId
-      ? db
-          .select({ coinId: coinVotes.coinId, createdAt: coinVotes.createdAt })
-          .from(coinVotes)
-          .where(
-            and(
-              eq(coinVotes.userId, userId),
-              inArray(coinVotes.coinId, uniqueIds),
-              sql`${coinVotes.createdAt} > ${cooldownStartIso}::timestamptz`,
-            ),
-          )
-          .orderBy(desc(coinVotes.createdAt))
-      : Promise.resolve([]),
-    userId
-      ? db
-          .select({ coinId: coinWatchlists.coinId })
-          .from(coinWatchlists)
-          .where(and(eq(coinWatchlists.userId, userId), inArray(coinWatchlists.coinId, uniqueIds)))
-      : Promise.resolve([]),
   ]).catch((error) => {
     if (isMissingInteractionTableError(error)) {
-      return [[], [], [], [], [], [], []] as const;
+      return [[], [], [], [], []] as const;
     }
     throw error;
   });
 
-  const [
-    weeklyVotes,
-    totalVotes,
-    recentVotes,
-    watchCounts,
-    recentWatchAdds,
-    userVotes,
-    userWatchlist,
-  ] = interactionRows;
+  const [weeklyVotes, totalVotes, recentVotes, watchCounts, recentWatchAdds] = interactionRows;
 
   weeklyVotes.forEach((row) => setSummaryValue(summaries, row.coinId, 'weeklyVotes', row.count));
   totalVotes.forEach((row) => setSummaryValue(summaries, row.coinId, 'totalVotes', row.count));
@@ -130,6 +122,40 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
   summaries.forEach((summary) => {
     summary.trendingScore = summary.recentVotes * 3 + summary.recentWatchlistAdds * 2;
   });
+
+  return Array.from(summaries.entries());
+}
+
+async function attachUserInteractionSummaries(
+  summaries: Map<number, InteractionSummary>,
+  coinIds: number[],
+  userId: string,
+) {
+  const cooldownStart = addHours(new Date(), -voteCooldownHours);
+  const cooldownStartIso = cooldownStart.toISOString();
+  const interactionRows = await Promise.all([
+    db
+      .select({ coinId: coinVotes.coinId, createdAt: coinVotes.createdAt })
+      .from(coinVotes)
+      .where(
+        and(
+          eq(coinVotes.userId, userId),
+          inArray(coinVotes.coinId, coinIds),
+          sql`${coinVotes.createdAt} > ${cooldownStartIso}::timestamptz`,
+        ),
+      )
+      .orderBy(desc(coinVotes.createdAt)),
+    db
+      .select({ coinId: coinWatchlists.coinId })
+      .from(coinWatchlists)
+      .where(and(eq(coinWatchlists.userId, userId), inArray(coinWatchlists.coinId, coinIds))),
+  ]).catch((error) => {
+    if (isMissingInteractionTableError(error)) return [[], []] as const;
+    throw error;
+  });
+
+  const [userVotes, userWatchlist] = interactionRows;
+
   userVotes.forEach((row) => {
     const summary = summaries.get(row.coinId);
     if (summary?.userHasVoted) return;
@@ -142,8 +168,37 @@ export async function getCoinInteractionSummaries(coinIds: number[], userId?: st
     );
   });
   userWatchlist.forEach((row) => setSummaryValue(summaries, row.coinId, 'userWatching', true));
+}
 
+function createPublicInteractionSummaries(coinIds: number[]) {
+  const summaries = new Map<number, PublicInteractionSummary>();
+  coinIds.forEach((coinId) => {
+    summaries.set(coinId, {
+      weeklyVotes: 0,
+      totalVotes: 0,
+      recentVotes: 0,
+      recentWatchlistAdds: 0,
+      trendingScore: 0,
+      watchlistCount: 0,
+    });
+  });
   return summaries;
+}
+
+function toFullInteractionSummaries(
+  rows: Array<[number, PublicInteractionSummary]>,
+): Map<number, InteractionSummary> {
+  return new Map(
+    rows.map(([coinId, summary]) => [
+      coinId,
+      {
+        ...summary,
+        userHasVoted: false,
+        nextVoteAt: null,
+        userWatching: false,
+      },
+    ]),
+  );
 }
 
 export async function recordCoinVote({
@@ -226,7 +281,7 @@ export async function toggleCoinWatchlist(coinId: number, userId: string) {
 }
 
 async function getSingleCoinSummary(coinId: number, userId: string) {
-  const summaries = await getCoinInteractionSummaries([coinId], userId);
+  const summaries = await getCoinInteractionSummaries([coinId], userId, { freshPublic: true });
   return summaries.get(coinId);
 }
 
@@ -252,18 +307,18 @@ async function assertActiveCoin(coinId: number) {
   }
 }
 
-function setSummaryValue<K extends keyof InteractionSummary>(
-  summaries: Map<number, InteractionSummary>,
+function setSummaryValue<T extends Record<string, unknown>, K extends keyof T>(
+  summaries: Map<number, T>,
   coinId: number,
   key: K,
-  value: InteractionSummary[K],
+  value: T[K],
 ) {
   const summary = summaries.get(coinId);
   if (summary) summary[key] = value;
 }
 
-function setRecentActivityValue(
-  summaries: Map<number, InteractionSummary>,
+function setRecentActivityValue<T extends Pick<PublicInteractionSummary, 'recentVotes' | 'recentWatchlistAdds'>>(
+  summaries: Map<number, T>,
   coinId: number,
   key: 'recentVotes' | 'recentWatchlistAdds',
   value: number,

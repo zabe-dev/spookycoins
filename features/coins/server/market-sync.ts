@@ -3,6 +3,7 @@ import 'server-only';
 import type { NetworkId } from '@/features/coins/types';
 import { db } from '@/lib/db/client';
 import { coins, marketSnapshots, marketSources } from '@/lib/db/schema';
+import { withRedisLock } from '@/lib/cache/redis-lock';
 import { desc, inArray, sql } from 'drizzle-orm';
 
 type MarketSyncCoin = Pick<
@@ -74,11 +75,19 @@ const syncState = globalThis as typeof globalThis & {
 
 const apiBaseUrl = process.env.MOBULA_API_BASE_URL || 'https://api.mobula.io';
 const requestTimeoutMs = Number(process.env.MOBULA_REQUEST_TIMEOUT_MS || 8_000);
-const cacheSeconds = Number(process.env.MARKET_DATA_CACHE_SECONDS || 900);
-const defaultSyncLimit = Number(process.env.MARKET_DATA_SYNC_LIMIT || 7);
-const maxSyncLimit = Number(process.env.MARKET_DATA_MAX_SYNC_LIMIT || 120);
+const cacheSeconds = Number(
+  process.env.MARKET_SYNC_CACHE_SECONDS || process.env.MARKET_DATA_CACHE_SECONDS || 900,
+);
+const defaultSyncLimit = Number(
+  process.env.MARKET_SYNC_LIMIT || process.env.MARKET_DATA_SYNC_LIMIT || 7,
+);
+const maxSyncLimit = Number(
+  process.env.MARKET_SYNC_MAX_LIMIT || process.env.MARKET_DATA_MAX_SYNC_LIMIT || 120,
+);
 const requestSpacingMs = Math.max(1_050, Number(process.env.MOBULA_REQUEST_SPACING_MS || 1_050));
-const lockId = 880_550_110;
+const syncLockTtlMs = Number(
+  process.env.MARKET_SYNC_LOCK_TTL_MS || process.env.MOBULA_SYNC_LOCK_TTL_MS || 120_000,
+);
 const mobulaProvider = 'mobula';
 const invalidAddressErrorCode = 'invalid-address-format';
 
@@ -153,28 +162,25 @@ async function runDedupeSync(fetcher: () => Promise<Map<number, MarketSnapshotRo
     return syncState.spookycoinsMobulaInFlight;
   }
 
-  syncState.spookycoinsMobulaInFlight = withAdvisoryLock(fetcher).finally(() => {
+  syncState.spookycoinsMobulaInFlight = withMobulaSyncLock(fetcher).finally(() => {
     syncState.spookycoinsMobulaInFlight = undefined;
   });
 
   return syncState.spookycoinsMobulaInFlight;
 }
 
-async function withAdvisoryLock(fetcher: () => Promise<Map<number, MarketSnapshotRow>>) {
-  const lockRows = await db.execute<{ locked: boolean }>(
-    sql`select pg_try_advisory_lock(${lockId}) as locked`,
+async function withMobulaSyncLock(fetcher: () => Promise<Map<number, MarketSnapshotRow>>) {
+  return withRedisLock(
+    {
+      key: 'lock:mobula-sync',
+      ttlMs: syncLockTtlMs,
+      onLocked: () => {
+        console.log(`${LOG_TAG} sync already locked, skipping duplicate run`);
+        return new Map<number, MarketSnapshotRow>();
+      },
+    },
+    fetcher,
   );
-  const locked = Boolean(lockRows[0]?.locked);
-  if (!locked) {
-    console.log(`${LOG_TAG} could not acquire advisory lock ${lockId}, another sync is running`);
-    return new Map<number, MarketSnapshotRow>();
-  }
-
-  try {
-    return await fetcher();
-  } finally {
-    await db.execute(sql`select pg_advisory_unlock(${lockId})`);
-  }
 }
 
 async function syncCoinMarketData(coinRows: MarketSyncCoin[]) {
