@@ -41,6 +41,12 @@ export const coins = pgTable(
     index('coins_symbol_idx').on(table.symbol),
     index('coins_chain_idx').on(table.chain),
     index('coins_category_idx').on(table.category),
+    index('coins_listing_status_idx').on(table.listingStatus),
+    index('coins_status_submitted_idx').on(table.listingStatus, table.submittedAt),
+    index('coins_status_launch_idx').on(table.listingStatus, table.launchDate),
+    index('coins_status_presale_idx').on(table.listingStatus, table.isPresale),
+    index('coins_status_category_idx').on(table.listingStatus, table.category),
+    index('coins_status_chain_idx').on(table.listingStatus, table.chain),
   ],
 );
 
@@ -135,6 +141,8 @@ export const marketSources = pgTable(
   (table) => [
     uniqueIndex('market_sources_provider_external_unique').on(table.provider, table.externalId),
     uniqueIndex('market_sources_coin_provider_unique').on(table.coinId, table.provider),
+    index('market_sources_error_idx').on(table.provider, table.lastErrorCode, table.externalId),
+    index('market_sources_sync_idx').on(table.provider, table.lastMarketSyncAt),
   ],
 );
 
@@ -170,7 +178,10 @@ export const coinLinks = pgTable(
     url: text('url').notNull(),
     ...timestamps,
   },
-  (table) => [uniqueIndex('coin_links_coin_type_unique').on(table.coinId, table.type)],
+  (table) => [
+    uniqueIndex('coin_links_coin_type_unique').on(table.coinId, table.type),
+    index('coin_links_coin_idx').on(table.coinId),
+  ],
 );
 
 export const changeRequests = pgTable(
@@ -188,7 +199,10 @@ export const changeRequests = pgTable(
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index('change_requests_coin_status_idx').on(table.coinId, table.status)],
+  (table) => [
+    index('change_requests_coin_status_idx').on(table.coinId, table.status),
+    index('change_requests_status_created_idx').on(table.status, table.createdAt),
+  ],
 );
 
 export const coinSubmissions = pgTable(
@@ -207,7 +221,16 @@ export const coinSubmissions = pgTable(
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index('coin_submissions_status_created_idx').on(table.status, table.createdAt)],
+  (table) => [
+    index('coin_submissions_status_created_idx').on(table.status, table.createdAt),
+    index('coin_submissions_status_type_created_idx').on(
+      table.status,
+      table.submissionType,
+      table.createdAt,
+    ),
+    index('coin_submissions_coin_idx').on(table.coinId),
+    index('coin_submissions_user_idx').on(table.submittedByUserId),
+  ],
 );
 
 export const coinSubmissionCategories = pgTable(
@@ -310,6 +333,7 @@ export const coinBoosts = pgTable(
   (table) => [
     index('coin_boosts_coin_status_idx').on(table.coinId, table.status),
     index('coin_boosts_expires_idx').on(table.expiresAt),
+    index('coin_boosts_status_schedule_idx').on(table.status, table.startsAt, table.expiresAt),
   ],
 );
 
@@ -334,6 +358,11 @@ export const coinPromotions = pgTable(
   (table) => [
     index('coin_promotions_coin_status_idx').on(table.coinId, table.status),
     index('coin_promotions_expires_idx').on(table.expiresAt),
+    index('coin_promotions_status_schedule_idx').on(
+      table.status,
+      table.startsAt,
+      table.expiresAt,
+    ),
   ],
 );
 
@@ -360,6 +389,13 @@ export const bannerAds = pgTable(
   (table) => [
     index('banner_ads_placement_status_idx').on(table.placement, table.status),
     index('banner_ads_schedule_idx').on(table.startsAt, table.expiresAt),
+    index('banner_ads_active_lookup_idx').on(
+      table.placement,
+      table.status,
+      table.startsAt,
+      table.expiresAt,
+      table.priority,
+    ),
   ],
 );
 
@@ -416,6 +452,8 @@ export const coinVotes = pgTable(
     index('coin_votes_coin_created_idx').on(table.coinId, table.createdAt),
     index('coin_votes_coin_week_idx').on(table.coinId, table.weekStartsAt),
     index('coin_votes_user_coin_created_idx').on(table.userId, table.coinId, table.createdAt),
+    index('coin_votes_created_idx').on(table.createdAt),
+    index('coin_votes_user_created_idx').on(table.userId, table.createdAt),
   ],
 );
 
@@ -435,6 +473,8 @@ export const coinWatchlists = pgTable(
     uniqueIndex('coin_watchlists_user_coin_unique').on(table.userId, table.coinId),
     index('coin_watchlists_coin_idx').on(table.coinId),
     index('coin_watchlists_user_idx').on(table.userId),
+    index('coin_watchlists_coin_created_idx').on(table.coinId, table.createdAt),
+    index('coin_watchlists_user_created_idx').on(table.userId, table.createdAt),
   ],
 );
 
@@ -452,5 +492,6 @@ export const adminAuditLogs = pgTable(
   (table) => [
     index('admin_audit_logs_admin_idx').on(table.adminUserId),
     index('admin_audit_logs_target_idx').on(table.targetType, table.targetId),
+    index('admin_audit_logs_created_idx').on(table.createdAt),
   ],
 );
