@@ -20,6 +20,7 @@ import {
   bannerPlacements,
   type BannerPlacement,
 } from '@/features/ads/types';
+import { getPaginationItems } from '@/lib/ui/pagination';
 import { Icon as IconifyIcon } from '@iconify/react';
 import {
   Check,
@@ -1096,6 +1097,7 @@ function AdminPanel<T>({
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const safePage = Math.min(page, pageCount - 1);
   const visibleRows = filteredRows.slice(safePage * pageSize, safePage * pageSize + pageSize);
+  const pageItems = getPaginationItems({ count: pageCount, page: safePage + 1 });
 
   return (
     <section className="admin-panel">
@@ -1141,6 +1143,22 @@ function AdminPanel<T>({
           <button type="button" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>
             Previous
           </button>
+          {pageItems.map((item) =>
+            typeof item === 'number' ? (
+              <button
+                key={item}
+                className={safePage + 1 === item ? 'active' : ''}
+                type="button"
+                onClick={() => setPage(item - 1)}
+              >
+                {item}
+              </button>
+            ) : (
+              <span className="admin-pagination-ellipsis" key={item} aria-hidden="true">
+                ...
+              </span>
+            ),
+          )}
           <button
             type="button"
             disabled={safePage >= pageCount - 1}

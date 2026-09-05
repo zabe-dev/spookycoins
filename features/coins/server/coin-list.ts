@@ -50,6 +50,25 @@ export async function getPublicCoinListItems(userId?: string | null): Promise<Co
   return personalizedRecords.map((coin, index) => toCoinListItem(coin, index));
 }
 
+export async function getPublicCoinListItemsByIds(
+  coinIds: number[],
+  userId?: string | null,
+): Promise<CoinListItem[]> {
+  const uniqueIds = Array.from(new Set(coinIds));
+  if (!uniqueIds.length) return [];
+
+  await processExpiredPresales();
+  await processExpiredCoinDeletionRequests();
+
+  const coinRecords = await readPublicCoinRecords(undefined, userId, undefined, uniqueIds);
+  const coinsById = new Map(coinRecords.map((coin) => [coin.id, coin]));
+
+  return uniqueIds.flatMap((coinId, index) => {
+    const coin = coinsById.get(coinId);
+    return coin ? [toCoinListItem(coin, index)] : [];
+  });
+}
+
 export async function getPublicCoinById(id: number, userId?: string | null): Promise<Coin | null> {
   const coinRecords = await getPublicCoinRecords(undefined, undefined, id);
   const rankedRecords = rankCoinsByBoostedVotes(coinRecords);
@@ -91,27 +110,35 @@ async function readPublicCoinRecords(
   coinId?: number,
   userId?: string | null,
   priorityCoinId?: number,
+  requestedCoinIds?: number[],
 ): Promise<Coin[]> {
   const now = new Date();
   const nowIso = now.toISOString();
+  const targetCoinIds = requestedCoinIds?.length ? Array.from(new Set(requestedCoinIds)) : null;
   const coinRows = await db
     .select()
     .from(coins)
-    .where(coinId ? eq(coins.id, coinId) : eq(coins.listingStatus, 'active'))
+    .where(
+      targetCoinIds
+        ? inArray(coins.id, targetCoinIds)
+        : coinId
+          ? eq(coins.id, coinId)
+          : eq(coins.listingStatus, 'active'),
+    )
     .orderBy(desc(coins.submittedAt))
-    .limit(coinId ? 1 : 500);
+    .limit(coinId ? 1 : targetCoinIds ? targetCoinIds.length : 500);
 
   if (!coinRows.length) return [];
 
-  const coinIds = coinRows.map((coin) => coin.id);
+  const hydratedCoinIds = coinRows.map((coin) => coin.id);
   const [snapshotRows, boostRows, promotionRows, linkRows, submissionRows] = await Promise.all([
-    selectLatestMarketSnapshots(coinIds),
+    selectLatestMarketSnapshots(hydratedCoinIds),
     db
       .select()
       .from(coinBoosts)
       .where(
         and(
-          inArray(coinBoosts.coinId, coinIds),
+          inArray(coinBoosts.coinId, hydratedCoinIds),
           sql`${coinBoosts.status} in ('active', 'scheduled')`,
           sql`${coinBoosts.startsAt} <= ${nowIso}::timestamptz`,
           sql`${coinBoosts.expiresAt} > ${nowIso}::timestamptz`,
@@ -123,20 +150,20 @@ async function readPublicCoinRecords(
       .from(coinPromotions)
       .where(
         and(
-          inArray(coinPromotions.coinId, coinIds),
+          inArray(coinPromotions.coinId, hydratedCoinIds),
           sql`${coinPromotions.status} in ('active', 'scheduled')`,
           sql`${coinPromotions.startsAt} <= ${nowIso}::timestamptz`,
           sql`${coinPromotions.expiresAt} > ${nowIso}::timestamptz`,
         ),
       )
       .orderBy(desc(coinPromotions.expiresAt)),
-    db.select().from(coinLinks).where(inArray(coinLinks.coinId, coinIds)),
+    db.select().from(coinLinks).where(inArray(coinLinks.coinId, hydratedCoinIds)),
     db
       .select()
       .from(coinSubmissions)
       .where(
         and(
-          inArray(coinSubmissions.coinId, coinIds),
+          inArray(coinSubmissions.coinId, hydratedCoinIds),
           eq(coinSubmissions.submissionType, 'new-coin'),
         ),
       )
@@ -157,7 +184,7 @@ async function readPublicCoinRecords(
   const promotionByCoin = firstByCoinId(promotionRows);
   const linksByCoin = groupLinksByCoinId(linkRows);
   const submissionByCoin = firstByCoinId(submissionRows.filter(hasLinkedCoinId));
-  const interactionsByCoin = await getCoinInteractionSummaries(coinIds, userId);
+  const interactionsByCoin = await getCoinInteractionSummaries(hydratedCoinIds, userId);
 
   return coinRows.map((coin, index) =>
     mapDbCoinToCoin({

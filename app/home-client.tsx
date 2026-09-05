@@ -6,6 +6,10 @@ import { MailingListSignup } from '@/components/layout/mailing-list-signup';
 import { BasicAdBannerPair, PremiumAdBanner } from '@/features/ads/components/ad-banners';
 import type { BannerAdMap } from '@/features/ads/types';
 import { AuthModal } from '@/features/auth/components/auth-modal';
+import type {
+  LeaderboardPage as ServerLeaderboardPage,
+  LeaderboardView as ServerLeaderboardView,
+} from '@/features/coins/leaderboard-types';
 import {
   CoinCells as Cells,
   DiscoveryCard as Discovery,
@@ -26,60 +30,46 @@ import {
 } from '@/features/coins/view';
 import { WeeklyResetChip } from '@/features/leaderboard/components/weekly-reset-chip';
 import { showRateLimitToast } from '@/lib/api/rate-limit-toast';
+import { getPaginationItems, type PaginationItem } from '@/lib/ui/pagination';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, useTransition, type CSSProperties } from 'react';
 /* Market data and reusable UI live in dedicated modules; this page owns orchestration state. */
 
-type LeaderboardView =
+type LeaderboardLabel =
   'Top coins' | 'Trending coins' | 'Presale coins' | 'Most watched' | 'Launched recently';
-type PaginationItem = number | 'ellipsis-left' | 'ellipsis-right';
 
-const viewParams: Record<LeaderboardView, string> = {
+const viewParams: Record<LeaderboardLabel, ServerLeaderboardView> = {
   'Top coins': 'top',
   'Trending coins': 'trending',
   'Presale coins': 'presales',
   'Most watched': 'watched',
   'Launched recently': 'recent',
 };
-const paramsToView = Object.fromEntries(
-  Object.entries(viewParams).map(([label, value]) => [value, label]),
-) as Record<string, LeaderboardView>;
-paramsToView['most-voted'] = 'Top coins';
-paramsToView.presale = 'Presale coins';
-paramsToView.presales = 'Presale coins';
-paramsToView.launched = 'Launched recently';
-const sortKeys: CoinSortKey[] = [
-  'rank',
-  'name',
-  'capN',
-  'price',
-  'change',
-  'launch',
-  'boost',
-  'votes',
-  'age',
-];
 const defaultSort: { key: CoinSortKey; dir: 1 | -1 } = { key: 'votes', dir: -1 };
 
 export function HomeClient({
   initialCoins,
+  initialLeaderboard,
   isSignedIn,
   bannerAds,
 }: {
   initialCoins: CoinListItem[];
+  initialLeaderboard: ServerLeaderboardPage;
   isSignedIn: boolean;
   bannerAds: BannerAdMap;
 }) {
   const [marketCoins, setMarketCoins] = useState<CoinListItem[]>(initialCoins);
-  const [view, setView] = useState<LeaderboardView>('Top coins'),
-    [category, setCategory] = useState('All'),
-    [chain, setChain] = useState('All chains'),
-    [search, setSearch] = useState('');
+  const [leaderboardPage, setLeaderboardPage] =
+    useState<ServerLeaderboardPage>(initialLeaderboard);
+  const [view, setView] = useState<LeaderboardLabel>(serverViewToLabel(initialLeaderboard.view)),
+    [category, setCategory] = useState(initialLeaderboard.category),
+    [chain, setChain] = useState(initialLeaderboard.chain),
+    [search, setSearch] = useState(initialLeaderboard.search);
   const [sort, setSort] = useState<{ key: CoinSortKey; dir: 1 | -1 }>({
-      ...defaultSort,
+      key: initialLeaderboard.sort.key,
+      dir: initialLeaderboard.sort.direction === 'asc' ? 1 : -1,
     }),
-    [page, setPage] = useState(1),
     [voted, setVoted] = useState<number[]>(() =>
       initialCoins.filter((coin) => coin.hasVoted).map((coin) => coin.coinId),
     ),
@@ -90,16 +80,16 @@ export function HomeClient({
     [watchAnimating, setWatchAnimating] = useState<number | null>(null),
     [interactionNotice, setInteractionNotice] = useState(''),
     [authOpen, setAuthOpen] = useState(false),
-    [hotspotRefresh, setHotspotRefresh] = useState(0),
-    [viewParamExplicit, setViewParamExplicit] = useState(false),
-    [urlReady, setUrlReady] = useState(false);
+    [hotspotRefresh, setHotspotRefresh] = useState(0);
   const categoryRef = useRef<HTMLDivElement>(null);
   const chainMenuRef = useRef<HTMLDivElement>(null);
   const hotspotTouchStartRef = useRef<number | null>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [categoryEdges, setCategoryEdges] = useState({ left: false, right: true });
   const [chainMenuOpen, setChainMenuOpen] = useState(false);
   const selectedChainChoice = coinChainChoices.find((choice) => choice.label === chain);
   const router = useRouter();
+  const [isLeaderboardPending, startLeaderboardTransition] = useTransition();
   const [hotspotsVisible, setHotspotsVisible] = useState(true),
     [hotspotIndex, setHotspotIndex] = useState(0);
   useEffect(() => {
@@ -109,55 +99,6 @@ export function HomeClient({
     document.addEventListener('pointerdown', closeChainMenu);
     return () => document.removeEventListener('pointerdown', closeChainMenu);
   }, []);
-  useEffect(() => {
-    const applyUrlState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const hasViewParam = params.has('coins') || params.has('view');
-      const nextView = paramsToView[params.get('coins') || params.get('view') || ''];
-      const nextSort = params.get('sort') as CoinSortKey | null;
-      const nextCategory = params.get('category');
-      const nextChain = params.get('chain');
-      setView(nextView || 'Top coins');
-      setViewParamExplicit(hasViewParam);
-      if (nextSort && sortKeys.includes(nextSort)) {
-        setSort({ key: nextSort, dir: params.get('dir') === 'desc' ? -1 : 1 });
-      }
-      if (
-        nextCategory &&
-        coinCategories.includes(nextCategory as (typeof coinCategories)[number])
-      ) {
-        setCategory(nextCategory);
-      }
-      if (nextChain && coinChainOptions.includes(nextChain)) setChain(nextChain);
-      setSearch(params.get('q') || '');
-      setPage(Math.max(1, Number(params.get('page')) || 1));
-      setUrlReady(true);
-    };
-    applyUrlState();
-    window.addEventListener('popstate', applyUrlState);
-    return () => window.removeEventListener('popstate', applyUrlState);
-  }, []);
-  useEffect(() => {
-    if (!urlReady) return;
-    const params = new URLSearchParams();
-    if (viewParamExplicit || view !== 'Top coins') {
-      params.set('coins', viewParams[view]);
-    }
-    if (sort.key !== 'votes' || sort.dir !== -1) {
-      params.set('sort', sort.key);
-      params.set('dir', sort.dir === -1 ? 'desc' : 'asc');
-    }
-    if (category !== 'All') params.set('category', category);
-    if (chain !== 'All chains') params.set('chain', chain);
-    if (search) params.set('q', search);
-    if (page > 1) params.set('page', String(page));
-    const query = params.toString();
-    window.history.replaceState(
-      null,
-      '',
-      `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
-    );
-  }, [category, chain, page, search, sort, urlReady, view, viewParamExplicit]);
   useEffect(() => {
     const el = categoryRef.current;
     if (!el) return;
@@ -184,6 +125,11 @@ export function HomeClient({
     const timer = window.setInterval(() => setHotspotRefresh((tick) => tick + 1), 30_000);
     return () => window.clearInterval(timer);
   }, [hotspotsVisible]);
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
+    };
+  }, []);
   const hotspotCoins = (() => {
     void hotspotRefresh;
 
@@ -203,40 +149,70 @@ export function HomeClient({
       watched: [...marketCoins].sort(sortByWatchCount).slice(0, 4),
     };
   })();
-  const filtered = useMemo(() => {
-    const list = marketCoins.filter(
-      (c) =>
-        (view === 'Presale coins' ? isActivePresaleCandidate(c) : true) &&
-        (category === 'All' || c.category === category) &&
-        (chain === 'All chains' || c.chain === chain) &&
-        (!search ||
-          `${c.name} ${c.symbol} ${c.chain}`.toLowerCase().includes(search.toLowerCase())),
-    );
-    if (view === 'Trending coins')
-      return [...list].filter((coin) => coin.trendingScore > 0).sort(sortByTrendingScore);
-    if (view === 'Most watched')
-      return [...list].filter((coin) => coin.watchCount > 0).sort(sortByWatchCount);
-    if (view === 'Launched recently')
-      return [...list].filter(isLaunchedRecentlyCandidate).sort(sortByNewestLaunch);
-    if (view === 'Presale coins')
-      return [...list].filter(isActivePresaleCandidate).sort(sortByPresaleEnd);
-    return [...list].sort(sortByVotes);
-  }, [category, chain, marketCoins, search, view]);
-  const displayedCoins = useMemo(
-    () => (isDefaultSort(sort) ? filtered : [...filtered].sort((a, b) => sortCoins(a, b, sort))),
-    [filtered, sort],
-  );
-  const rows = displayedCoins
-      .slice((page - 1) * 25, page * 25)
-      .map((coin, index) => ({ ...coin, rank: (page - 1) * 25 + index + 1 })),
-    pages = Math.max(1, Math.ceil(displayedCoins.length / 25));
-  const visiblePageItems = getVisiblePageItems(page, pages);
+  const rows = leaderboardPage.rows;
+  const pages = leaderboardPage.pages;
+  const totalRows = leaderboardPage.total;
+  const page = leaderboardPage.page;
+  const visiblePageItems = getPaginationItems({ count: pages, page });
+  const goToLeaderboard = ({
+    nextView = view,
+    nextCategory = category,
+    nextChain = chain,
+    nextSearch = search,
+    nextSort = sort,
+    nextPage = page,
+  }: {
+    nextView?: LeaderboardLabel;
+    nextCategory?: string;
+    nextChain?: string;
+    nextSearch?: string;
+    nextSort?: { key: CoinSortKey; dir: 1 | -1 };
+    nextPage?: number;
+  }) => {
+    setView(nextView);
+    setCategory(nextCategory);
+    setChain(nextChain);
+    setSearch(nextSearch);
+    setSort(nextSort);
+
+    const params = new URLSearchParams();
+    if (nextView !== 'Top coins') params.set('coins', viewParams[nextView]);
+    if (nextSort.key !== 'votes' || nextSort.dir !== -1) {
+      params.set('sort', nextSort.key);
+      params.set('dir', nextSort.dir === -1 ? 'desc' : 'asc');
+    }
+    if (nextCategory !== 'All') params.set('category', nextCategory);
+    if (nextChain !== 'All chains') params.set('chain', nextChain);
+    if (nextSearch) params.set('q', nextSearch);
+    if (nextPage > 1) params.set('page', String(nextPage));
+
+    const query = params.toString();
+    startLeaderboardTransition(() => {
+      router.push(`${window.location.pathname}${query ? `?${query}` : ''}#leaderboard`, {
+        scroll: false,
+      });
+    });
+  };
   const sortBy = (key: CoinSortKey) => {
-    setSort((s) => ({
+    const nextSort = {
       key,
-      dir: s.key === key ? (s.dir === 1 ? -1 : 1) : key === 'rank' ? 1 : -1,
+      dir: sort.key === key ? (sort.dir === 1 ? -1 : 1) : key === 'rank' ? 1 : -1,
+    } satisfies { key: CoinSortKey; dir: 1 | -1 };
+    goToLeaderboard({ nextSort, nextPage: 1 });
+  };
+  const searchLeaderboard = (value: string) => {
+    setSearch(value);
+    if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      goToLeaderboard({ nextSearch: value, nextPage: 1 });
+    }, 350);
+  };
+  const updateCoinRows = (updater: (coin: CoinListItem) => CoinListItem) => {
+    setMarketCoins((coins) => coins.map(updater));
+    setLeaderboardPage((current) => ({
+      ...current,
+      rows: current.rows.map(updater),
     }));
-    setPage(1);
   };
   const vote = async (coinId: number) => {
     if (voted.includes(coinId)) return;
@@ -246,8 +222,7 @@ export function HomeClient({
     }
     setInteractionNotice('');
     setVoted((current) => [...current, coinId]);
-    setMarketCoins((coins) =>
-      coins.map((coin) =>
+    updateCoinRows((coin) =>
         coin.coinId === coinId
           ? {
               ...coin,
@@ -260,7 +235,6 @@ export function HomeClient({
               trend: coin.trend + 3,
             }
           : coin,
-      ),
     );
     setAnimating(coinId);
     window.setTimeout(() => setAnimating(null), 700);
@@ -269,8 +243,7 @@ export function HomeClient({
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
       setVoted((current) => current.filter((id) => id !== coinId));
-      setMarketCoins((coins) =>
-        coins.map((coin) =>
+      updateCoinRows((coin) =>
           coin.coinId === coinId
             ? {
                 ...coin,
@@ -283,7 +256,6 @@ export function HomeClient({
                 trend: Math.max(0, coin.trend - 3),
               }
             : coin,
-        ),
       );
       if (body.code === 'VOTE_COOLDOWN') {
         const summary = body.data?.summary;
@@ -309,8 +281,7 @@ export function HomeClient({
     setWatchlist((current) =>
       removing ? current.filter((id) => id !== coinId) : [...current, coinId],
     );
-    setMarketCoins((coins) =>
-      coins.map((coin) =>
+    updateCoinRows((coin) =>
         coin.coinId === coinId
           ? {
               ...coin,
@@ -321,7 +292,6 @@ export function HomeClient({
               trend: Math.max(0, coin.trend + (removing ? -2 : 2)),
             }
           : coin,
-      ),
     );
     if (removing) setWatchAnimating(null);
     else {
@@ -335,8 +305,7 @@ export function HomeClient({
       setWatchlist((current) =>
         removing ? [...current, coinId] : current.filter((id) => id !== coinId),
       );
-      setMarketCoins((coins) =>
-        coins.map((coin) =>
+      updateCoinRows((coin) =>
           coin.coinId === coinId
             ? {
                 ...coin,
@@ -347,7 +316,6 @@ export function HomeClient({
                 trend: Math.max(0, coin.trend + (removing ? 2 : -2)),
               }
             : coin,
-        ),
       );
       if (!showRateLimitToast(body, 'watchlist')) {
         setInteractionNotice(body.message || 'Could not update your watchlist.');
@@ -372,8 +340,7 @@ export function HomeClient({
       userWatching?: boolean;
     },
   ) {
-    setMarketCoins((coins) =>
-      coins.map((coin) =>
+    updateCoinRows((coin) =>
         coin.coinId === coinId
           ? (() => {
               const rawVotes = summary.weeklyVotes ?? coin.rawVotes;
@@ -393,7 +360,6 @@ export function HomeClient({
               };
             })()
           : coin,
-      ),
     );
     if (summary.userHasVoted === true)
       setVoted((current) => (current.includes(coinId) ? current : [...current, coinId]));
@@ -542,16 +508,13 @@ export function HomeClient({
               'Presale coins',
               'Most watched',
               'Launched recently',
-            ] as LeaderboardView[]
+            ] as LeaderboardLabel[]
           ).map((x) => (
             <button
               key={x}
               className={view === x ? 'selected' : ''}
               onClick={() => {
-                setViewParamExplicit(true);
-                setView(x);
-                setSort(defaultSort);
-                setPage(1);
+                goToLeaderboard({ nextView: x, nextSort: defaultSort, nextPage: 1 });
               }}
             >
               {x}
@@ -563,10 +526,7 @@ export function HomeClient({
             <Search aria-hidden="true" />
             <input
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              onChange={(e) => searchLeaderboard(e.target.value)}
               placeholder="Search coin, symbol or chain"
             />
           </label>
@@ -601,8 +561,7 @@ export function HomeClient({
                     role="option"
                     type="button"
                     onClick={() => {
-                      setChain(choice.label);
-                      setPage(1);
+                      goToLeaderboard({ nextChain: choice.label, nextPage: 1 });
                       setChainMenuOpen(false);
                     }}
                   >
@@ -625,8 +584,7 @@ export function HomeClient({
                   key={x}
                   className={category === x ? 'selected' : ''}
                   onClick={() => {
-                    setCategory(x);
-                    setPage(1);
+                    goToLeaderboard({ nextCategory: x, nextPage: 1 });
                   }}
                 >
                   {x}
@@ -655,7 +613,7 @@ export function HomeClient({
             )}
           </div>
         </div>
-        <TableScroller>
+        <TableScroller className={isLeaderboardPending ? 'table-scroller--pending' : ''}>
           <table className="coins-table">
             <thead>
               <tr>
@@ -718,11 +676,14 @@ export function HomeClient({
         </TableScroller>
         <div className="pagination">
           <span>
-            Showing {(page - 1) * 25 + 1}–{Math.min(page * 25, displayedCoins.length)} of{' '}
-            {displayedCoins.length}
+            Showing {totalRows ? (page - 1) * leaderboardPage.pageSize + 1 : 0}–
+            {Math.min(page * leaderboardPage.pageSize, totalRows)} of {totalRows}
           </span>
           <div>
-            <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+            <button
+              disabled={isLeaderboardPending || page === 1}
+              onClick={() => goToLeaderboard({ nextPage: Math.max(1, page - 1) })}
+            >
               <ChevronLeft aria-hidden="true" />
             </button>
             {visiblePageItems.map((item) =>
@@ -730,7 +691,8 @@ export function HomeClient({
                 <button
                   key={item}
                   className={page === item ? 'active' : ''}
-                  onClick={() => setPage(item)}
+                  disabled={isLeaderboardPending}
+                  onClick={() => goToLeaderboard({ nextPage: item })}
                 >
                   {item}
                 </button>
@@ -740,7 +702,10 @@ export function HomeClient({
                 </span>
               ),
             )}
-            <button disabled={page === pages} onClick={() => setPage((p) => p + 1)}>
+            <button
+              disabled={isLeaderboardPending || page === pages}
+              onClick={() => goToLeaderboard({ nextPage: Math.min(pages, page + 1) })}
+            >
               <ChevronRight aria-hidden="true" />
             </button>
           </div>
@@ -757,40 +722,6 @@ export function HomeClient({
 
 function sortByNewestLaunch(a: CoinListItem, b: CoinListItem) {
   return dateValue(b.launchTimestamp) - dateValue(a.launchTimestamp);
-}
-
-function getVisiblePageItems(currentPage: number, totalPages: number): PaginationItem[] {
-  const visibleNumbers = 6;
-  if (totalPages <= visibleNumbers) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
-  }
-
-  if (currentPage <= 5) {
-    return [1, 2, 3, 4, 5, 'ellipsis-right', totalPages];
-  }
-
-  if (currentPage >= totalPages - 4) {
-    return [
-      1,
-      'ellipsis-left',
-      totalPages - 4,
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages,
-    ];
-  }
-
-  return [
-    1,
-    'ellipsis-left',
-    currentPage - 1,
-    currentPage,
-    currentPage + 1,
-    currentPage + 2,
-    'ellipsis-right',
-    totalPages,
-  ];
 }
 
 function isLaunchedRecentlyCandidate(coin: CoinListItem) {
@@ -813,10 +744,6 @@ function sortByWatchCount(a: CoinListItem, b: CoinListItem) {
   return b.watchCount - a.watchCount || b.votes - a.votes || a.name.localeCompare(b.name);
 }
 
-function sortByTrendingScore(a: CoinListItem, b: CoinListItem) {
-  return b.trendingScore - a.trendingScore || b.votes - a.votes || a.name.localeCompare(b.name);
-}
-
 function sortByTrendingHotspotScore(a: CoinListItem, b: CoinListItem) {
   return (
     getTrendingHotspotScore(b) - getTrendingHotspotScore(a) ||
@@ -834,46 +761,8 @@ function sortByVotes(a: CoinListItem, b: CoinListItem) {
   return b.votes - a.votes || a.name.localeCompare(b.name);
 }
 
-function isDefaultSort(sort: { key: CoinSortKey; dir: 1 | -1 }) {
-  return sort.key === defaultSort.key && sort.dir === defaultSort.dir;
-}
-
-function sortCoins(a: CoinListItem, b: CoinListItem, sort: { key: CoinSortKey; dir: 1 | -1 }) {
-  const direction = sort.dir;
-  let result = 0;
-
-  if (sort.key === 'name') result = a.name.localeCompare(b.name);
-  else if (sort.key === 'capN') result = a.capN - b.capN;
-  else if (sort.key === 'price') result = moneyValue(a.price) - moneyValue(b.price);
-  else if (sort.key === 'change') result = a.change - b.change;
-  else if (sort.key === 'launch')
-    result = dateValue(a.launchTimestamp) - dateValue(b.launchTimestamp);
-  else if (sort.key === 'boost') result = (a.boost || 0) - (b.boost || 0);
-  else if (sort.key === 'votes') result = a.votes - b.votes;
-  else if (sort.key === 'age')
-    result = dateValue(a.submittedTimestamp) - dateValue(b.submittedTimestamp);
-  else result = a.rank - b.rank;
-
-  return result * direction || a.name.localeCompare(b.name);
-}
-
 function rankCoins(coins: CoinListItem[]) {
   return coins.map((coin, index) => ({ ...coin, rank: index + 1 }));
-}
-
-function moneyValue(value: string) {
-  if (value === '—') return 0;
-  const normalized = value.replace(/[$,]/g, '').trim().toUpperCase();
-  const multiplier = normalized.endsWith('T')
-    ? 1_000_000_000_000
-    : normalized.endsWith('B')
-      ? 1_000_000_000
-      : normalized.endsWith('M')
-        ? 1_000_000
-        : normalized.endsWith('K')
-          ? 1_000
-          : 1;
-  return Number.parseFloat(normalized) * multiplier || 0;
 }
 
 function futureDateValue(value: string | null | undefined) {
@@ -885,4 +774,12 @@ function futureDateValue(value: string | null | undefined) {
 function dateValue(value: string | null | undefined) {
   const time = value ? new Date(value).getTime() : 0;
   return Number.isFinite(time) ? time : 0;
+}
+
+function serverViewToLabel(view: ServerLeaderboardView): LeaderboardLabel {
+  if (view === 'trending') return 'Trending coins';
+  if (view === 'presales') return 'Presale coins';
+  if (view === 'watched') return 'Most watched';
+  if (view === 'recent') return 'Launched recently';
+  return 'Top coins';
 }

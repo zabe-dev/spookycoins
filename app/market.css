@@ -806,6 +806,11 @@
   border-color: var(--border);
   box-shadow: none;
 }
+.market-page .table-scroller--pending {
+  opacity: 0.72;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
 .market-page thead {
   background: var(--surface2);
 }

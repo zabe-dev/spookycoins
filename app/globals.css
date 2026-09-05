@@ -3515,9 +3515,24 @@ img.admin-project-logo {
   border-color: rgba(203, 255, 74, 0.34);
   color: var(--lime, #cbff4a);
 }
+.admin-pagination button.active {
+  border-color: rgba(203, 255, 74, 0.72);
+  background: var(--lime, #cbff4a);
+  color: #0b0d0e;
+}
 .admin-pagination button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+.admin-pagination-ellipsis {
+  display: inline-grid;
+  min-width: 22px;
+  min-height: 32px;
+  place-items: center;
+  color: rgba(135, 146, 158, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+  user-select: none;
 }
 @media (max-width: 640px) {
   .admin-pagination {
@@ -3536,6 +3551,11 @@ img.admin-project-logo {
   .admin-pagination button {
     min-height: 29px;
     padding: 7px 9px;
+    font-size: 8px;
+  }
+  .admin-pagination-ellipsis {
+    min-width: 16px;
+    min-height: 29px;
     font-size: 8px;
   }
 }
