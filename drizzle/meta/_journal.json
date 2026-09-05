@@ -92,6 +92,13 @@
       "when": 1788637383148,
       "tag": "0012_add_public_read_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788641649000,
+      "tag": "0013_speed_query_indexes",
+      "breakpoints": true
     }
   ]
 }

@@ -230,6 +230,16 @@ export const coinSubmissions = pgTable(
     ),
     index('coin_submissions_coin_idx').on(table.coinId),
     index('coin_submissions_user_idx').on(table.submittedByUserId),
+    index('coin_submissions_requester_type_created_idx').on(
+      table.requesterEmail,
+      table.submissionType,
+      table.createdAt,
+    ),
+    index('coin_submissions_coin_type_created_idx').on(
+      table.coinId,
+      table.submissionType,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -334,6 +344,12 @@ export const coinBoosts = pgTable(
     index('coin_boosts_coin_status_idx').on(table.coinId, table.status),
     index('coin_boosts_expires_idx').on(table.expiresAt),
     index('coin_boosts_status_schedule_idx').on(table.status, table.startsAt, table.expiresAt),
+    index('coin_boosts_coin_schedule_idx').on(
+      table.coinId,
+      table.status,
+      table.startsAt,
+      table.expiresAt,
+    ),
   ],
 );
 
@@ -362,6 +378,13 @@ export const coinPromotions = pgTable(
       table.status,
       table.startsAt,
       table.expiresAt,
+    ),
+    index('coin_promotions_rank_schedule_idx').on(
+      table.status,
+      table.startsAt,
+      table.expiresAt,
+      table.priority,
+      table.coinId,
     ),
   ],
 );
@@ -451,6 +474,7 @@ export const coinVotes = pgTable(
   (table) => [
     index('coin_votes_coin_created_idx').on(table.coinId, table.createdAt),
     index('coin_votes_coin_week_idx').on(table.coinId, table.weekStartsAt),
+    index('coin_votes_week_coin_idx').on(table.weekStartsAt, table.coinId),
     index('coin_votes_user_coin_created_idx').on(table.userId, table.coinId, table.createdAt),
     index('coin_votes_created_idx').on(table.createdAt),
     index('coin_votes_user_created_idx').on(table.userId, table.createdAt),
@@ -475,6 +499,7 @@ export const coinWatchlists = pgTable(
     index('coin_watchlists_user_idx').on(table.userId),
     index('coin_watchlists_coin_created_idx').on(table.coinId, table.createdAt),
     index('coin_watchlists_user_created_idx').on(table.userId, table.createdAt),
+    index('coin_watchlists_user_created_coin_idx').on(table.userId, table.createdAt, table.coinId),
   ],
 );
 
