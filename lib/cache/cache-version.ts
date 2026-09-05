@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { cacheKeyPart } from './cache-key';
 import { getReadyRedisClient } from './redis';
 
 const defaultCacheVersion = 1;
@@ -47,5 +48,5 @@ export async function bumpCacheVersion(...scopes: string[]) {
 }
 
 export function cacheVersionKey(scope: string) {
-  return `cache-version:${scope}`;
+  return `cache-version:${cacheKeyPart(scope)}`;
 }

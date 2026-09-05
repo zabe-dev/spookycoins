@@ -2,6 +2,7 @@ import type { PublicWatchedCoin } from '@/features/account/components/account-pa
 import type { AccountTablePage } from '@/features/account/types';
 import { getPublicCoinListItemsByIds } from '@/features/coins/server/coin-list';
 import { isMissingInteractionTableError } from '@/features/coins/server/interactions';
+import { cacheKeyPart } from '@/lib/cache/cache-key';
 import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
@@ -77,7 +78,7 @@ export async function getWatchlistTablePage(
 async function getCachedPublicWatchedCoinRecords(userId: string, page: number, pageSize: number) {
   const version = await getCacheVersion('public-watchlists');
   return rememberJson(
-    `watchlist:public:${version}:${userId}:${page}:${pageSize}:v2`,
+    `watchlist:public:${version}:${cacheKeyPart(userId)}:${page}:${pageSize}:v2`,
     { ttlSeconds: watchlistCacheSeconds },
     () => readWatchedCoinRecords(userId, page, pageSize),
   );

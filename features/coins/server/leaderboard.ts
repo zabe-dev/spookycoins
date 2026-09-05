@@ -13,6 +13,7 @@ import {
   type CoinListItem,
   type CoinSortKey,
 } from '@/features/coins/view';
+import { cacheKeyPart } from '@/lib/cache/cache-key';
 import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
@@ -297,7 +298,7 @@ function buildLeaderboardCacheKey(query: NormalizedLeaderboardQuery, version: nu
     query.pageSize,
     'v1',
   ]
-    .map((part) => encodeURIComponent(String(part)))
+    .map(cacheKeyPart)
     .join(':');
 }
 
