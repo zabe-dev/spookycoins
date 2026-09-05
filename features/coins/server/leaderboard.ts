@@ -4,6 +4,7 @@ import { NETWORKS, type NetworkConfig } from '@/features/coins/networks';
 import type {
   LeaderboardPage,
   LeaderboardQuery,
+  LeaderboardSelection,
   LeaderboardView,
 } from '@/features/coins/leaderboard-types';
 import {
@@ -35,7 +36,7 @@ const maxPageSize = 100;
 const leaderboardCacheSeconds = Number(process.env.LEADERBOARD_CACHE_SECONDS || 30);
 
 export async function getLeaderboardPage(query: LeaderboardQuery = {}): Promise<LeaderboardPage> {
-  const databasePage = await getLeaderboardPageFromDatabase(query).catch((error) => {
+  const databaseSelection = await getLeaderboardSelection(query).catch((error) => {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
         '[leaderboard] database paging unavailable, falling back to cached list:',
@@ -45,15 +46,15 @@ export async function getLeaderboardPage(query: LeaderboardQuery = {}): Promise<
     return null;
   });
 
-  if (databasePage) return databasePage;
+  if (databaseSelection) return hydrateLeaderboardSelection(databaseSelection, query.userId);
 
   const coins = await getPublicCoinListItems(query.userId);
   return getLeaderboardPageFromCoins(coins, query);
 }
 
-async function getLeaderboardPageFromDatabase(
+export async function getLeaderboardSelection(
   query: LeaderboardQuery = {},
-): Promise<LeaderboardPage | null> {
+): Promise<LeaderboardSelection> {
   const normalized = normalizeLeaderboardQuery(query);
   const rows = await getCachedLeaderboardCoinIds(normalized);
   const total = Number(rows[0]?.totalCount || 0);
@@ -62,7 +63,7 @@ async function getLeaderboardPageFromDatabase(
 
   if (!rows.length && total === 0) {
     return {
-      rows: [],
+      ids: [],
       total,
       page,
       pageSize: normalized.pageSize,
@@ -76,17 +77,11 @@ async function getLeaderboardPageFromDatabase(
   }
 
   if (!rows.length && normalized.page > 1) {
-    return getLeaderboardPageFromDatabase({ ...query, page: 1 });
+    return getLeaderboardSelection({ ...query, page: 1 });
   }
 
-  const start = (page - 1) * normalized.pageSize;
-  const coinItems = await getPublicCoinListItemsByIds(
-    rows.map((row) => Number(row.id)),
-    query.userId,
-  );
-
   return {
-    rows: coinItems.map((coin, index) => ({ ...coin, rank: start + index + 1 })),
+    ids: rows.map((row) => Number(row.id)),
     total,
     page,
     pageSize: normalized.pageSize,
@@ -96,6 +91,36 @@ async function getLeaderboardPageFromDatabase(
     chain: normalized.chain,
     search: normalized.search,
     sort: normalized.sort,
+  };
+}
+
+export async function hydrateLeaderboardSelection(
+  selection: LeaderboardSelection,
+  userId?: string | null,
+): Promise<LeaderboardPage> {
+  const { ids, ...page } = selection;
+  const start = (selection.page - 1) * selection.pageSize;
+  const coinItems = await getPublicCoinListItemsByIds(ids, userId);
+
+  return {
+    ...page,
+    rows: coinItems.map((coin, index) => ({ ...coin, rank: start + index + 1 })),
+  };
+}
+
+export function hydrateLeaderboardSelectionFromItems(
+  selection: LeaderboardSelection,
+  itemsById: Map<number, CoinListItem>,
+): LeaderboardPage {
+  const { ids, ...page } = selection;
+  const start = (selection.page - 1) * selection.pageSize;
+
+  return {
+    ...page,
+    rows: ids.flatMap((id, index) => {
+      const coin = itemsById.get(id);
+      return coin ? [{ ...coin, rank: start + index + 1 }] : [];
+    }),
   };
 }
 

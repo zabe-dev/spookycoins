@@ -7,22 +7,84 @@ import { db } from '@/lib/db/client';
 import { coinBoosts, coinPromotions, coinVotes, coins } from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 import { getPublicCoinListItemsByIds } from './coin-list';
-import { getLeaderboardPage } from './leaderboard';
+import {
+  getLeaderboardPage,
+  getLeaderboardSelection,
+  hydrateLeaderboardSelectionFromItems,
+} from './leaderboard';
 import { getCurrentVoteWeekStart } from './interactions';
 
 const promotedCoinsLimit = 25;
 const promotedCoinsCacheSeconds = Number(process.env.PROMOTED_COINS_CACHE_SECONDS || 60);
 
 export async function getDiscoveryData(query: LeaderboardQuery = {}): Promise<DiscoveryData> {
-  const [hotspots, promotedCoins, leaderboard] = await Promise.all([
-    getDiscoveryHotspots(query.userId),
-    getPromotedCoinItems(query.userId),
-    getLeaderboardPage(query),
+  const selectionData = await getDiscoverySelections(query).catch((error) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        '[discovery] batched discovery data unavailable:',
+        error instanceof Error ? error.message : error,
+      );
+    }
+    return null;
+  });
+
+  if (!selectionData) {
+    const [hotspots, promotedCoins, leaderboard] = await Promise.all([
+      getDiscoveryHotspots(query.userId),
+      getPromotedCoinItems(query.userId),
+      getLeaderboardPage(query),
+    ]);
+
+    return {
+      hotspots,
+      promotedCoins,
+      leaderboard,
+    };
+  }
+
+  const allIds = uniqueNumbers([
+    ...selectionData.recent.ids,
+    ...selectionData.trending.ids,
+    ...selectionData.presales.ids,
+    ...selectionData.watched.ids,
+    ...selectionData.promotedIds,
+    ...selectionData.leaderboard.ids,
+  ]);
+  const hydratedItems = await getPublicCoinListItemsByIds(allIds, query.userId);
+  const itemsById = new Map(hydratedItems.map((item) => [item.coinId, item]));
+  const promotedCoins = selectionData.promotedIds.flatMap((id, index) => {
+    const item = itemsById.get(id);
+    return item ? [{ ...item, rank: index + 1 }] : [];
+  });
+
+  return {
+    hotspots: {
+      recent: hydrateLeaderboardSelectionFromItems(selectionData.recent, itemsById).rows,
+      trending: hydrateLeaderboardSelectionFromItems(selectionData.trending, itemsById).rows,
+      presales: hydrateLeaderboardSelectionFromItems(selectionData.presales, itemsById).rows,
+      watched: hydrateLeaderboardSelectionFromItems(selectionData.watched, itemsById).rows,
+    },
+    promotedCoins,
+    leaderboard: hydrateLeaderboardSelectionFromItems(selectionData.leaderboard, itemsById),
+  };
+}
+
+async function getDiscoverySelections(query: LeaderboardQuery = {}) {
+  const [recent, trending, presales, watched, promotedIds, leaderboard] = await Promise.all([
+    getLeaderboardSelection({ view: 'recent', pageSize: 4 }),
+    getLeaderboardSelection({ view: 'trending', pageSize: 4 }),
+    getLeaderboardSelection({ view: 'presales', pageSize: 4 }),
+    getLeaderboardSelection({ view: 'watched', pageSize: 4 }),
+    getCachedActivePromotedCoinIds(),
+    getLeaderboardSelection(query),
   ]);
 
   return {
-    hotspots,
-    promotedCoins,
+    recent,
+    trending,
+    presales,
+    watched,
+    promotedIds,
     leaderboard,
   };
 }
@@ -114,4 +176,8 @@ async function selectActivePromotedCoinIds() {
   `);
 
   return Array.from(rows, (row) => Number(row.id));
+}
+
+function uniqueNumbers(values: number[]) {
+  return Array.from(new Set(values));
 }

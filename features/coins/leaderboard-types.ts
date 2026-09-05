@@ -29,3 +29,7 @@ export type LeaderboardPage = {
     direction: 'asc' | 'desc';
   };
 };
+
+export type LeaderboardSelection = Omit<LeaderboardPage, 'rows'> & {
+  ids: number[];
+};

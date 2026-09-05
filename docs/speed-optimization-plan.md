@@ -45,6 +45,7 @@ Suggested cache timing:
 - Homepage rankings: 30–60 seconds
 - Ranking hotspots: 30–60 seconds
 - Promoted coin IDs: 60 seconds
+- Homepage discovery hydration: batch shared coin IDs once per request
 - Coin page market snapshot: 1–5 minutes
 - Public watchlist: 30–60 seconds
 
