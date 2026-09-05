@@ -1,10 +1,27 @@
 import 'server-only';
 
 import { NETWORKS, type NetworkConfig } from '@/features/coins/networks';
-import type { LeaderboardPage, LeaderboardQuery, LeaderboardView } from '@/features/coins/leaderboard-types';
-import { coinCategories, coinChainOptions, type CoinListItem, type CoinSortKey } from '@/features/coins/view';
+import type {
+  LeaderboardPage,
+  LeaderboardQuery,
+  LeaderboardView,
+} from '@/features/coins/leaderboard-types';
+import {
+  coinCategories,
+  coinChainOptions,
+  type CoinListItem,
+  type CoinSortKey,
+} from '@/features/coins/view';
+import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
-import { coinBoosts, coins, coinSubmissions, coinVotes, coinWatchlists, marketSnapshots } from '@/lib/db/schema';
+import {
+  coinBoosts,
+  coins,
+  coinSubmissions,
+  coinVotes,
+  coinWatchlists,
+  marketSnapshots,
+} from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 import { getPublicCoinListItems, getPublicCoinListItemsByIds } from './coin-list';
 import { getCurrentVoteWeekStart } from './interactions';
@@ -15,6 +32,7 @@ const defaultSort: { key: CoinSortKey; direction: 'asc' | 'desc' } = {
   direction: 'desc',
 };
 const maxPageSize = 100;
+const leaderboardCacheSeconds = Number(process.env.LEADERBOARD_CACHE_SECONDS || 30);
 
 export async function getLeaderboardPage(query: LeaderboardQuery = {}): Promise<LeaderboardPage> {
   const databasePage = await getLeaderboardPageFromDatabase(query).catch((error) => {
@@ -37,7 +55,7 @@ async function getLeaderboardPageFromDatabase(
   query: LeaderboardQuery = {},
 ): Promise<LeaderboardPage | null> {
   const normalized = normalizeLeaderboardQuery(query);
-  const rows = await selectLeaderboardCoinIds(normalized);
+  const rows = await getCachedLeaderboardCoinIds(normalized);
   const total = Number(rows[0]?.totalCount || 0);
   const pages = Math.max(1, Math.ceil(total / normalized.pageSize));
   const page = Math.min(normalized.page, pages);
@@ -116,6 +134,14 @@ type LeaderboardIdRow = {
   id: number;
   totalCount: number | string;
 };
+
+async function getCachedLeaderboardCoinIds(query: NormalizedLeaderboardQuery) {
+  return rememberJson(
+    buildLeaderboardCacheKey(query),
+    { ttlSeconds: leaderboardCacheSeconds },
+    () => selectLeaderboardCoinIds(query),
+  );
+}
 
 async function selectLeaderboardCoinIds(
   query: NormalizedLeaderboardQuery,
@@ -227,6 +253,24 @@ async function selectLeaderboardCoinIds(
   `);
 
   return Array.from(result);
+}
+
+function buildLeaderboardCacheKey(query: NormalizedLeaderboardQuery) {
+  return [
+    'leaderboard',
+    getCurrentVoteWeekStart().toISOString(),
+    query.view,
+    query.category,
+    query.chain,
+    query.search.toLowerCase(),
+    query.sort.key,
+    query.sort.direction,
+    query.page,
+    query.pageSize,
+    'v1',
+  ]
+    .map((part) => encodeURIComponent(String(part)))
+    .join(':');
 }
 
 function buildLeaderboardWhere(query: NormalizedLeaderboardQuery, nowIso: string) {

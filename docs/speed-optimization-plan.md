@@ -44,6 +44,7 @@ Suggested cache timing:
 - Banner ads: 2–5 minutes
 - Homepage rankings: 30–60 seconds
 - Ranking hotspots: 30–60 seconds
+- Promoted coin IDs: 60 seconds
 - Coin page market snapshot: 1–5 minutes
 - Public watchlist: 30–60 seconds
 

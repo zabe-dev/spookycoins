@@ -2,6 +2,7 @@ import 'server-only';
 
 import type { DiscoveryData, DiscoveryHotspots } from '@/features/coins/discovery-types';
 import type { LeaderboardQuery } from '@/features/coins/leaderboard-types';
+import { rememberJson } from '@/lib/cache/json-cache';
 import { db } from '@/lib/db/client';
 import { coinBoosts, coinPromotions, coinVotes, coins } from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
@@ -10,6 +11,7 @@ import { getLeaderboardPage } from './leaderboard';
 import { getCurrentVoteWeekStart } from './interactions';
 
 const promotedCoinsLimit = 25;
+const promotedCoinsCacheSeconds = Number(process.env.PROMOTED_COINS_CACHE_SECONDS || 60);
 
 export async function getDiscoveryData(query: LeaderboardQuery = {}): Promise<DiscoveryData> {
   const [hotspots, promotedCoins, leaderboard] = await Promise.all([
@@ -42,7 +44,7 @@ async function getDiscoveryHotspots(userId?: string | null): Promise<DiscoveryHo
 }
 
 async function getPromotedCoinItems(userId?: string | null) {
-  const ids = await selectActivePromotedCoinIds().catch((error) => {
+  const ids = await getCachedActivePromotedCoinIds().catch((error) => {
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
         '[discovery] promoted coin query unavailable:',
@@ -59,6 +61,14 @@ async function getPromotedCoinItems(userId?: string | null) {
     const item = itemById.get(id);
     return item ? [{ ...item, rank: index + 1 }] : [];
   });
+}
+
+async function getCachedActivePromotedCoinIds() {
+  return rememberJson(
+    `promoted-coins:active:${getCurrentVoteWeekStart().toISOString()}:v1`,
+    { ttlSeconds: promotedCoinsCacheSeconds },
+    selectActivePromotedCoinIds,
+  );
 }
 
 async function selectActivePromotedCoinIds() {

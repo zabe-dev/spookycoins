@@ -52,7 +52,7 @@ async function getCachedPublicInteractionSummaries(coinIds: number[]) {
   const sortedIds = [...coinIds].sort((a, b) => a - b);
   const idHash = createHash('sha256').update(sortedIds.join(',')).digest('hex').slice(0, 16);
   return rememberJson(
-    `coins:interactions:${getCurrentVoteWeekStart().toISOString()}:${idHash}:v1`,
+    `coins:interactions:${getCurrentVoteWeekStart().toISOString()}:${idHash}:v2`,
     { ttlSeconds: interactionCacheSeconds },
     () => readPublicInteractionSummaries(sortedIds),
   );
