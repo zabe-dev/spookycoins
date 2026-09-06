@@ -68,9 +68,9 @@ const evmNetworks = new Set<NetworkId>([
 const base58AddressPattern = /^[1-9A-HJ-NP-Za-km-z]+$/;
 
 const syncState = globalThis as typeof globalThis & {
-  spookycoinsMobulaInFlight?: Promise<Map<number, MarketSnapshotRow>>;
-  spookycoinsMobulaNextAllowedAt?: number;
-  spookycoinsMobulaKeyIndex?: number;
+  endorsecoinMobulaInFlight?: Promise<Map<number, MarketSnapshotRow>>;
+  endorsecoinMobulaNextAllowedAt?: number;
+  endorsecoinMobulaKeyIndex?: number;
 };
 
 const apiBaseUrl = process.env.MOBULA_API_BASE_URL || 'https://api.mobula.io';
@@ -157,16 +157,16 @@ export async function syncMobulaMarketData(limit = defaultSyncLimit) {
 }
 
 async function runDedupeSync(fetcher: () => Promise<Map<number, MarketSnapshotRow>>) {
-  if (syncState.spookycoinsMobulaInFlight) {
+  if (syncState.endorsecoinMobulaInFlight) {
     console.log(`${LOG_TAG} sync already in flight, reusing existing promise`);
-    return syncState.spookycoinsMobulaInFlight;
+    return syncState.endorsecoinMobulaInFlight;
   }
 
-  syncState.spookycoinsMobulaInFlight = withMobulaSyncLock(fetcher).finally(() => {
-    syncState.spookycoinsMobulaInFlight = undefined;
+  syncState.endorsecoinMobulaInFlight = withMobulaSyncLock(fetcher).finally(() => {
+    syncState.endorsecoinMobulaInFlight = undefined;
   });
 
-  return syncState.spookycoinsMobulaInFlight;
+  return syncState.endorsecoinMobulaInFlight;
 }
 
 async function withMobulaSyncLock(fetcher: () => Promise<Map<number, MarketSnapshotRow>>) {
@@ -456,8 +456,8 @@ function getNextMobulaApiKey() {
   const keys = getMobulaApiKeys();
   if (!keys.length) return '';
 
-  const index = syncState.spookycoinsMobulaKeyIndex || 0;
-  syncState.spookycoinsMobulaKeyIndex = (index + 1) % keys.length;
+  const index = syncState.endorsecoinMobulaKeyIndex || 0;
+  syncState.endorsecoinMobulaKeyIndex = (index + 1) % keys.length;
 
   return keys[index % keys.length];
 }
@@ -560,10 +560,10 @@ function cleanErrorMessage(body: string) {
 
 async function waitForMobulaSlot() {
   const now = Date.now();
-  const nextAllowedAt = syncState.spookycoinsMobulaNextAllowedAt || 0;
+  const nextAllowedAt = syncState.endorsecoinMobulaNextAllowedAt || 0;
   const delay = Math.max(0, nextAllowedAt - now);
 
-  syncState.spookycoinsMobulaNextAllowedAt = Math.max(now, nextAllowedAt) + requestSpacingMs;
+  syncState.endorsecoinMobulaNextAllowedAt = Math.max(now, nextAllowedAt) + requestSpacingMs;
   if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
 }
 

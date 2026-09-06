@@ -6,7 +6,7 @@ export function GET() {
   return apiSuccess(
     {
       status: 'ok',
-      service: 'spookycoins',
+      service: 'endorsecoin',
       checkedAt: new Date().toISOString(),
     },
     'Service is running.',

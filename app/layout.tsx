@@ -30,10 +30,10 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://spookycoins.com'),
+  metadataBase: new URL('https://endorsecoin.com'),
   title: {
-    default: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
-    template: '%s | SpookyCoins',
+    default: 'EndorseCoin — New Crypto Projects, Presales & Community Voting',
+    template: '%s | EndorseCoin',
   },
   description:
     'Discover new crypto projects, token presales, trending coins, and weekly community-voted rankings across ETH, BSC, Solana, Base, Polygon, and more.',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     'DeFi tokens',
     'community crypto rankings',
     'crypto watchlist',
-    'SpookyCoins',
+    'EndorseCoin',
   ],
   alternates: {
     canonical: '/',
@@ -61,16 +61,16 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
+    title: 'EndorseCoin — New Crypto Projects, Presales & Community Voting',
     description:
       'Track early crypto projects, vote every 12 hours, follow watchlists, and discover weekly community signals before they get crowded.',
     url: '/',
-    siteName: 'SpookyCoins',
+    siteName: 'EndorseCoin',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
+    title: 'EndorseCoin — New Crypto Projects, Presales & Community Voting',
     description:
       'Discover new crypto projects, presales, trending coins, and weekly community-voted rankings.',
   },

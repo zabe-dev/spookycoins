@@ -250,7 +250,7 @@ function mapDbCoinToCoin({
 
   return {
     id: coin.id,
-    externalId: `spookycoins-db-${coin.id}`,
+    externalId: `endorsecoin-db-${coin.id}`,
     name: coin.name,
     symbol: coin.symbol,
     slug: coin.slug,

@@ -13,9 +13,9 @@ const coinGeckoIds = {
 } satisfies Record<(typeof symbols)[number], string>;
 const fallbackPrices = symbols.map((symbol) => ({ symbol, price: null, change: null }));
 const providerState = globalThis as typeof globalThis & {
-  spookycoinsTopbarPriceFetches?: number[];
-  spookycoinsTopbarPriceInFlight?: Promise<TopbarPriceTicker[]>;
-  spookycoinsTopbarLastGoodPrices?: TopbarPriceTicker[];
+  endorsecoinTopbarPriceFetches?: number[];
+  endorsecoinTopbarPriceInFlight?: Promise<TopbarPriceTicker[]>;
+  endorsecoinTopbarLastGoodPrices?: TopbarPriceTicker[];
 };
 
 const requestTimeoutMs = 4_000;
@@ -39,7 +39,7 @@ export function getCachedTopbarPrices() {
 async function getSafeTopbarPrices(): Promise<TopbarPriceTicker[]> {
   try {
     const prices = await dedupeFetch('topbar-market-prices', fetchMarketPrices);
-    if (hasPriceData(prices)) providerState.spookycoinsTopbarLastGoodPrices = prices;
+    if (hasPriceData(prices)) providerState.endorsecoinTopbarLastGoodPrices = prices;
     return hasPriceData(prices) ? prices : getLastGoodPrices();
   } catch {
     return getLastGoodPrices();
@@ -144,15 +144,15 @@ async function fetchCoinGeckoPrices(): Promise<TopbarPriceTicker[]> {
 }
 
 async function dedupeFetch(_key: string, fetcher: () => Promise<TopbarPriceTicker[]>) {
-  if (providerState.spookycoinsTopbarPriceInFlight) {
-    return providerState.spookycoinsTopbarPriceInFlight;
+  if (providerState.endorsecoinTopbarPriceInFlight) {
+    return providerState.endorsecoinTopbarPriceInFlight;
   }
 
-  providerState.spookycoinsTopbarPriceInFlight = fetcher().finally(() => {
-    providerState.spookycoinsTopbarPriceInFlight = undefined;
+  providerState.endorsecoinTopbarPriceInFlight = fetcher().finally(() => {
+    providerState.endorsecoinTopbarPriceInFlight = undefined;
   });
 
-  return providerState.spookycoinsTopbarPriceInFlight;
+  return providerState.endorsecoinTopbarPriceInFlight;
 }
 
 async function canUsePriceProvider() {
@@ -160,16 +160,16 @@ async function canUsePriceProvider() {
   if (redisCount !== null) return redisCount <= maxRequestsPerDay;
 
   const dayAgo = Date.now() - 86_400_000;
-  const attempts = (providerState.spookycoinsTopbarPriceFetches || []).filter(
+  const attempts = (providerState.endorsecoinTopbarPriceFetches || []).filter(
     (timestamp) => timestamp > dayAgo,
   );
 
   if (attempts.length >= maxRequestsPerDay) {
-    providerState.spookycoinsTopbarPriceFetches = attempts;
+    providerState.endorsecoinTopbarPriceFetches = attempts;
     return false;
   }
 
-  providerState.spookycoinsTopbarPriceFetches = [...attempts, Date.now()];
+  providerState.endorsecoinTopbarPriceFetches = [...attempts, Date.now()];
   return true;
 }
 
@@ -183,7 +183,7 @@ function hasPriceData(prices: TopbarPriceTicker[]) {
 }
 
 function getLastGoodPrices() {
-  return hasPriceData(providerState.spookycoinsTopbarLastGoodPrices || [])
-    ? providerState.spookycoinsTopbarLastGoodPrices!
+  return hasPriceData(providerState.endorsecoinTopbarLastGoodPrices || [])
+    ? providerState.endorsecoinTopbarLastGoodPrices!
     : fallbackPrices;
 }

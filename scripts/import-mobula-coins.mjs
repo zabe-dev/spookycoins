@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Imports random non-major tokens from Mobula into the current SpookyCoins schema.
+ * Imports random non-major tokens from Mobula into the current EndorseCoin schema.
  *
  * Usage:
  *   npm run import:mobula

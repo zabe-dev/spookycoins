@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: CoinPageParams): Promise<Meta
   const title = `${coin.name} $${coin.symbol} — ${networkName} Crypto Project`;
   const description =
     coin.description ||
-    `View ${coin.name} $${coin.symbol} on SpookyCoins, including ${networkName} project details, community votes, watchlist signals, and promotion status.`;
+    `View ${coin.name} $${coin.symbol} on EndorseCoin, including ${networkName} project details, community votes, watchlist signals, and promotion status.`;
 
   return {
     title,

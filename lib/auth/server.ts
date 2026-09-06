@@ -20,10 +20,10 @@ import { Resend } from 'resend';
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const resendApiKey = process.env.RESEND_API_KEY;
-const authEmailFrom = process.env.AUTH_EMAIL_FROM || 'SpookyCoins <onboarding@resend.dev>';
+const authEmailFrom = process.env.AUTH_EMAIL_FROM || 'EndorseCoin <onboarding@resend.dev>';
 const authSecret =
   process.env.BETTER_AUTH_SECRET ||
-  (process.env.NODE_ENV === 'production' ? undefined : 'spookycoins-local-dev-secret-change-me');
+  (process.env.NODE_ENV === 'production' ? undefined : 'endorsecoin-local-dev-secret-change-me');
 const authUrl =
   process.env.BETTER_AUTH_URL ||
   (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:3000');
@@ -47,16 +47,16 @@ async function sendAuthCodeEmail({
 
   if (!resend) {
     if (process.env.NODE_ENV !== 'production') {
-      console.info(`[SpookyCoins auth] ${type} OTP for ${email}: ${otp}`);
+      console.info(`[EndorseCoin auth] ${type} OTP for ${email}: ${otp}`);
       return;
     }
 
-    console.error('[SpookyCoins auth] RESEND_API_KEY is missing; auth email was not sent.');
+    console.error('[EndorseCoin auth] RESEND_API_KEY is missing; auth email was not sent.');
     throw new Error('AUTH_EMAIL_SEND_FAILED');
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    console.info(`[SpookyCoins auth] Sending ${type} OTP to ${email} with Resend.`);
+    console.info(`[EndorseCoin auth] Sending ${type} OTP to ${email} with Resend.`);
   }
 
   const { error } = await resend.emails.send({
@@ -67,7 +67,7 @@ async function sendAuthCodeEmail({
   });
 
   if (error) {
-    console.error('[SpookyCoins auth] Failed to send auth email with Resend.', {
+    console.error('[EndorseCoin auth] Failed to send auth email with Resend.', {
       type,
       name: error.name,
       message: error.message,
@@ -77,7 +77,7 @@ async function sendAuthCodeEmail({
 }
 
 export const auth = betterAuth({
-  appName: 'SpookyCoins',
+  appName: 'EndorseCoin',
   secret: authSecret,
   baseURL: authUrl,
   advanced: {

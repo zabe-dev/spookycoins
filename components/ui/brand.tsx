@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function Brand({ beta = false }: { beta?: boolean }) {
   return (
-    <Link className="brand" href="/" aria-label="SpookyCoins home">
+    <Link className="brand" href="/" aria-label="EndorseCoin home">
       <span className="brand-mark">
         <Image src="/logo.svg" alt="EndorseCoin logo" width={40} height={40} />
       </span>

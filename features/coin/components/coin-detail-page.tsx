@@ -375,7 +375,7 @@ export function CoinDetailPage({
 
   async function shareCoin() {
     const url = window.location.href;
-    const title = `${coin.name} on SpookyCoins`;
+    const title = `${coin.name} on EndorseCoin`;
     try {
       if (navigator.share) {
         await navigator.share({ title, url });

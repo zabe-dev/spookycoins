@@ -16,14 +16,14 @@ import './partners.css';
 export const metadata: Metadata = {
   title: 'Partners',
   description:
-    'SpookyCoins is looking for crypto ecosystem partners, launchpads, communities, tools, and service providers.',
+    'EndorseCoin is looking for crypto ecosystem partners, launchpads, communities, tools, and service providers.',
   alternates: {
     canonical: '/partners',
   },
   openGraph: {
-    title: 'Partner with SpookyCoins',
+    title: 'Partner with EndorseCoin',
     description:
-      'SpookyCoins is looking for crypto ecosystem partners. Contact @CoinSpookySupport on Telegram if interested.',
+      'EndorseCoin is looking for crypto ecosystem partners. Contact @EndorseCoinSupport on Telegram if interested.',
     url: '/partners',
   },
 };
@@ -41,11 +41,11 @@ export default function PartnersPage() {
               <span>for better coin discovery.</span>
             </h1>
             <p>
-              SpookyCoins partners with teams that help projects launch, prove trust, and reach
+              EndorseCoin partners with teams that help projects launch, prove trust, and reach
               crypto investors looking for an edge in early discovery.
             </p>
             <div className="partners-actions">
-              <a className="partners-primary" href="https://t.me/CoinSpookySupport">
+              <a className="partners-primary" href="https://t.me/EndorseCoinSupport">
                 <MessageCircle aria-hidden="true" />
                 Contact support
               </a>
@@ -123,7 +123,7 @@ export default function PartnersPage() {
             <h2>Send the useful version.</h2>
             <p>What you do, who you help, and what a clean partnership should look like.</p>
           </div>
-          <a className="partners-secondary" href="https://t.me/CoinSpookySupport">
+          <a className="partners-secondary" href="https://t.me/EndorseCoinSupport">
             Start a conversation
             <ArrowRight aria-hidden="true" />
           </a>

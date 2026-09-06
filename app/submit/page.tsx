@@ -10,7 +10,7 @@ import './submit.css';
 export const metadata: Metadata = {
   title: 'Submit a Crypto Project',
   description:
-    'Submit a crypto project, token, or presale to SpookyCoins for review and future community voting.',
+    'Submit a crypto project, token, or presale to EndorseCoin for review and future community voting.',
   alternates: {
     canonical: '/submit',
   },

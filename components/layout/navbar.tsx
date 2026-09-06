@@ -93,9 +93,9 @@ export function Navbar({
             >
               <MenuIcon type="discover" /> <span className="menu-item-label">Discover</span>
             </Link>
-            <Link href="/#promoted" onClick={closeMenu}>
-              <MenuIcon type="promoted" /> <span className="menu-item-label">Promoted</span>
-            </Link>
+            <button className="nav-placeholder-link" type="button" onClick={closeMenu}>
+              <MenuIcon type="airdrops" /> <span className="menu-item-label">Airdrops</span>
+            </button>
             <Link href="/partners" onClick={closeMenu}>
               <MenuIcon type="partners" /> <span className="menu-item-label">Partners</span>
             </Link>
@@ -246,7 +246,7 @@ function MenuIcon({
 }: {
   type:
     | 'discover'
-    | 'promoted'
+    | 'airdrops'
     | 'partners'
     | 'advertise'
     | 'account'
@@ -256,7 +256,7 @@ function MenuIcon({
     | 'logout';
 }) {
   if (type === 'discover') return <Compass className="menu-item-icon" aria-hidden="true" />;
-  if (type === 'promoted') return <Zap className="menu-item-icon" aria-hidden="true" />;
+  if (type === 'airdrops') return <Zap className="menu-item-icon" aria-hidden="true" />;
   if (type === 'partners') return <Handshake className="menu-item-icon" aria-hidden="true" />;
   if (type === 'advertise') return <Megaphone className="menu-item-icon" aria-hidden="true" />;
   if (type === 'account') return <CircleUserRound className="menu-item-icon" aria-hidden="true" />;

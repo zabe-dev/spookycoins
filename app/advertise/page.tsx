@@ -18,12 +18,12 @@ import { SubmitProjectAction } from './submit-project-action';
 export const metadata: Metadata = {
   title: 'Advertise Crypto Projects',
   description:
-    'Advertise on SpookyCoins with banner ads, promoted coin slots, and boost packages for listed crypto projects.',
+    'Advertise on EndorseCoin with banner ads, promoted coin slots, and boost packages for listed crypto projects.',
   alternates: {
     canonical: '/advertise',
   },
   openGraph: {
-    title: 'Advertise Crypto Projects on SpookyCoins',
+    title: 'Advertise Crypto Projects on EndorseCoin',
     description:
       'Promote listed crypto projects with promoted coin placements, boost packages, and golden ticker visibility.',
     url: '/advertise',
@@ -77,7 +77,7 @@ const bannerPlacements = [
 
 const approvalSteps = [
   'Choose your project and campaign type.',
-  'Message @SpookyCoinsSupport on Telegram.',
+  'Message @EndorseCoinSupport on Telegram.',
   'Send your preferred dates and creative.',
   'We manually review the request.',
   'Confirm the payment/order details.',
@@ -91,7 +91,7 @@ export default function AdvertisePage() {
       <section className="container advertise-shell">
         <div className="advertise-hero">
           <p className="eyebrow">
-            <span>●</span> Advertise on SpookyCoins
+            <span>●</span> Advertise on EndorseCoin
           </p>
           <h1>Reach crypto’s earliest project investors.</h1>
           <p>
@@ -100,9 +100,9 @@ export default function AdvertisePage() {
             or boosts depending on how loud you want the campaign to be.
           </p>
           <div className="advertise-actions">
-            <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
+            <a className="advertise-primary" href="https://t.me/EndorseCoinSupport">
               <MessageCircle aria-hidden="true" />
-              Contact @SpookyCoinsSupport
+              Contact @EndorseCoinSupport
             </a>
             <SubmitProjectAction />
           </div>
@@ -233,7 +233,7 @@ export default function AdvertisePage() {
             </span>
             <h2>Eligibility rules</h2>
             <p>
-              The project must already be submitted/listed on SpookyCoins, must not be suspended,
+              The project must already be submitted/listed on EndorseCoin, must not be suspended,
               rejected, fraud-flagged, hidden, or under review, and must pass final manual approval.
             </p>
           </div>
@@ -270,7 +270,7 @@ export default function AdvertisePage() {
             <p>Message us to start your project campaign.</p>
           </div>
           <div className="advertise-actions advertise-final-actions">
-            <a className="advertise-primary" href="https://t.me/SpookyCoinsSupport">
+            <a className="advertise-primary" href="https://t.me/EndorseCoinSupport">
               <MessageCircle aria-hidden="true" />
               Contact us
             </a>

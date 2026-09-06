@@ -1,4 +1,4 @@
-# SpookyCoins Speed Optimization Plan
+# EndorseCoin Speed Optimization Plan
 
 ## Current setup
 

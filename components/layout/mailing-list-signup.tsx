@@ -53,7 +53,7 @@ export function MailingListSignup() {
         </span>
         <h2 id="mailing-list-title">Get early project drops in your inbox.</h2>
         <p>
-          Subscribe for launch updates, presale alerts, promoted campaigns, and SpookyCoins
+          Subscribe for launch updates, presale alerts, promoted campaigns, and EndorseCoin
           announcements.
         </p>
       </div>

@@ -21,7 +21,7 @@ export default function GlobalError({
       <body>
         <SystemStatePage
           eyebrow="Critical error"
-          title="SpookyCoins needs a refresh."
+          title="EndorseCoin needs a refresh."
           description="A root-level error interrupted the app. Try reloading the page, or return home and continue from there."
           icon={<OctagonAlert aria-hidden="true" />}
           secondaryLabel="Try again"

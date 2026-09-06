@@ -5,7 +5,7 @@ import '../market.css';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Privacy Policy for SpookyCoins.',
+  description: 'Privacy Policy for EndorseCoin.',
   alternates: {
     canonical: '/privacy',
   },
@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
           <small>LEGAL</small>
           <h1>Privacy Policy</h1>
           <p>
-            This page explains what SpookyCoins collects, why we collect it, and how we use it to
+            This page explains what EndorseCoin collects, why we collect it, and how we use it to
             keep the site useful, fair, and safer for crypto investors and project owners.
           </p>
           <span>Last updated: {lastUpdated}</span>
@@ -31,13 +31,9 @@ export default function PrivacyPolicyPage() {
         <div className="legal-card">
           <LegalSection title="Who we are">
             <p>
-              SpookyCoins is a crypto discovery platform operated as <strong>spookycoins</strong>.
-              For privacy questions, contact us at{' '}
-              <a href="mailto:legal@spookycoins.com">legal@spookycoins.com</a>.
-            </p>
-            <p>
-              <strong>Jurisdiction placeholder:</strong> replace this with the country/state where
-              SpookyCoins is operated before launch.
+              EndorseCoin is a crypto discovery platform for early-stage tokens, presales, and
+              community-powered project visibility. This policy explains how we handle information
+              when you use the site.
             </p>
           </LegalSection>
 
@@ -59,11 +55,11 @@ export default function PrivacyPolicyPage() {
           </LegalSection>
 
           <LegalSection title="How we use information">
-            <p>We use information to operate SpookyCoins, including to:</p>
+            <p>We use information to operate EndorseCoin, including to:</p>
             <ul>
               <li>Create accounts and keep voting/watchlists working.</li>
               <li>Review submissions, reports, advertisements, boosts, and promoted coins.</li>
-              <li>Send email updates, launch alerts, promotions, and SpookyCoins announcements.</li>
+              <li>Send email updates, launch alerts, promotions, and EndorseCoin announcements.</li>
               <li>Display approved public project information on the site.</li>
               <li>Prevent spam, abuse, fake votes, fraud, and unsafe listings.</li>
               <li>Improve site performance, rankings, market data, and user experience.</li>
@@ -80,13 +76,15 @@ export default function PrivacyPolicyPage() {
 
           <LegalSection title="Third-party services">
             <p>
-              SpookyCoins may use third-party services for authentication, hosting, storage,
-              databases, bot protection, market data, analytics, payments, and infrastructure.
+              We may use trusted third-party services to help run the platform, protect the site,
+              process requests, store files, deliver emails, understand performance, show market
+              data, and support payments or advertising. These providers only receive information
+              needed for their role.
             </p>
             <p>
-              <strong>Service list placeholder:</strong> confirm the final providers before launch,
-              such as Neon, Cloudflare R2, Mobula, Binance/proxy services, Cloudflare, Better Auth,
-              analytics, and payment processors.
+              We do not sell your personal information. If we share information, it is to operate
+              EndorseCoin, comply with legal obligations, prevent abuse, or protect users and the
+              platform.
             </p>
           </LegalSection>
 
@@ -100,16 +98,15 @@ export default function PrivacyPolicyPage() {
 
           <LegalSection title="Your choices">
             <p>
-              You may request access, correction, or deletion of your personal information by
-              emailing <a href="mailto:legal@spookycoins.com">legal@spookycoins.com</a>. Some
-              information may need to be retained for security, legal, or platform integrity
-              reasons.
+              You may request access, correction, or deletion of your personal information through
+              our official support channels. Some information may need to be retained for security,
+              legal, or platform integrity reasons.
             </p>
           </LegalSection>
 
           <LegalSection title="Age requirement">
             <p>
-              SpookyCoins is intended only for users who are at least 18 years old. Do not use the
+              EndorseCoin is intended only for users who are at least 18 years old. Do not use the
               site if you are under 18.
             </p>
           </LegalSection>

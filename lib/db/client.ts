@@ -6,11 +6,11 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error('DATABASE_URL is required');
 
 const globalForDb = globalThis as unknown as {
-  spookycoinsSql?: ReturnType<typeof postgres>;
+  endorsecoinSql?: ReturnType<typeof postgres>;
 };
 
 export const sql =
-  globalForDb.spookycoinsSql ??
+  globalForDb.endorsecoinSql ??
   postgres(connectionString, {
     max: 5,
     idle_timeout: 20,
@@ -18,6 +18,6 @@ export const sql =
     prepare: false,
   });
 
-if (process.env.NODE_ENV !== 'production') globalForDb.spookycoinsSql = sql;
+if (process.env.NODE_ENV !== 'production') globalForDb.endorsecoinSql = sql;
 
 export const db = drizzle(sql, { schema });

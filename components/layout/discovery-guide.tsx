@@ -1,7 +1,7 @@
 const guideItems = [
   {
-    title: 'What is SpookyCoins?',
-    body: 'SpookyCoins is built for people who like finding crypto projects early. We bring new launches, presales, and active community picks into one place that is easier to scan.',
+    title: 'What is EndorseCoin?',
+    body: 'EndorseCoin is built for people who like finding crypto projects early. We bring new launches, presales, and active community picks into one place that is easier to scan.',
   },
   {
     title: 'How are rankings calculated?',
@@ -33,7 +33,7 @@ const summaryItems = [
   {
     kicker: 'Who we are',
     title: 'A community-powered crypto discovery platform.',
-    body: 'SpookyCoins spotlights early-stage tokens, presales, and airdrops in one place. We help crypto investors discover promising projects early, follow the ones they like, and influence visibility through real community votes.',
+    body: 'EndorseCoin spotlights early-stage tokens, presales, and airdrops in one place. We help crypto investors discover promising projects early, follow the ones they like, and influence visibility through real community votes.',
     points: [
       'Early-stage tokens, presales, and airdrops',
       'Community-led voting visibility',
@@ -43,7 +43,7 @@ const summaryItems = [
   {
     kicker: 'What we do',
     title: 'Find early crypto projects before most investors do.',
-    body: 'SpookyCoins gives crypto investors a cleaner way to discover fresh launches, live presales, and promoted projects competing for attention each week.',
+    body: 'EndorseCoin gives crypto investors a cleaner way to discover fresh launches, live presales, and promoted projects competing for attention each week.',
     points: [
       'Browse new launches and presales',
       'Vote for projects you believe in',

@@ -5,7 +5,7 @@ import '../market.css';
 
 export const metadata: Metadata = {
   title: 'Terms and Conditions',
-  description: 'Terms and Conditions for SpookyCoins.',
+  description: 'Terms and Conditions for EndorseCoin.',
   alternates: {
     canonical: '/terms',
   },
@@ -22,7 +22,7 @@ export default function TermsPage() {
           <small>LEGAL</small>
           <h1>Terms and Conditions</h1>
           <p>
-            These terms explain the rules for using SpookyCoins, submitting projects, voting,
+            These terms explain the rules for using EndorseCoin, submitting projects, voting,
             watching coins, and purchasing paid visibility.
           </p>
           <span>Last updated: {lastUpdated}</span>
@@ -32,25 +32,21 @@ export default function TermsPage() {
           <LegalSection title="Who these terms apply to">
             <p>
               These Terms and Conditions apply to anyone who visits, uses, submits to, advertises
-              on, or creates an account with SpookyCoins, operated as <strong>spookycoins</strong>.
-              Contact us at <a href="mailto:legal@spookycoins.com">legal@spookycoins.com</a>.
-            </p>
-            <p>
-              <strong>Jurisdiction placeholder:</strong> replace this with the governing law and
-              dispute venue before launch.
+              on, or creates an account with EndorseCoin. By using the site, you agree to follow
+              these rules and use the platform responsibly.
             </p>
           </LegalSection>
 
           <LegalSection title="Age requirement">
             <p>
-              You must be at least 18 years old to use SpookyCoins. By using the site, you confirm
+              You must be at least 18 years old to use EndorseCoin. By using the site, you confirm
               that you meet this requirement.
             </p>
           </LegalSection>
 
           <LegalSection title="No financial advice">
             <p>
-              SpookyCoins is a discovery and information platform. We do not provide financial,
+              EndorseCoin is a discovery and information platform. We do not provide financial,
               investment, legal, tax, or trading advice. Listings, votes, charts, market data,
               boosts, ads, and promoted placements are not endorsements. Always do your own research
               before interacting with any project.
@@ -80,7 +76,7 @@ export default function TermsPage() {
           <LegalSection title="User-submitted content">
             <p>
               By submitting project information, logos, links, descriptions, or other content, you
-              give SpookyCoins permission to display, store, resize, crop, format, and use that
+              give EndorseCoin permission to display, store, resize, crop, format, and use that
               content for the platform, review process, promotion, and listing pages.
             </p>
           </LegalSection>
@@ -114,13 +110,13 @@ export default function TermsPage() {
             <p>
               Market prices, charts, liquidity, supply, holders, DEX links, and other external data
               may be delayed, incomplete, unavailable, or incorrect. Third-party websites are not
-              controlled by SpookyCoins, and users visit them at their own risk.
+              controlled by EndorseCoin, and users visit them at their own risk.
             </p>
           </LegalSection>
 
           <LegalSection title="Changes to these terms">
             <p>
-              We may update these terms as SpookyCoins grows. If changes are material, we will make
+              We may update these terms as EndorseCoin grows. If changes are material, we will make
               reasonable efforts to make the update visible on the site.
             </p>
           </LegalSection>

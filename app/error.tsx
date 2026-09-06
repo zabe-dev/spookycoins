@@ -19,7 +19,7 @@ export default function Error({
     <SystemStatePage
       eyebrow="Something broke"
       title="The page hit a snag."
-      description="Something went wrong while loading this part of SpookyCoins. You can try again or head back home."
+      description="Something went wrong while loading this part of EndorseCoin. You can try again or head back home."
       icon={<TriangleAlert aria-hidden="true" />}
       secondaryLabel="Try again"
       onSecondaryClick={reset}
