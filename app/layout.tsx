@@ -52,6 +52,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  manifest: '/site.webmanifest',
+  icons: {
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    icon: [
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+    ],
+  },
   openGraph: {
     title: 'SpookyCoins — New Crypto Projects, Presales & Community Voting',
     description:

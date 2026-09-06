@@ -356,10 +356,11 @@ h3,
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 18px;
+  justify-content: center;
+  gap: 6px;
+  font-size: 24px;
   font-weight: 850;
-  letter-spacing: 0.015em;
+  letter-spacing: -0.92px;
 }
 .brand-mark {
   display: grid;
@@ -1941,7 +1942,7 @@ tbody tr:hover td {
     color: currentColor;
   }
   .brand {
-    font-size: 15px;
+    font-size: 20px;
   }
   .mobile-menu-btn {
     display: flex;

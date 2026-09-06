@@ -5,9 +5,9 @@ export function Brand({ beta = false }: { beta?: boolean }) {
   return (
     <Link className="brand" href="/" aria-label="SpookyCoins home">
       <span className="brand-mark">
-        <Image src="/spookycoins-logo.png" alt="SpookyCoins logo" width={40} height={40} />
+        <Image src="/logo.svg" alt="EndorseCoin logo" width={40} height={40} />
       </span>
-      <span>spookycoins</span>
+      <span>endorsecoin</span>
       {beta && <em>beta</em>}
     </Link>
   );
