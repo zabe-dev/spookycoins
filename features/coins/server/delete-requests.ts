@@ -1,11 +1,16 @@
 import 'server-only';
 
 import { db } from '@/lib/db/client';
-import { coinSubmissions, coins } from '@/lib/db/schema';
+import { adminAuditLogs, coinSubmissions, coins } from '@/lib/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { invalidateCoinDiscoveryCache } from './cache-invalidation';
 
-export async function processExpiredCoinDeletionRequests() {
+type AdminAuditContext = {
+  adminUserId: string;
+  source: 'admin-dashboard';
+};
+
+export async function processExpiredCoinDeletionRequests(auditContext?: AdminAuditContext) {
   try {
     const now = new Date();
     const deletionRequests = await db
@@ -51,6 +56,22 @@ export async function processExpiredCoinDeletionRequests() {
 
       if (coinIds.length) {
         await tx.delete(coins).where(inArray(coins.id, coinIds));
+      }
+
+      if (auditContext) {
+        await tx.insert(adminAuditLogs).values({
+          adminUserId: auditContext.adminUserId,
+          action: 'maintenance.expired-delete-requests-processed',
+          targetType: 'coin-submission',
+          targetId: requestIds.join(','),
+          metadata: {
+            source: auditContext.source,
+            requestIds,
+            coinIds,
+            completedRequests: requestIds.length,
+            deletedCoins: coinIds.length,
+          },
+        });
       }
     });
 

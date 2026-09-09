@@ -1,14 +1,19 @@
 import 'server-only';
 
 import { db } from '@/lib/db/client';
-import { coins, coinSubmissions } from '@/lib/db/schema';
+import { adminAuditLogs, coins, coinSubmissions } from '@/lib/db/schema';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { invalidateCoinDiscoveryCache } from './cache-invalidation';
 
 type PresaleCoin = Pick<typeof coins.$inferSelect, 'id'>;
 type SubmissionRow = Pick<typeof coinSubmissions.$inferSelect, 'coinId' | 'coinData'>;
 
-export async function processExpiredPresales() {
+type AdminAuditContext = {
+  adminUserId: string;
+  source: 'admin-dashboard';
+};
+
+export async function processExpiredPresales(auditContext?: AdminAuditContext) {
   try {
     const presaleCoins = await db
       .select({ id: coins.id })
@@ -62,6 +67,20 @@ export async function processExpiredPresales() {
               ),
             );
         }
+      }
+
+      if (auditContext) {
+        await tx.insert(adminAuditLogs).values({
+          adminUserId: auditContext.adminUserId,
+          action: 'maintenance.expired-presales-processed',
+          targetType: 'coin',
+          targetId: expiredCoins.map((coin) => coin.id).join(','),
+          metadata: {
+            source: auditContext.source,
+            coinIds: expiredCoins.map((coin) => coin.id),
+            converted: expiredCoins.length,
+          },
+        });
       }
     });
 

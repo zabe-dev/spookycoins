@@ -3,11 +3,11 @@
 import { invalidateBannerAdCache } from '@/features/ads/server/cache-invalidation';
 import { bannerPlacementLabels, bannerPlacements } from '@/features/ads/types';
 import { invalidateCoinDiscoveryCache } from '@/features/coins/server/cache-invalidation';
+import { recordAdminAuditLog } from '@/lib/admin/audit';
 import { getCurrentSession } from '@/lib/auth/session';
 import { hasAdminAccess } from '@/lib/auth/roles';
 import { db } from '@/lib/db/client';
 import {
-  adminAuditLogs,
   bannerAds,
   changeRequests,
   coinBoosts,
@@ -272,7 +272,9 @@ export async function removeCoinBoost(formData: FormData) {
   const activeBoosts = await db
     .select()
     .from(coinBoosts)
-    .where(and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`));
+    .where(
+      and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`),
+    );
 
   await cancelActiveBoosts(coinId);
   await audit(adminUser.id, 'boost.removed', 'coin', String(coinId), {
@@ -311,7 +313,10 @@ export async function addPromotedCoin(formData: FormData) {
     .limit(1);
 
   if (existingPromotion) {
-    const currentStatus = getScheduleStatus(existingPromotion.startsAt, existingPromotion.expiresAt);
+    const currentStatus = getScheduleStatus(
+      existingPromotion.startsAt,
+      existingPromotion.expiresAt,
+    );
     if (currentStatus === 'active') {
       if (extensionDays < 1) throw new Error('Add at least 1 day to extend an active promotion.');
       await db
@@ -379,7 +384,10 @@ export async function removePromotedCoin(formData: FormData) {
     .select()
     .from(coinPromotions)
     .where(
-      and(eq(coinPromotions.coinId, coinId), sql`${coinPromotions.status} in ('active', 'scheduled')`),
+      and(
+        eq(coinPromotions.coinId, coinId),
+        sql`${coinPromotions.status} in ('active', 'scheduled')`,
+      ),
     );
 
   await cancelActivePromotions(coinId);
@@ -467,6 +475,10 @@ export async function updateBannerAd(formData: FormData) {
       .update(bannerAds)
       .set({ status: 'inactive', updatedAt: new Date() })
       .where(eq(bannerAds.id, bannerId));
+    await audit(adminUser.id, 'banner.marked-inactive', 'banner', bannerId, {
+      previousStatus: existing.status,
+      currentStatus,
+    });
     throw new Error('Inactive ads cannot be edited. Create a new booking instead.');
   }
 
@@ -687,14 +699,18 @@ async function cancelActiveBoosts(coinId: number) {
   await db
     .update(coinBoosts)
     .set({ status: 'canceled', updatedAt: new Date() })
-    .where(and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`));
+    .where(
+      and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`),
+    );
 }
 
 async function cancelOpenBoosts(coinId: number) {
   await db
     .update(coinBoosts)
     .set({ status: 'canceled', updatedAt: new Date() })
-    .where(and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`));
+    .where(
+      and(eq(coinBoosts.coinId, coinId), sql`${coinBoosts.status} in ('active', 'scheduled')`),
+    );
 }
 
 async function cancelActivePromotions(coinId: number) {
@@ -702,7 +718,10 @@ async function cancelActivePromotions(coinId: number) {
     .update(coinPromotions)
     .set({ status: 'canceled', updatedAt: new Date() })
     .where(
-      and(eq(coinPromotions.coinId, coinId), sql`${coinPromotions.status} in ('active', 'scheduled')`),
+      and(
+        eq(coinPromotions.coinId, coinId),
+        sql`${coinPromotions.status} in ('active', 'scheduled')`,
+      ),
     );
 }
 
@@ -713,7 +732,7 @@ async function audit(
   targetId: string,
   metadata: Record<string, unknown>,
 ) {
-  await db.insert(adminAuditLogs).values({
+  await recordAdminAuditLog({
     adminUserId,
     action,
     targetType,

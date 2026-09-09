@@ -44,8 +44,14 @@ export default async function AdminDashboardPage({
   if (!session) redirect('/');
   if (!hasAdminAccess(session.user.role)) notFound();
 
-  await processExpiredPresales();
-  await processExpiredCoinDeletionRequests();
+  await processExpiredPresales({
+    adminUserId: session.user.id,
+    source: 'admin-dashboard',
+  });
+  await processExpiredCoinDeletionRequests({
+    adminUserId: session.user.id,
+    source: 'admin-dashboard',
+  });
 
   const now = new Date();
   const nowIso = now.toISOString();
