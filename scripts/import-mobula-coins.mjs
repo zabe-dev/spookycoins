@@ -289,7 +289,6 @@ function logImportProgress(current, total, phaseStartedAt) {
 }
 
 async function fetchMobulaAssets() {
-  log('Requesting full asset list from Mobula (GET /api/1/all)...');
   const url = new URL(MOBULA_BASE_URL);
   url.searchParams.set(
     'fields',
@@ -333,8 +332,6 @@ async function fetchMobulaAssets() {
     fail(`Unexpected Mobula response shape: ${JSON.stringify(json).slice(0, 500)}`);
     throw new Error('Mobula response was not a token list.');
   }
-
-  log(`Received ${list.length} assets from Mobula.`);
 
   if (DEBUG && list.length) {
     console.log('Sample Mobula item:');
@@ -935,10 +932,10 @@ function buildToken(item) {
   if (!contract) return null;
 
   const price = pickNumber(item, ['price']);
-  if (price === null || price <= 0) return null;
+  if (price !== null && price <= 0) return null;
 
   const marketCap = pickNumber(item, ['market_cap', 'marketCap']);
-  if (marketCap === null || marketCap <= 0) return null;
+  if (marketCap !== null && marketCap <= 0) return null;
 
   const symbol = pickString(item, ['symbol']) || '???';
   if (symbolDenylist.has(symbol.toUpperCase())) return null;
@@ -1739,17 +1736,40 @@ function errorMessage(error) {
   return String(error);
 }
 
+function logImportPlan({
+  rawCount,
+  matchedCount,
+  existingCount,
+  candidateCount,
+  selectedCount,
+  selectionTarget,
+  perChainCount,
+}) {
+  const mode = NEW_POPULAR_ONLY ? 'new-popular' : 'random';
+  const writeMode = DRY_RUN ? 'dry-run' : 'write';
+  const chainSummary = chainKeys
+    .filter((chain) => perChainCount[chain] > 0)
+    .map((chain) => `${chain}:${perChainCount[chain]}`)
+    .join(' ');
+
+  log(
+    `Plan: ${writeMode} ${selectedCount}/${selectionTarget} ${mode} tokens | raw ${rawCount} → eligible ${matchedCount} → candidates ${candidateCount}`,
+  );
+  if (NEW_POPULAR_ONLY) {
+    log(`Filters: this-year age, no >2y, rank>${EXCLUDE_TOP_RANK}, skip existing ${existingCount}`);
+  } else {
+    log(`Filters: rank>${EXCLUDE_TOP_RANK}`);
+  }
+  log(`Chains: ${chainSummary || 'none'}`);
+}
+
 function readPositiveInteger(value, fallback) {
   const number = Number(value);
   return Number.isSafeInteger(number) && number > 0 ? number : fallback;
 }
 
 async function main() {
-  logSection(
-    `Mobula import starting — target ${TARGET_COUNT} token(s), ${
-      DRY_RUN ? 'DRY RUN (no writes)' : 'writing to database'
-    }, exclude rank <= ${EXCLUDE_TOP_RANK}${NEW_POPULAR_ONLY ? ', new popular default' : ', random mode'}`,
-  );
+  logSection('Mobula import');
 
   const raw = await fetchMobulaAssets();
   const matchedAll = raw.map(buildToken).filter(Boolean);
@@ -1757,12 +1777,6 @@ async function main() {
   const importableAll = NEW_POPULAR_ONLY
     ? matchedAll.filter((token) => !hasExistingContract(existingContracts, token))
     : matchedAll;
-
-  if (NEW_POPULAR_ONLY && existingContracts.size) {
-    log(
-      `Filtered ${matchedAll.length - importableAll.length} existing contract(s); ${importableAll.length}/${matchedAll.length} candidate(s) remain for incremental import.`,
-    );
-  }
 
   const candidatePool = NEW_POPULAR_ONLY
     ? selectNewPopularCandidatePool(importableAll)
@@ -1776,12 +1790,6 @@ async function main() {
   if (emptyChains.length) {
     warn(`No eligible tokens found for: ${emptyChains.join(', ')}`);
   }
-
-  log(
-    `Matched ${matchedAll.length}/${raw.length} raw assets as eligible; ${candidatePool.length} candidate(s) will be considered: ${chainKeys
-      .map((chain) => `${chain}=${available[chain]}`)
-      .join(', ')}.`,
-  );
 
   const selectionTarget = NEW_POPULAR_ONLY
     ? Math.min(
@@ -1808,12 +1816,15 @@ async function main() {
     warn(`Only ${tokens.length}/${selectionTarget} tokens available; some chains ran out.`);
   }
 
-  log(
-    `Selected ${tokens.length}/${selectionTarget} token(s) to enrich: ${chainKeys
-      .map((chain) => `${chain}=${perChainCount[chain]}`)
-      .join(', ')}.`,
-  );
-  log('Chart and DEX links will be added only when market data confirms a usable route.');
+  logImportPlan({
+    rawCount: raw.length,
+    matchedCount: matchedAll.length,
+    existingCount: matchedAll.length - importableAll.length,
+    candidateCount: candidatePool.length,
+    selectedCount: tokens.length,
+    selectionTarget,
+    perChainCount,
+  });
 
   await enrichTokensWithMobulaDetails(tokens);
   await enrichTokensWithMobulaMetadata(tokens);
@@ -1823,9 +1834,7 @@ async function main() {
     const enrichedCount = tokens.length;
     tokens = tokens.filter(isNewPopularToken).sort(compareNewPopularTokens).slice(0, TARGET_COUNT);
 
-    log(
-      `New popular filter kept ${tokens.length}/${enrichedCount} enriched candidate(s): listed within ${NEW_POPULAR_MAX_AGE_DAYS} day(s), excluding anything older than ${NEW_POPULAR_EXCLUDE_OLDER_THAN_DAYS} day(s), plus rank <= ${NEW_POPULAR_MAX_RANK} or volume/liquidity >= configured thresholds.`,
-    );
+    log(`Filtered: kept ${tokens.length}/${enrichedCount} new-popular tokens`);
   }
 
   if (DRY_RUN) {

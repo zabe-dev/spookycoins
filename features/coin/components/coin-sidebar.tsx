@@ -92,17 +92,6 @@ export function CoinSidebar({
         <h3>Coin information</h3>
         <Info label="Network" value={coin.chain} />
         <Info label="Category" value={coin.category} />
-        {coin.lifecycle === 'presale' && (
-          <>
-            <InfoLink label="Presale website" url={coin.presale.websiteUrl} />
-            <Info label="Presale coin" value={coin.presale.paymentToken || '—'} />
-            <Info label="Soft cap" value={formatPresaleCap(coin.presale.softCap)} />
-            <Info label="Hard cap" value={formatPresaleCap(coin.presale.hardCap)} />
-            <Info label="Start date" value={formatPresaleDateTime(coin.presaleStartTimestamp)} />
-            <Info label="End date" value={formatPresaleDateTime(coin.presaleEndTimestamp)} />
-          </>
-        )}
-        <Info label="Submitted" value={coin.age} />
         <Info
           label="Status"
           value={
@@ -113,6 +102,18 @@ export function CoinSidebar({
               : 'Suspended'
           }
         />
+        <Info label="Launched date" value={formatCoinDate(coin.launchTimestamp)} />
+        <Info label="Submitted" value={coin.age} />
+        {coin.lifecycle === 'presale' && (
+          <>
+            <InfoLink label="Presale website" url={coin.presale.websiteUrl} />
+            <Info label="Presale coin" value={coin.presale.paymentToken || '—'} />
+            <Info label="Soft cap" value={formatPresaleCap(coin.presale.softCap)} />
+            <Info label="Hard cap" value={formatPresaleCap(coin.presale.hardCap)} />
+            <Info label="Start date" value={formatPresaleDateTime(coin.presaleStartTimestamp)} />
+            <Info label="End date" value={formatPresaleDateTime(coin.presaleEndTimestamp)} />
+          </>
+        )}
       </section>
       <section className="detail-card request-change-card">
         <div className="request-change-icon" aria-hidden="true">
@@ -126,6 +127,17 @@ export function CoinSidebar({
       </section>
     </aside>
   );
+}
+
+function formatCoinDate(value: string | null) {
+  if (!value) return '—';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(value));
 }
 
 function formatPresaleDateTime(value: string | null) {
