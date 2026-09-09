@@ -210,37 +210,51 @@ function sleep(ms) {
 // --- Logging helpers -----------------------------------------------------
 //
 // Every log line is prefixed with elapsed time since the script started
-// (e.g. "[+2m14s]") so it's obvious from the output alone whether a long
-// run is progressing normally or has stalled somewhere.
+// (e.g. "12:04") so it's obvious from the output alone whether a long run
+// is progressing normally or has stalled somewhere.
+
+const COLOR = {
+  reset: '\x1b[0m',
+  dim: '\x1b[2m',
+  bold: '\x1b[1m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+};
+
+const useColor = process.stdout.isTTY;
+function paint(color, text) {
+  return useColor ? `${color}${text}${COLOR.reset}` : text;
+}
 
 function formatDuration(ms) {
   const totalSeconds = Math.max(0, Math.round(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return minutes > 0 ? `${minutes}m${String(seconds).padStart(2, '0')}s` : `${seconds}s`;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function timestamp() {
+  return paint(COLOR.dim, `[${formatDuration(Date.now() - scriptStartTime)}]`);
 }
 
 function log(message) {
-  console.log(`[${formatDuration(Date.now() - scriptStartTime)}] ${message}`);
+  console.log(`${timestamp()} ${message}`);
 }
 
 function logSection(title) {
-  console.log(`\n[${formatDuration(Date.now() - scriptStartTime)}] ${title}`);
+  console.log(`\n${timestamp()} ${paint(COLOR.bold + COLOR.cyan, title)}`);
 }
 
 function warn(message) {
-  console.warn(`[${formatDuration(Date.now() - scriptStartTime)}] WARN ${message}`);
+  console.warn(`${timestamp()} ${paint(COLOR.yellow, 'WARN')}  ${message}`);
 }
 
 function fail(message) {
-  console.error(`[${formatDuration(Date.now() - scriptStartTime)}] ERROR ${message}`);
+  console.error(`${timestamp()} ${paint(COLOR.red, 'ERROR')} ${message}`);
 }
 
-// Logs batch progress at a handful of evenly-spaced points (not every batch,
-// so a 900-batch run doesn't print 900 lines) with a live ETA based on the
-// average time per batch so far. Always logs the first and last batch.
-// Shows both the batch number and the underlying token count (X/Y) so it's
-// clear exactly which token range has been processed, not just which batch.
 function logBatchProgress(
   label,
   batchNumber,
@@ -256,20 +270,20 @@ function logBatchProgress(
   if (!isFirst && !isLast && batchNumber % logEvery !== 0) return;
 
   const elapsedMs = Date.now() - phaseStartedAt;
-  const pct = ((tokensSoFar / totalTokens) * 100).toFixed(0);
+  const pct = ((tokensSoFar / totalTokens) * 100).toFixed(0).padStart(3);
   const ratePerMs = tokensSoFar / elapsedMs;
   const remainingTokens = totalTokens - tokensSoFar;
   const etaMs = ratePerMs > 0 ? remainingTokens / ratePerMs : 0;
+  const tail = isLast
+    ? paint(COLOR.green, `done in ${formatDuration(elapsedMs)}`)
+    : `eta ${formatDuration(etaMs)}`;
 
   log(
-    `${label}: ${tokensSoFar}/${totalTokens} (${pct}%, batch ${batchNumber}/${totalBatches})` +
-      (isLast ? ` done ${formatDuration(elapsedMs)}` : ` eta ${formatDuration(etaMs)}`),
+    `  ${label.padEnd(14)} ${pct}%  ${tokensSoFar}/${totalTokens} tokens  ` +
+      `(batch ${batchNumber}/${totalBatches})  ${tail}`,
   );
 }
 
-// Logs import-loop progress at a handful of evenly-spaced points (scales with
-// total size, so a 500-token run and a 9,000-token run both get ~20 updates)
-// with a live ETA, plus always the first and last token.
 function logImportProgress(current, total, phaseStartedAt) {
   const every = Math.max(1, Math.round(total / 20));
   const isFirst = current === 1;
@@ -277,15 +291,35 @@ function logImportProgress(current, total, phaseStartedAt) {
   if (!isFirst && !isLast && current % every !== 0) return;
 
   const elapsedMs = Date.now() - phaseStartedAt;
-  const pct = ((current / total) * 100).toFixed(1);
+  const pct = ((current / total) * 100).toFixed(1).padStart(5);
   const ratePerMs = current / elapsedMs;
   const remaining = total - current;
   const etaMs = ratePerMs > 0 ? remaining / ratePerMs : 0;
+  const tail = isLast
+    ? paint(COLOR.green, `done in ${formatDuration(elapsedMs)}`)
+    : `eta ${formatDuration(etaMs)}`;
 
-  log(
-    `Write: ${current}/${total} (${pct}%)` +
-      (isLast ? ` done ${formatDuration(elapsedMs)}` : ` eta ${formatDuration(etaMs)}`),
-  );
+  log(`  write  ${pct}%  ${current}/${total}  ${tail}`);
+}
+
+function logCoinWrite(result, token, current, total) {
+  const progress = `${String(current).padStart(String(total).length)}/${total}`;
+  const icon = paint(COLOR.green, '✓');
+  const action = result.action.padEnd(8);
+  const id = `#${result.id}`.padEnd(7);
+  const name = tokenLabel(token).padEnd(28);
+  const where = `${token.contract.chain}:${shortAddress(token.contract.address)}`;
+
+  log(`${icon} ${progress}  ${action} ${id} ${name} ${where}`);
+}
+
+function logWriteFailure(token, current, total, error) {
+  const progress = `${String(current).padStart(String(total).length)}/${total}`;
+  const icon = paint(COLOR.red, '✗');
+  const name = tokenLabel(token).padEnd(28);
+  const where = `${token.contract.chain}:${shortAddress(token.contract.address)}`;
+
+  fail(`${icon} ${progress}  ${name} ${where} — ${errorMessage(error)}`);
 }
 
 async function fetchMobulaAssets() {
@@ -346,7 +380,7 @@ async function enrichTokensWithMobulaDetails(tokens) {
 
   const totalBatches = Math.ceil(tokens.length / DETAILS_BATCH_SIZE);
   logSection(
-    `Phase 1/3: Asset details (dates + links) — ${tokens.length} tokens, ${totalBatches} batch(es) of ${DETAILS_BATCH_SIZE}`,
+    `Phase 1/3: Asset details (dates + links) · ${tokens.length} tokens, ${totalBatches} batch(es) of ${DETAILS_BATCH_SIZE}`,
   );
 
   let enrichedCount = 0;
@@ -390,7 +424,7 @@ async function enrichTokensWithMobulaMetadata(tokens) {
 
   const totalBatches = Math.ceil(tokens.length / DETAILS_BATCH_SIZE);
   logSection(
-    `Phase 2/3: Metadata (trust + social links) — ${tokens.length} tokens, ${totalBatches} batch(es) of ${DETAILS_BATCH_SIZE}`,
+    `Phase 2/3: Metadata (trust + social links) · ${tokens.length} tokens, ${totalBatches} batch(es) of ${DETAILS_BATCH_SIZE}`,
   );
 
   let enrichedCount = 0;
@@ -454,7 +488,7 @@ async function enrichTokensWithMobulaMarketDetails(tokens) {
 
   const totalBatches = Math.ceil(usableTokens.length / MARKET_DETAILS_BATCH_SIZE);
   logSection(
-    `Phase 3/3: Market details (chart/DEX links) — ${usableTokens.length} tokens, ${totalBatches} batch(es) of ${MARKET_DETAILS_BATCH_SIZE}` +
+    `Phase 3/3: Market details (chart/DEX links) · ${usableTokens.length} tokens, ${totalBatches} batch(es) of ${MARKET_DETAILS_BATCH_SIZE}` +
       (skippedCount ? ` (${skippedCount} skipped, unsupported chain)` : ''),
   );
 
@@ -568,9 +602,6 @@ async function fetchMobulaMarketDetails(token) {
   }
 }
 
-// Batched replacement for calling fetchMobulaMarketDetails once per token.
-// Falls back to fetchMarketDetailsIndividually (which reuses the single-token
-// function above) if the batch request errors or returns an unexpected shape.
 async function fetchMobulaMarketDetailsBatch(tokens) {
   const body = {
     items: tokens.map((token) => ({
@@ -622,8 +653,6 @@ async function fetchMobulaMarketDetailsBatch(tokens) {
   }
 }
 
-// Same 1 request/sec pacing as before - used only as a per-batch fallback now,
-// not as the primary path, so it should rarely run for a full import.
 async function fetchMarketDetailsIndividually(tokens) {
   const details = [];
   for (const token of tokens) {
@@ -1702,14 +1731,6 @@ function toDbNumber(value) {
   return Number.isFinite(value) ? String(value) : null;
 }
 
-function logCoinWrite(result, token, current, total) {
-  log(
-    `${result.action} ${current}/${total} #${result.id} ${tokenLabel(token)} ${token.contract.chain} ${shortAddress(
-      token.contract.address,
-    )}`,
-  );
-}
-
 function tokenLabel(token) {
   return `${token.symbol} (${token.name})`;
 }
@@ -1743,24 +1764,32 @@ function logImportPlan({
   candidateCount,
   selectedCount,
   selectionTarget,
+  targetCount,
   perChainCount,
 }) {
   const mode = NEW_POPULAR_ONLY ? 'new-popular' : 'random';
-  const writeMode = DRY_RUN ? 'dry-run' : 'write';
+  const writeMode = DRY_RUN ? 'preview' : 'write';
   const chainSummary = chainKeys
     .filter((chain) => perChainCount[chain] > 0)
-    .map((chain) => `${chain}:${perChainCount[chain]}`)
-    .join(' ');
+    .map((chain) => `${chain}: ${perChainCount[chain]}`)
+    .join(', ');
 
-  log(
-    `Plan: ${writeMode} ${selectedCount}/${selectionTarget} ${mode} tokens | raw ${rawCount} → eligible ${matchedCount} → candidates ${candidateCount}`,
-  );
+  logSection('Import plan');
   if (NEW_POPULAR_ONLY) {
-    log(`Filters: this-year age, no >2y, rank>${EXCLUDE_TOP_RANK}, skip existing ${existingCount}`);
+    log(`  mode      ${mode} (${writeMode})`);
+    log(
+      `  target    up to ${targetCount} tokens, checked ${selectedCount}/${selectionTarget} candidates`,
+    );
+    log(
+      `  filters   this-year age, no >2y, rank > ${EXCLUDE_TOP_RANK}, skip existing (${existingCount})`,
+    );
   } else {
-    log(`Filters: rank>${EXCLUDE_TOP_RANK}`);
+    log(`  mode      ${mode} (${writeMode})`);
+    log(`  target    ${selectedCount}/${selectionTarget} tokens`);
+    log(`  filters   rank > ${EXCLUDE_TOP_RANK}`);
   }
-  log(`Chains: ${chainSummary || 'none'}`);
+  log(`  pool      raw ${rawCount} · eligible ${matchedCount} · candidates ${candidateCount}`);
+  log(`  chains    ${chainSummary || 'none'}`);
 }
 
 function readPositiveInteger(value, fallback) {
@@ -1769,7 +1798,7 @@ function readPositiveInteger(value, fallback) {
 }
 
 async function main() {
-  logSection('Mobula import');
+  log('Mobula import has started');
 
   const raw = await fetchMobulaAssets();
   const matchedAll = raw.map(buildToken).filter(Boolean);
@@ -1823,6 +1852,7 @@ async function main() {
     candidateCount: candidatePool.length,
     selectedCount: tokens.length,
     selectionTarget,
+    targetCount: TARGET_COUNT,
     perChainCount,
   });
 
@@ -1834,7 +1864,9 @@ async function main() {
     const enrichedCount = tokens.length;
     tokens = tokens.filter(isNewPopularToken).sort(compareNewPopularTokens).slice(0, TARGET_COUNT);
 
-    log(`Filtered: kept ${tokens.length}/${enrichedCount} new-popular tokens`);
+    log(
+      `Final selection: ${tokens.length}/${TARGET_COUNT} tokens kept from ${enrichedCount} checked`,
+    );
   }
 
   if (DRY_RUN) {
@@ -1892,11 +1924,7 @@ async function main() {
       logCoinWrite(result, token, current, tokens.length);
     } catch (error) {
       failed += 1;
-      fail(
-        `failed ${current}/${tokens.length} ${tokenLabel(token)} ${token.contract.chain} ${shortAddress(
-          token.contract.address,
-        )}: ${errorMessage(error)}`,
-      );
+      logWriteFailure(token, current, tokens.length, error);
     }
 
     logImportProgress(current, tokens.length, writePhaseStartedAt);

@@ -9,6 +9,8 @@ import { getCacheVersion } from '@/lib/cache/cache-version';
 import { rememberJson } from '@/lib/cache/json-cache';
 
 const summaryCacheSeconds = Number(process.env.TOPBAR_SUMMARY_CACHE_SECONDS || 60);
+const displayedUserOffset = 300;
+const displayedVoteOffset = 5_000;
 
 export async function getTopbarSummary() {
   const version = await getCacheVersion('topbar-summary');
@@ -50,9 +52,9 @@ async function readDatabaseSummary() {
     ]);
 
   return {
-    users: readCount(userCountRows),
+    users: readCount(userCountRows) + displayedUserOffset,
     projects: readCount(projectCountRows),
-    totalVotes: readCount(voteCountRows),
+    totalVotes: readCount(voteCountRows) + displayedVoteOffset,
     trendingCoin,
     topVotedCoin,
   };
