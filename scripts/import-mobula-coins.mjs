@@ -221,11 +221,19 @@ function formatDuration(ms) {
 }
 
 function log(message) {
-  console.log(`[+${formatDuration(Date.now() - scriptStartTime)}] ${message}`);
+  console.log(`[${formatDuration(Date.now() - scriptStartTime)}] ${message}`);
 }
 
 function logSection(title) {
-  console.log(`\n[+${formatDuration(Date.now() - scriptStartTime)}] === ${title} ===`);
+  console.log(`\n[${formatDuration(Date.now() - scriptStartTime)}] ${title}`);
+}
+
+function warn(message) {
+  console.warn(`[${formatDuration(Date.now() - scriptStartTime)}] WARN ${message}`);
+}
+
+function fail(message) {
+  console.error(`[${formatDuration(Date.now() - scriptStartTime)}] ERROR ${message}`);
 }
 
 // Logs batch progress at a handful of evenly-spaced points (not every batch,
@@ -254,8 +262,8 @@ function logBatchProgress(
   const etaMs = ratePerMs > 0 ? remainingTokens / ratePerMs : 0;
 
   log(
-    `${label}: token ${tokensSoFar}/${totalTokens} (${pct}%, batch ${batchNumber}/${totalBatches})` +
-      (isLast ? ` — done in ${formatDuration(elapsedMs)}` : ` — ETA ${formatDuration(etaMs)}`),
+    `${label}: ${tokensSoFar}/${totalTokens} (${pct}%, batch ${batchNumber}/${totalBatches})` +
+      (isLast ? ` done ${formatDuration(elapsedMs)}` : ` eta ${formatDuration(etaMs)}`),
   );
 }
 
@@ -275,8 +283,8 @@ function logImportProgress(current, total, phaseStartedAt) {
   const etaMs = ratePerMs > 0 ? remaining / ratePerMs : 0;
 
   log(
-    `Import progress: token ${current}/${total} (${pct}%)` +
-      (isLast ? ` — done in ${formatDuration(elapsedMs)}` : ` — ETA ${formatDuration(etaMs)}`),
+    `Write: ${current}/${total} (${pct}%)` +
+      (isLast ? ` done ${formatDuration(elapsedMs)}` : ` eta ${formatDuration(etaMs)}`),
   );
 }
 
@@ -322,7 +330,7 @@ async function fetchMobulaAssets() {
   const list = Array.isArray(json) ? json : json?.data;
 
   if (!Array.isArray(list)) {
-    console.error('Unexpected Mobula response shape:', JSON.stringify(json).slice(0, 1500));
+    fail(`Unexpected Mobula response shape: ${JSON.stringify(json).slice(0, 500)}`);
     throw new Error('Mobula response was not a token list.');
   }
 
@@ -524,11 +532,7 @@ async function fetchMobulaMetadataBatch(tokens) {
       return expectedIndex >= 0 ? details[expectedIndex] || null : null;
     });
   } catch (error) {
-    console.warn(
-      `Mobula metadata batch failed; selected tokens will keep existing trust/link data. ${
-        error instanceof Error ? error.message : ''
-      }`,
-    );
+    warn(`Mobula metadata batch failed; keeping existing trust/link data. ${errorMessage(error)}`);
     if (DEBUG) console.warn(error);
     return tokens.map(() => null);
   }
@@ -550,8 +554,8 @@ async function fetchMobulaMarketDetails(token) {
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       if (DEBUG) {
-        console.warn(
-          `Mobula market details failed for ${token.symbol}: ${response.status} ${response.statusText}${
+        warn(
+          `Market details failed for ${tokenLabel(token)}: ${response.status} ${response.statusText}${
             errorText ? ` — ${errorText.slice(0, 500)}` : ''
           }`,
         );
@@ -562,7 +566,7 @@ async function fetchMobulaMarketDetails(token) {
     const json = await response.json();
     return json?.data || null;
   } catch (error) {
-    if (DEBUG) console.warn(`Mobula market details failed for ${token.symbol}:`, error);
+    if (DEBUG) warn(`Market details failed for ${tokenLabel(token)}: ${errorMessage(error)}`);
     return null;
   }
 }
@@ -605,18 +609,16 @@ async function fetchMobulaMarketDetailsBatch(tokens) {
         : [];
 
     if (payload.length !== tokens.length) {
-      console.warn(
-        `[+${formatDuration(Date.now() - scriptStartTime)}] ⚠ Market details batch mismatch: expected ${tokens.length} items, got ${payload.length}. Falling back to one-at-a-time requests for this batch of ${tokens.length} token(s) (slower, but safe).`,
+      warn(
+        `Market details batch mismatch: expected ${tokens.length}, got ${payload.length}; retrying individually.`,
       );
       return fetchMarketDetailsIndividually(tokens);
     }
 
     return payload;
   } catch (error) {
-    console.warn(
-      `[+${formatDuration(Date.now() - scriptStartTime)}] ⚠ Market details batch request failed (${
-        error instanceof Error ? error.message : 'unknown error'
-      }). Falling back to one-at-a-time requests for this batch of ${tokens.length} token(s).`,
+    warn(
+      `Market details batch failed: ${errorMessage(error)}; retrying ${tokens.length} individually.`,
     );
     if (DEBUG) console.warn(error);
     return fetchMarketDetailsIndividually(tokens);
@@ -769,11 +771,7 @@ async function fetchMobulaAssetDetailsBatch(tokens) {
     if (!Array.isArray(payload)) return [];
     return payload;
   } catch (error) {
-    console.warn(
-      `Mobula details batch failed; selected tokens will keep any list-level date data. ${
-        error instanceof Error ? error.message : ''
-      }`,
-    );
+    warn(`Mobula details batch failed; keeping list-level date data. ${errorMessage(error)}`);
     if (DEBUG) console.warn(error);
     return fetchMobulaAssetDetailsIndividually(tokens);
   }
@@ -799,8 +797,8 @@ async function fetchMobulaAssetDetailsIndividually(tokens) {
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         if (DEBUG) {
-          console.warn(
-            `Mobula details single request failed for ${token.symbol}: ${response.status} ${response.statusText}${
+          warn(
+            `Details failed for ${tokenLabel(token)}: ${response.status} ${response.statusText}${
               errorText ? ` — ${errorText.slice(0, 500)}` : ''
             }`,
           );
@@ -812,7 +810,7 @@ async function fetchMobulaAssetDetailsIndividually(tokens) {
       const json = await response.json();
       details.push(json?.data || null);
     } catch (error) {
-      if (DEBUG) console.warn(`Mobula details single request failed for ${token.symbol}:`, error);
+      if (DEBUG) warn(`Details failed for ${tokenLabel(token)}: ${errorMessage(error)}`);
       details.push(null);
     }
 
@@ -975,7 +973,7 @@ async function upsertToken(token, slug) {
   if (!db) throw new Error('DATABASE_URL is required.');
   const logoUrl = await resolveLogoUrl(token);
 
-  await db.begin(async (tx) => {
+  return db.begin(async (tx) => {
     const existing = await tx`
       select id
       from coins
@@ -983,7 +981,8 @@ async function upsertToken(token, slug) {
         and lower(contract_address) = lower(${token.contract.address})
       limit 1
     `;
-    const coinId = existing[0]?.id || (await readNextCoinId(tx));
+    const existingCoinId = existing[0]?.id;
+    const coinId = existingCoinId || (await readNextCoinId(tx));
     const now = new Date();
 
     await tx`
@@ -1027,7 +1026,7 @@ async function upsertToken(token, slug) {
     if (token.chartUrl) await upsertCoinLink(tx, coinId, 'chart', token.chartUrl, now);
     await upsertProjectLinks(tx, coinId, token.projectLinks, now);
 
-    return coinId;
+    return { id: coinId, action: existingCoinId ? 'updated' : 'inserted' };
   });
 }
 
@@ -1040,11 +1039,7 @@ async function resolveLogoUrl(token) {
     });
     return uploaded.url;
   } catch (error) {
-    throw new Error(
-      `Could not mirror logo to R2 for ${token.symbol}. ${
-        error instanceof Error ? error.message : ''
-      }`,
-    );
+    throw new Error(`Could not mirror logo to R2 for ${tokenLabel(token)}: ${errorMessage(error)}`);
   }
 }
 
@@ -1710,6 +1705,40 @@ function toDbNumber(value) {
   return Number.isFinite(value) ? String(value) : null;
 }
 
+function logCoinWrite(result, token, current, total) {
+  log(
+    `${result.action} ${current}/${total} #${result.id} ${tokenLabel(token)} ${token.contract.chain} ${shortAddress(
+      token.contract.address,
+    )}`,
+  );
+}
+
+function tokenLabel(token) {
+  return `${token.symbol} (${token.name})`;
+}
+
+function shortAddress(address) {
+  if (!address || address.length <= 14) return address || 'no-address';
+  return `${address.slice(0, 6)}…${address.slice(-6)}`;
+}
+
+function errorMessage(error) {
+  if (error instanceof Error) {
+    const cause = error.cause instanceof Error ? `; cause: ${error.cause.message}` : '';
+    return `${error.message}${cause}`;
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
+  return String(error);
+}
+
 function readPositiveInteger(value, fallback) {
   const number = Number(value);
   return Number.isSafeInteger(number) && number > 0 ? number : fallback;
@@ -1745,9 +1774,7 @@ async function main() {
   const available = Object.fromEntries(chainKeys.map((chain) => [chain, byChain[chain].length]));
   const emptyChains = chainKeys.filter((chain) => available[chain] === 0);
   if (emptyChains.length) {
-    console.warn(
-      `[+${formatDuration(Date.now() - scriptStartTime)}] ⚠ No eligible tokens found for: ${emptyChains.join(', ')}`,
-    );
+    warn(`No eligible tokens found for: ${emptyChains.join(', ')}`);
   }
 
   log(
@@ -1778,9 +1805,7 @@ async function main() {
       : selectedByChain;
 
   if (tokens.length < selectionTarget) {
-    console.warn(
-      `[+${formatDuration(Date.now() - scriptStartTime)}] ⚠ Only ${tokens.length}/${selectionTarget} tokens available — some chains ran out of eligible tokens.`,
-    );
+    warn(`Only ${tokens.length}/${selectionTarget} tokens available; some chains ran out.`);
   }
 
   log(
@@ -1853,14 +1878,15 @@ async function main() {
     current += 1;
     try {
       const slug = uniqueSlug(slugify(`${token.symbol}-${token.name}`), existingSlugs);
-      await upsertToken(token, slug);
+      const result = await upsertToken(token, slug);
       success += 1;
-      if (DEBUG) log(`✔ [${token.contract.chain}] ${token.symbol} (${token.name})`);
+      logCoinWrite(result, token, current, tokens.length);
     } catch (error) {
       failed += 1;
-      console.error(
-        `[+${formatDuration(Date.now() - scriptStartTime)}] ✘ Failed to import ${token.symbol} [${token.contract.chain}]:`,
-        error,
+      fail(
+        `failed ${current}/${tokens.length} ${tokenLabel(token)} ${token.contract.chain} ${shortAddress(
+          token.contract.address,
+        )}: ${errorMessage(error)}`,
       );
     }
 
@@ -1875,10 +1901,7 @@ async function main() {
 
 main()
   .catch((error) => {
-    console.error(
-      `[+${formatDuration(Date.now() - scriptStartTime)}] Fatal error — import stopped early:`,
-      error,
-    );
+    fail(`fatal: ${errorMessage(error)}`);
     process.exitCode = 1;
   })
   .finally(async () => {
