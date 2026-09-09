@@ -9,6 +9,8 @@
  *   npm run import:mobula -- --limit=150
  *   npm run import:mobula -- --dry-run
  *   npm run import:mobula -- --dry-run --debug
+ *   npm run import:mobula:random
+ *   npm run import:mobula -- --random --limit=150
  *
  * This script writes only to tables the app currently reads:
  *   - coins
@@ -42,7 +44,8 @@ const positionalLimitArg = args.find((arg) => /^\d+$/.test(arg));
 const TARGET_COUNT = readPositiveInteger(limitArg?.split('=')[1] || positionalLimitArg, 250);
 const DRY_RUN = args.includes('--dry-run');
 const DEBUG = args.includes('--debug');
-const RANDOMIZE = !args.includes('--no-random');
+const RANDOM_IMPORT = args.includes('--random');
+const RANDOMIZE = RANDOM_IMPORT && !args.includes('--no-random');
 const DETAILS_BATCH_SIZE = Math.min(
   readPositiveInteger(
     args.find((arg) => arg.startsWith('--details-batch-size='))?.split('=')[1],
@@ -63,6 +66,17 @@ const EXCLUDE_TOP_RANK = readPositiveInteger(
   150,
 );
 const SKIP_R2_LOGO_UPLOAD = args.includes('--skip-r2-logo-upload');
+const NEW_POPULAR_ONLY = !RANDOM_IMPORT;
+const NEW_POPULAR_MAX_AGE_DAYS = readPositiveInteger(
+  args.find((arg) => arg.startsWith('--new-popular-max-age-days='))?.split('=')[1] ||
+    process.env.MOBULA_NEW_POPULAR_MAX_AGE_DAYS,
+  daysSinceStartOfYear(),
+);
+const NEW_POPULAR_EXCLUDE_OLDER_THAN_DAYS = 730;
+const NEW_POPULAR_MAX_RANK = 5_000;
+const NEW_POPULAR_MIN_VOLUME_USD = 10_000;
+const NEW_POPULAR_MIN_LIQUIDITY_USD = 10_000;
+const NEW_POPULAR_OVERSAMPLE_FACTOR = 6;
 
 if (!DATABASE_URL && !DRY_RUN) {
   throw new Error('DATABASE_URL is required for a real import. Use --dry-run to preview only.');
@@ -1064,6 +1078,93 @@ async function loadExistingSlugs() {
   return new Set(rows.map((row) => row.slug));
 }
 
+async function loadExistingContracts() {
+  if (!db || DRY_RUN) return new Set();
+  const rows = await db`
+    select lower(chain) as chain, lower(contract_address) as contract_address
+    from coins
+    where contract_address is not null and contract_address <> ''
+  `;
+  return new Set(rows.map((row) => contractKey(row.chain, row.contractAddress)));
+}
+
+function hasExistingContract(existingContracts, token) {
+  return existingContracts.has(contractKey(token.contract.chain, token.contract.address));
+}
+
+function contractKey(chain, address) {
+  return `${String(chain || '').toLowerCase()}:${String(address || '').toLowerCase()}`;
+}
+
+function selectNewPopularCandidatePool(tokens) {
+  const candidates = tokens.filter(couldBecomeNewPopularToken).sort(compareNewPopularTokens);
+  const maxCandidates = Math.max(TARGET_COUNT, TARGET_COUNT * NEW_POPULAR_OVERSAMPLE_FACTOR);
+  return candidates.slice(0, maxCandidates);
+}
+
+function couldBecomeNewPopularToken(token) {
+  if (!hasPopularitySignal(token)) return false;
+  if (!token.launchDate) return true;
+  return isRecentLaunchDate(token.launchDate);
+}
+
+function isNewPopularToken(token) {
+  return Boolean(
+    token.launchDate && isRecentLaunchDate(token.launchDate) && hasPopularitySignal(token),
+  );
+}
+
+function isRecentLaunchDate(date) {
+  const timestamp = date instanceof Date ? date.getTime() : new Date(date).getTime();
+  if (!Number.isFinite(timestamp)) return false;
+
+  const now = Date.now();
+  const maxAgeMs = NEW_POPULAR_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  const maxAllowedAgeMs = NEW_POPULAR_EXCLUDE_OLDER_THAN_DAYS * 24 * 60 * 60 * 1000;
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  return timestamp >= now - Math.min(maxAgeMs, maxAllowedAgeMs) && timestamp <= now + oneDayMs;
+}
+
+function hasPopularitySignal(token) {
+  return (
+    (token.rank !== null && token.rank <= NEW_POPULAR_MAX_RANK) ||
+    (token.volume !== null && token.volume >= NEW_POPULAR_MIN_VOLUME_USD) ||
+    (token.liquidity !== null && token.liquidity >= NEW_POPULAR_MIN_LIQUIDITY_USD)
+  );
+}
+
+function compareNewPopularTokens(a, b) {
+  return (
+    newPopularScore(b) - newPopularScore(a) || newestFirst(a, b) || a.name.localeCompare(b.name)
+  );
+}
+
+function newestFirst(a, b) {
+  return (b.launchDate?.getTime() || 0) - (a.launchDate?.getTime() || 0);
+}
+
+function newPopularScore(token) {
+  const rankScore = token.rank ? Math.max(0, NEW_POPULAR_MAX_RANK - token.rank) * 100 : 0;
+  const volumeScore = Math.log10(Math.max(1, token.volume || 0)) * 1_000;
+  const liquidityScore = Math.log10(Math.max(1, token.liquidity || 0)) * 900;
+  const marketCapScore = Math.log10(Math.max(1, token.marketCap || 0)) * 500;
+  const ageScore = token.launchDate
+    ? Math.max(0, NEW_POPULAR_MAX_AGE_DAYS - ageInDays(token.launchDate)) * 50
+    : 0;
+
+  return rankScore + volumeScore + liquidityScore + marketCapScore + ageScore;
+}
+
+function ageInDays(date) {
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000)));
+}
+
+function daysSinceStartOfYear() {
+  const now = new Date();
+  const startOfYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  return Math.max(1, Math.ceil((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)));
+}
+
 function uniqueSlug(base, taken) {
   const safeBase = base || 'token';
   let slug = safeBase;
@@ -1618,14 +1719,28 @@ async function main() {
   logSection(
     `Mobula import starting — target ${TARGET_COUNT} token(s), ${
       DRY_RUN ? 'DRY RUN (no writes)' : 'writing to database'
-    }, exclude rank <= ${EXCLUDE_TOP_RANK}`,
+    }, exclude rank <= ${EXCLUDE_TOP_RANK}${NEW_POPULAR_ONLY ? ', new popular default' : ', random mode'}`,
   );
 
   const raw = await fetchMobulaAssets();
   const matchedAll = raw.map(buildToken).filter(Boolean);
+  const existingContracts = NEW_POPULAR_ONLY ? await loadExistingContracts() : new Set();
+  const importableAll = NEW_POPULAR_ONLY
+    ? matchedAll.filter((token) => !hasExistingContract(existingContracts, token))
+    : matchedAll;
+
+  if (NEW_POPULAR_ONLY && existingContracts.size) {
+    log(
+      `Filtered ${matchedAll.length - importableAll.length} existing contract(s); ${importableAll.length}/${matchedAll.length} candidate(s) remain for incremental import.`,
+    );
+  }
+
+  const candidatePool = NEW_POPULAR_ONLY
+    ? selectNewPopularCandidatePool(importableAll)
+    : importableAll;
 
   const byChain = Object.fromEntries(chainKeys.map((chain) => [chain, []]));
-  for (const token of matchedAll) byChain[token.contract.chain].push(token);
+  for (const token of candidatePool) byChain[token.contract.chain].push(token);
 
   const available = Object.fromEntries(chainKeys.map((chain) => [chain, byChain[chain].length]));
   const emptyChains = chainKeys.filter((chain) => available[chain] === 0);
@@ -1636,28 +1751,40 @@ async function main() {
   }
 
   log(
-    `Matched ${matchedAll.length}/${raw.length} raw assets as eligible: ${chainKeys
+    `Matched ${matchedAll.length}/${raw.length} raw assets as eligible; ${candidatePool.length} candidate(s) will be considered: ${chainKeys
       .map((chain) => `${chain}=${available[chain]}`)
       .join(', ')}.`,
   );
 
-  const perChainCount = randomSplit(TARGET_COUNT, chainKeys, available);
+  const selectionTarget = NEW_POPULAR_ONLY
+    ? Math.min(
+        candidatePool.length,
+        Math.max(TARGET_COUNT, TARGET_COUNT * NEW_POPULAR_OVERSAMPLE_FACTOR),
+      )
+    : TARGET_COUNT;
+  const perChainCount = randomSplit(selectionTarget, chainKeys, available);
   const selectedByChain = chainKeys.flatMap((chain) => {
-    const pool = RANDOMIZE
-      ? shuffle(byChain[chain])
-      : [...byChain[chain]].sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity));
+    const pool = NEW_POPULAR_ONLY
+      ? [...byChain[chain]].sort(compareNewPopularTokens)
+      : RANDOMIZE
+        ? shuffle(byChain[chain])
+        : [...byChain[chain]].sort((a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity));
     return pool.slice(0, perChainCount[chain]);
   });
-  const tokens = RANDOMIZE ? shuffle(selectedByChain) : selectedByChain;
+  let tokens = NEW_POPULAR_ONLY
+    ? selectedByChain.sort(compareNewPopularTokens)
+    : RANDOMIZE
+      ? shuffle(selectedByChain)
+      : selectedByChain;
 
-  if (tokens.length < TARGET_COUNT) {
+  if (tokens.length < selectionTarget) {
     console.warn(
-      `[+${formatDuration(Date.now() - scriptStartTime)}] ⚠ Only ${tokens.length}/${TARGET_COUNT} tokens available — some chains ran out of eligible tokens.`,
+      `[+${formatDuration(Date.now() - scriptStartTime)}] ⚠ Only ${tokens.length}/${selectionTarget} tokens available — some chains ran out of eligible tokens.`,
     );
   }
 
   log(
-    `Selected ${tokens.length}/${TARGET_COUNT} token(s) to enrich: ${chainKeys
+    `Selected ${tokens.length}/${selectionTarget} token(s) to enrich: ${chainKeys
       .map((chain) => `${chain}=${perChainCount[chain]}`)
       .join(', ')}.`,
   );
@@ -1666,6 +1793,15 @@ async function main() {
   await enrichTokensWithMobulaDetails(tokens);
   await enrichTokensWithMobulaMetadata(tokens);
   await enrichTokensWithMobulaMarketDetails(tokens);
+
+  if (NEW_POPULAR_ONLY) {
+    const enrichedCount = tokens.length;
+    tokens = tokens.filter(isNewPopularToken).sort(compareNewPopularTokens).slice(0, TARGET_COUNT);
+
+    log(
+      `New popular filter kept ${tokens.length}/${enrichedCount} enriched candidate(s): listed within ${NEW_POPULAR_MAX_AGE_DAYS} day(s), excluding anything older than ${NEW_POPULAR_EXCLUDE_OLDER_THAN_DAYS} day(s), plus rank <= ${NEW_POPULAR_MAX_RANK} or volume/liquidity >= configured thresholds.`,
+    );
+  }
 
   if (DRY_RUN) {
     logSection(`Dry run: previewing ${tokens.length} enriched token(s) — no rows will be written`);
